@@ -66,12 +66,18 @@ public class JGitBuildNumberMojo extends AbstractMojo {
      * @parameter expression="${buildnumberProperty}"
      */
     private String buildnumberProperty = "git.buildnumber";
-	/**
+    /**
      * commitDate property name
      *
      * @parameter expression="${commitDateProperty}"
      */
     private String commitDateProperty = "git.commitDate";
+    /**
+     * describe property name
+     *
+     * @parameter expression="${describeProperty}"
+     */
+    private String describeProperty = "git.describe";
     /**
      * Java Script buildnumber callback
      *
@@ -141,12 +147,14 @@ public class JGitBuildNumberMojo extends AbstractMojo {
                 props.setProperty(tagProperty, bn.getTag());
                 props.setProperty(parentProperty, bn.getParent());
                 props.setProperty(commitsCountProperty, bn.getCommitsCountAsString());
-				props.setProperty(commitDateProperty, bn.getCommitDate());
+                props.setProperty(commitDateProperty, bn.getCommitDate());
                 // create composite buildnumber
                 String composite = createBuildnumber(bn);
                 props.setProperty(buildnumberProperty, composite);
-                getLog().info("Git info extracted, revision: '" + bn.getShortRevision() + "', branch: '" + bn.getBranch() +
-                        "', tag: '" + bn.getTag() + "', commitsCount: '" + bn.getCommitsCount() + "', commitDate: '" + bn.getCommitDate() + "', buildnumber: '" + composite + "'");
+                getLog().info(String.format(
+                  "Git info extracted, revision: '%s', branch: '%s', tag: '%s', commitsCount: '%d', commitDate: '%s', buildNumber: '%s', describe: '%s",
+                  bn.getShortRevision(), bn.getBranch(), bn.getTag(), bn.getCommitsCount(), bn.getCommitDate(), composite, bn.getDescribe()
+                ));
             } else if("pom".equals(parentProject.getPackaging())) {
                 // build started from parent, we are in subproject, lets provide parent properties to our project
                 Properties parentProps = parentProject.getProperties();
@@ -165,7 +173,8 @@ public class JGitBuildNumberMojo extends AbstractMojo {
                 props.setProperty(parentProperty, parentProps.getProperty(parentProperty));
                 props.setProperty(commitsCountProperty, parentProps.getProperty(commitsCountProperty));
                 props.setProperty(buildnumberProperty, parentProps.getProperty(buildnumberProperty));
-				props.setProperty(commitDateProperty, parentProps.getProperty(commitDateProperty));
+                props.setProperty(commitDateProperty, parentProps.getProperty(commitDateProperty));
+                props.setProperty(describeProperty, parentProps.getProperty(describeProperty));
             } else {
                 // should not happen
                 getLog().warn("Cannot extract JGit version: something wrong with build process, we're not in parent, not in subproject!");
@@ -185,7 +194,8 @@ public class JGitBuildNumberMojo extends AbstractMojo {
         props.setProperty(parentProperty, "UNKNOWN_PARENT");
         props.setProperty(commitsCountProperty, "-1");
         props.setProperty(buildnumberProperty, "UNKNOWN_BUILDNUMBER");
-		props.setProperty(commitDateProperty, "UNKNOWN_COMMIT_DATE");
+        props.setProperty(commitDateProperty, "UNKNOWN_COMMIT_DATE");
+        props.setProperty(describeProperty, "UNKNOWN_DESCRIBE");
     }
 
     private String createBuildnumber(BuildNumber bn) throws ScriptException {
@@ -201,7 +211,8 @@ public class JGitBuildNumberMojo extends AbstractMojo {
         jsEngine.put("parent", bn.getParent());
         jsEngine.put("shortRevision", bn.getShortRevision());
         jsEngine.put("commitsCount", bn.getCommitsCount());
-		jsEngine.put("commitDate", bn.getCommitDate());
+        jsEngine.put("commitDate", bn.getCommitDate());
+        jsEngine.put("describe", bn.getDescribe());
         Object res = jsEngine.eval(javaScriptBuildnumberCallback);
         if(null == res) throw new IllegalStateException("JS buildnumber callback returns null");
         return res.toString();
