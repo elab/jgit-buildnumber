@@ -6,7 +6,7 @@
         <artifactId>oss-parent</artifactId>
         <version>7</version>
     </parent>
-    <groupId>ru.concerteza.buildnumber</groupId>
+    <groupId>com.aperto</groupId>
     <artifactId>jgit-buildnumber-parent</artifactId>
     <version>1.2.11-SNAPSHOT</version>
     <packaging>pom</packaging>
@@ -50,6 +50,19 @@
         </developer>
     </developers>
 
+	<distributionManagement>
+		<snapshotRepository>
+			<id>aperto.nexus.snapshots</id>
+			<name>Aperto 3rd party snapshots</name>
+			<url>https://maven.aperto.de/nexus/content/repositories/thirdparty.snapshots/</url>
+		</snapshotRepository>
+		<repository>
+			<id>aperto.nexus.releases</id>
+			<name>Aperto 3rd party</name>
+			<url>https://maven.aperto.de/nexus/content/repositories/thirdparty/</url>
+		</repository>
+	</distributionManagement>
+  
     <modules>
         <module>maven-jgit-buildnumber-plugin</module>
         <module>jgit-buildnumber-ant-task</module>
@@ -102,40 +115,40 @@
                     </execution>
                 </executions>
             </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-javadoc-plugin</artifactId>
-                <version>2.8.1</version>
-                <executions>
-                    <execution>
-                        <id>attach-javadoc</id>
-                        <goals>
-                            <goal>jar</goal>
-                        </goals>
-                        <configuration>
-                            <linksource>true</linksource>
-                            <quiet>true</quiet>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-gpg-plugin</artifactId>
-                <version>1.4</version>
-                <executions>
-                    <execution>
-                        <id>sign-artifacts</id>
-                        <phase>verify</phase>
-                        <goals>
-                            <goal>sign</goal>
-                        </goals>
-                        <configuration>
-                            <passphrase>${gpg.key}</passphrase>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
+<!--             <plugin> -->
+<!--                 <groupId>org.apache.maven.plugins</groupId> -->
+<!--                 <artifactId>maven-javadoc-plugin</artifactId> -->
+<!--                 <version>2.8.1</version> -->
+<!--                 <executions> -->
+<!--                     <execution> -->
+<!--                         <id>attach-javadoc</id> -->
+<!--                         <goals> -->
+<!--                             <goal>jar</goal> -->
+<!--                         </goals> -->
+<!--                         <configuration> -->
+<!--                             <linksource>true</linksource> -->
+<!--                             <quiet>true</quiet> -->
+<!--                         </configuration> -->
+<!--                     </execution> -->
+<!--                 </executions> -->
+<!--             </plugin> -->
+<!--             <plugin> -->
+<!--                 <groupId>org.apache.maven.plugins</groupId> -->
+<!--                 <artifactId>maven-gpg-plugin</artifactId> -->
+<!--                 <version>1.4</version> -->
+<!--                 <executions> -->
+<!--                     <execution> -->
+<!--                         <id>sign-artifacts</id> -->
+<!--                         <phase>verify</phase> -->
+<!--                         <goals> -->
+<!--                             <goal>sign</goal> -->
+<!--                         </goals> -->
+<!--                         <configuration> -->
+<!--                             <passphrase>${gpg.key}</passphrase> -->
+<!--                         </configuration> -->
+<!--                     </execution> -->
+<!--                 </executions> -->
+<!--             </plugin> -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-release-plugin</artifactId>
