@@ -1,5 +1,6 @@
 package ru.concerteza.util.buildnumber;
 
+import org.eclipse.jgit.errors.RevWalkException;
 import org.eclipse.jgit.lib.Constants;
 import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.PersonIdent;
@@ -139,7 +140,13 @@ public class BuildNumberExtractor {
         RevCommit head = walk.parseCommit(revision);
         walk.markStart(head);
         int res = 0;
-        for (RevCommit commit : walk) res += 1;
+        try {
+            for (RevCommit commit : walk) res += 1;
+        } catch (RevWalkException ex) {
+            // Ignore exception thrown by JGit when walking shallow clone,
+            // return -1 to indicate shallow.
+            return -1;
+        }
         walk.dispose();
         return res;
     }
