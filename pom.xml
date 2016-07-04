@@ -6,9 +6,9 @@
         <artifactId>oss-parent</artifactId>
         <version>7</version>
     </parent>
-    <groupId>com.aperto</groupId>
+    <groupId>com.github.aperto</groupId>
     <artifactId>jgit-buildnumber-parent</artifactId>
-    <version>1.2.11-SNAPSHOT</version>
+    <version>1.2.12-SNAPSHOT</version>
     <packaging>pom</packaging>
     <name>JGit Build Number Plugins For Maven And Ant</name>
 
