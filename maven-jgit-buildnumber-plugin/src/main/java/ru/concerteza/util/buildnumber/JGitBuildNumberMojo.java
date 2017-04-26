@@ -72,6 +72,12 @@ public class JGitBuildNumberMojo extends AbstractMojo {
      * @parameter expression="${commitDateProperty}"
      */
     private String commitDateProperty = "git.commitDate";
+	/**
+     * commitDate property name
+     *
+     * @parameter expression="${commitDateFormat}" default-value="yyyy-MM-dd"
+     */
+    private String commitDateFormat;
     /**
      * Java Script buildnumber callback
      *
@@ -134,7 +140,7 @@ public class JGitBuildNumberMojo extends AbstractMojo {
             // http://www.sonatype.com/people/2009/05/how-to-make-a-plugin-run-once-during-a-build/
             if (executionRootDirectory.equals(baseDirectory) || !runOnlyAtExecutionRoot) {
                 // build started from this projects root
-                BuildNumber bn = BuildNumberExtractor.extract(repositoryDirectory);
+                BuildNumber bn = BuildNumberExtractor.extract(repositoryDirectory, commitDateFormat);
                 props.setProperty(revisionProperty, bn.getRevision());
                 props.setProperty(shortRevisionProperty, bn.getShortRevision());
                 props.setProperty(branchProperty, bn.getBranch());

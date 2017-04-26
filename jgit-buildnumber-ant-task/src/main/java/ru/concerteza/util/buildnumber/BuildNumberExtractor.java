@@ -1,5 +1,13 @@
 package ru.concerteza.util.buildnumber;
 
+import java.io.File;
+import java.io.IOException;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
+
 import org.eclipse.jgit.lib.Constants;
 import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.PersonIdent;
@@ -8,14 +16,6 @@ import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.revwalk.RevWalk;
 import org.eclipse.jgit.storage.file.FileRepository;
 import org.eclipse.jgit.storage.file.FileRepositoryBuilder;
-
-import java.io.File;
-import java.io.IOException;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * Extracts buildnumber fields from git repository. Put it here, not in common module, because we don't want
@@ -31,10 +31,11 @@ public class BuildNumberExtractor {
     /**
      * @param repoDirectory directory to start searching git root from, should contain '.git' directory
      *                      or be a subdirectory of such directory
+     * @param commitDateFormat the date formatter string 
      * @return extracted buildnumber object
      * @throws IOException
      */
-    public static BuildNumber extract(File repoDirectory) throws IOException {
+    public static BuildNumber extract(File repoDirectory, String commitDateFormat) throws IOException {
         if(!(repoDirectory.exists() && repoDirectory.isDirectory())) throw new IOException(
                 "Invalid repository directory provided: " + repoDirectory.getAbsolutePath());
         // open repo, jgit has some problems with not canonical paths
@@ -54,7 +55,7 @@ public class BuildNumberExtractor {
             // count total commits
             int commitsCount = countCommits(repo, revisionObject);
 			// extract date of current commit
-			String commitDate = readCurrentCommitDate(repo, revision);
+			String commitDate = readCurrentCommitDate(repo, revision, commitDateFormat);
             return new BuildNumber(revision, branch, tag, parent, commitsCount, commitDate);
         } finally {
             repo.close();
@@ -96,8 +97,8 @@ public class BuildNumberExtractor {
         return parentsFormat;
     }
 
-	private static String readCurrentCommitDate(FileRepository repo, String revision) throws IOException {
-		DateFormat df = new SimpleDateFormat("yyyy-MM-dd");
+	private static String readCurrentCommitDate(FileRepository repo, String revision, String commitDateFormat) throws IOException {
+		DateFormat df = new SimpleDateFormat(commitDateFormat);
 		ObjectId rev = repo.resolve(revision);
 		if (null == rev) return EMPTY_STRING;
 		RevWalk rw = new RevWalk(repo);
