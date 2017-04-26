@@ -6,7 +6,7 @@
         <artifactId>oss-parent</artifactId>
         <version>9</version>
     </parent>
-    <groupId>org.bidib.com.github</groupId>
+    <groupId>org.bidib.buildnumber</groupId>
     <artifactId>jgit-buildnumber-parent</artifactId>
     <version>1.2.11-SNAPSHOT</version>
     <packaging>pom</packaging>
