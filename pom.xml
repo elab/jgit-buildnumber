@@ -6,14 +6,14 @@
         <artifactId>oss-parent</artifactId>
         <version>9</version>
     </parent>
-    <groupId>ru.concerteza.buildnumber</groupId>
+    <groupId>com.github</groupId>
     <artifactId>jgit-buildnumber-parent</artifactId>
     <version>1.2.11-SNAPSHOT</version>
     <packaging>pom</packaging>
     <name>JGit Build Number Plugins For Maven And Ant</name>
 
     <description>Maven plugin and Ant task, extract buildnumbers from project's Git repository without Git command line tool</description>
-    <url>https://github.com/alx3apps/jgit-buildnumber</url>
+    <url>https://github.com/akuhtz/jgit-buildnumber</url>
     <licenses>
         <license>
             <name>Apache License 2.0</name>
@@ -21,9 +21,9 @@
         </license>
     </licenses>
     <scm>
-        <url>https://github.com/alx3apps/jgit-buildnumber</url>
-        <connection>scm:git:https://github.com/alx3apps/jgit-buildnumber.git</connection>
-        <developerConnection>scm:git:https://github.com/alx3apps/jgit-buildnumber.git</developerConnection>
+        <url>https://github.com/akuhtz/jgit-buildnumber</url>
+        <connection>scm:git:https://github.com/akuhtz/jgit-buildnumber.git</connection>
+        <developerConnection>scm:git:https://github.com/akuhtz/jgit-buildnumber.git</developerConnection>
       <tag>HEAD</tag>
   </scm>
     <developers>
@@ -49,7 +49,7 @@
             <url>https://github.com/teleshoes</url>
         </developer>
     </developers>
-
+  
     <modules>
         <module>maven-jgit-buildnumber-plugin</module>
         <module>jgit-buildnumber-ant-task</module>
@@ -57,6 +57,7 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <gpg.useagent>true</gpg.useagent>
     </properties>
 
     <build>
@@ -86,6 +87,28 @@
                     <artifactId>maven-project-info-reports-plugin</artifactId>
                     <version>2.5.1</version>
                 </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-javadoc-plugin</artifactId>
+                    <version>2.10.4</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-gpg-plugin</artifactId>
+                    <version>1.6</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-release-plugin</artifactId>
+                    <version>2.5.3</version>
+                    <configuration>
+                        <useReleaseProfile>false</useReleaseProfile>
+                        <preparationGoals>clean install</preparationGoals>
+                        <goals>deploy</goals>
+                        <arguments>-Prelease-sign-artifacts,release -Dgpg.passphrase=${gpg.passphrase}</arguments>
+                        <autoVersionSubmodules>true</autoVersionSubmodules>
+                    </configuration>
+                </plugin>
             </plugins>
         </pluginManagement>
         <plugins>
@@ -105,7 +128,6 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-javadoc-plugin</artifactId>
-                <version>2.10.4</version>
                 <!-- add this to disable checking under JDK8 -->
                 <configuration>
                     <additionalparam>${javadoc.opts}</additionalparam>
@@ -123,25 +145,6 @@
                     </execution>
                 </executions>
             </plugin>
-            <!--
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-gpg-plugin</artifactId>
-                <version>1.6</version>
-                <executions>
-                    <execution>
-                        <id>sign-artifacts</id>
-                        <phase>verify</phase>
-                        <goals>
-                            <goal>sign</goal>
-                        </goals>
-                        <configuration>
-                            <passphrase>${gpg.key}</passphrase>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-            -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-release-plugin</artifactId>
@@ -164,6 +167,60 @@
             <properties>
                 <javadoc.opts>-Xdoclint:none</javadoc.opts>
             </properties>
+        </profile>
+        <profile>
+            <id>release-sign-artifacts</id>
+            <activation>
+                <property>
+                    <name>performRelease</name>
+                    <value>true</value>
+                </property>
+            </activation>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-deploy-plugin</artifactId>
+                        <inherited>true</inherited>
+                        <configuration>
+                            <updateReleaseInfo>true</updateReleaseInfo>
+                        </configuration>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-javadoc-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>attach-javadocs</id>
+                                <goals>
+                                    <goal>jar</goal>
+                                </goals>
+                                <!-- add this to disable checking -->
+                                <configuration>
+                                    <additionalparam>${javadoc.opts}</additionalparam>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-gpg-plugin</artifactId>
+                        <configuration>
+                            <passphrase>${gpg.passphrase}</passphrase>
+                            <useAgent>${gpg.useagent}</useAgent>
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <id>sign-artifacts</id>
+                                <phase>verify</phase>
+                                <goals>
+                                    <goal>sign</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
         </profile>
     </profiles>
     
