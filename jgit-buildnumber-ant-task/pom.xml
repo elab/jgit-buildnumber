@@ -4,7 +4,7 @@
     <parent>
         <groupId>org.bidib.buildnumber</groupId>
         <artifactId>jgit-buildnumber-parent</artifactId>
-        <version>1.2.11-SNAPSHOT</version>
+        <version>1.2.11</version>
     </parent>
     <artifactId>jgit-buildnumber-ant-task</artifactId>
     <packaging>jar</packaging>
