@@ -147,7 +147,8 @@ If JS snippet failed to execute, it won't break build process, Rhino error will 
  in every submodule, not only in root one. Default: `true`.
  This feature was added by [bradszabo](https://github.com/bradszabo).
  * `commitDateProperty`- the date of the last commit, default: `git.commitDate`
- The following features were added by [akuhtz](https://github.com/akuhtz).
+ 
+ The following properties were added by [akuhtz](https://github.com/akuhtz).
  * `commitDateFormat`- the format used for commit date and build data, default: `yyyy-MM-dd`
  * `buildDateProperty` - the current date when the plugin was executed during the build, default: `buildDate`
  
