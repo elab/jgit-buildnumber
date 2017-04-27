@@ -56,7 +56,8 @@ public class BuildNumberExtractor {
             int commitsCount = countCommits(repo, revisionObject);
 			// extract date of current commit
 			String commitDate = readCurrentCommitDate(repo, revision, commitDateFormat);
-            return new BuildNumber(revision, branch, tag, parent, commitsCount, commitDate);
+			String buildDate = getCurrentBuildDate(commitDateFormat); 
+            return new BuildNumber(revision, branch, tag, parent, commitsCount, commitDate, buildDate);
         } finally {
             repo.close();
         }
@@ -106,6 +107,11 @@ public class BuildNumberExtractor {
 		PersonIdent author = commit.getAuthorIdent();
 		Date commitDate = author.getWhen();
 		return df.format(commitDate);
+	}
+	
+	private static String getCurrentBuildDate(String commitDateFormat) {
+		DateFormat df = new SimpleDateFormat(commitDateFormat);
+		return df.format(new Date());
 	}
 
     // sha1 -> tag name

@@ -81,6 +81,12 @@ public class JGitBuildNumberMojo extends AbstractMojo {
      * @parameter expression="${commitDateFormat}" default-value="yyyy-MM-dd"
      */
     private String commitDateFormat;
+	/**
+     * buildDate property name
+     *
+     * @parameter expression="${buildDateProperty}"
+     */
+    private String buildDateProperty = "buildDate";
     /**
      * Java Script buildnumber callback
      *
@@ -153,13 +159,15 @@ public class JGitBuildNumberMojo extends AbstractMojo {
                 props.setProperty(parentProperty, bn.getParent());
                 props.setProperty(commitsCountProperty, bn.getCommitsCountAsString());
 				props.setProperty(commitDateProperty, bn.getCommitDate());
+				props.setProperty(buildDateProperty, bn.getBuildDate());
                 // create composite buildnumber
                 String composite = createBuildnumber(bn);
                 props.setProperty(buildnumberProperty, composite);
                 
                 long durationMillis = System.currentTimeMillis() - startMillis;
                 getLog().info("Git info extracted in " + durationMillis + "ms, revision: '" + bn.getShortRevision() + "', branch: '" + bn.getBranch() +
-                        "', tag: '" + bn.getTag() + "', commitsCount: '" + bn.getCommitsCount() + "', commitDate: '" + bn.getCommitDate() + "', buildnumber: '" + composite + "'");
+                        "', tag: '" + bn.getTag() + "', commitsCount: '" + bn.getCommitsCount() + "', commitDate: '" + bn.getCommitDate() + "', buildDate: '" + bn.getBuildDate() 
+                        + "', buildnumber: '" + composite + "'");
             } else if("pom".equals(parentProject.getPackaging())) {
                 // build started from parent, we are in subproject, lets provide parent properties to our project
                 Properties parentProps = parentProject.getProperties();
@@ -179,6 +187,7 @@ public class JGitBuildNumberMojo extends AbstractMojo {
                 props.setProperty(commitsCountProperty, parentProps.getProperty(commitsCountProperty));
                 props.setProperty(buildnumberProperty, parentProps.getProperty(buildnumberProperty));
 				props.setProperty(commitDateProperty, parentProps.getProperty(commitDateProperty));
+				props.setProperty(buildDateProperty, parentProps.getProperty(buildDateProperty));
             } else {
                 // should not happen
                 getLog().warn("Cannot extract JGit version: something wrong with build process, we're not in parent, not in subproject!");
@@ -199,6 +208,7 @@ public class JGitBuildNumberMojo extends AbstractMojo {
         props.setProperty(commitsCountProperty, "-1");
         props.setProperty(buildnumberProperty, "UNKNOWN_BUILDNUMBER");
 		props.setProperty(commitDateProperty, "UNKNOWN_COMMIT_DATE");
+		props.setProperty(buildDateProperty, "UNKNOWN_BUILD_DATE");
     }
 
     private String createBuildnumber(BuildNumber bn) throws ScriptException {
