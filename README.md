@@ -41,7 +41,7 @@ Usage in Maven 3
 
 Note: this plugin accesses Git repo only once during multi-module build.
 
-###Store raw buildnumber parts in MANIFEST.MF file
+### Store raw buildnumber parts in MANIFEST.MF file
 
 In this case extracted buildnumber parts are stored in manifest as is, and may be read from there on startup and composed into buildnumber.
 
@@ -96,7 +96,7 @@ Results exmple (from MANIFEST.MF):
     X-Git-Commits-Count: 30
     X-Git-Tag: 1.3.7
 
-###Create ready to use buildnumber
+### Create ready to use buildnumber
 
 Plugin may be configured to produce ready-to-use buildnumber into `git.buildnumber` property.
 By default buildnumber created as `<tag or branch>.<commitsCount>.<shortRevision>`.
@@ -134,7 +134,7 @@ Script engine is initialized only if `javaScriptBuildnumberCallback` is provided
 
 If JS snippet failed to execute, it won't break build process, Rhino error will be printed to Maven output and all properties will get "UNKNOWN" values.
 
-###Maven properties configuration:
+### Maven properties configuration:
 
  * `revisionProperty`, default: `git.revision`
  * `branchProperty`, default: `git.branch`
@@ -146,7 +146,11 @@ If JS snippet failed to execute, it won't break build process, Rhino error will 
  * `runOnlyAtExecutionRoot`: setting this parameter to 'false' allows to execute plugin
  in every submodule, not only in root one. Default: `true`.
  This feature was added by [bradszabo](https://github.com/bradszabo).
-
+ * `commitDateProperty`- the date of the last commit, default: `git.commitDate`
+ The following features were added by [akuhtz](https://github.com/akuhtz).
+ * `commitDateFormat`- the format used for commit date and build data, default: `yyyy-MM-dd`
+ * `buildDateProperty` - the current date when the plugin was executed during the build, default: `buildDate`
+ 
 Usage in Ant
 ------------
 
@@ -174,7 +178,7 @@ build.xml usage snippet:
         <echo>Git version extracted ${git.commitsCount} (${git.shortRevision})</echo>
     </target>
 
-###Ready to use buildnumber
+### Ready to use buildnumber
 
 Default buildnumber in form `<tag or branch>.<commitsCount>.<shortRevision>` will be put into property `git.buildnumber`.
 If you want to customize it, you can use Ant [Script task](http://ant.apache.org/manual/Tasks/script.html) like this:
