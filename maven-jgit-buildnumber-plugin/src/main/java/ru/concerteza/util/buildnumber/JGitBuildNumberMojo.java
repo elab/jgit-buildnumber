@@ -1,5 +1,12 @@
 package ru.concerteza.util.buildnumber;
 
+import java.io.File;
+import java.util.Properties;
+
+import javax.script.ScriptEngine;
+import javax.script.ScriptEngineManager;
+import javax.script.ScriptException;
+
 /**
  * User: alexey
  * Date: 11/16/11
@@ -9,12 +16,6 @@ import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.project.MavenProject;
-
-import javax.script.ScriptEngine;
-import javax.script.ScriptEngineManager;
-import javax.script.ScriptException;
-import java.io.File;
-import java.util.Properties;
 
 /**
  * Goal which creates build number.
@@ -135,14 +136,36 @@ public class JGitBuildNumberMojo extends AbstractMojo {
     private MavenProject parentProject;
 
     /**
-     * Extracts buildnumber fields from git repository and publishes them as maven properties.
-     * Executes only once per build. Return default (unknown) buildnumber fields on error.
+     * This will skip the plugin execution.
+     * 
+     * @parameter expression="${skip}"
+     */
+    private boolean skip;
+
+    public boolean isSkip() {
+        return skip;
+    }
+
+    public void setSkip(boolean skip) {
+        this.skip = skip;
+    }
+
+    /**
+     * Extracts buildnumber fields from git repository and publishes them as maven
+     * properties. Executes only once per build. Return default (unknown)
+     * buildnumber fields on error.
      *
      * @throws MojoExecutionException
      * @throws MojoFailureException
      */
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
+
+        if (isSkip()) {
+            getLog().info("Execution of plugin is skipped by configuration.");
+            return;
+        }
+
         Properties props = project.getProperties();
         try {
             // executes only once per build
