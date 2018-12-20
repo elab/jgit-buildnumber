@@ -168,9 +168,14 @@ public class JGitBuildNumberMojo extends AbstractMojo {
 
         Properties props = project.getProperties();
         try {
+            getLog().info("Current repositoryDirectory: " + repositoryDirectory + ", executionRootDirectory: " + executionRootDirectory + ", runOnlyAtExecutionRoot: " + runOnlyAtExecutionRoot);
+                
             // executes only once per build
             // http://www.sonatype.com/people/2009/05/how-to-make-a-plugin-run-once-during-a-build/
-            if (executionRootDirectory.equals(baseDirectory) || !runOnlyAtExecutionRoot) {
+            if ((executionRootDirectory.equals(baseDirectory) || !runOnlyAtExecutionRoot) 
+                || (executionRootDirectory.equals(repositoryDirectory.getParentFile()) && runOnlyAtExecutionRoot )) {
+                getLog().info("Get git info from repositoryDirectory: " + repositoryDirectory);
+                
                 long startMillis = System.currentTimeMillis();
                 
                 // build started from this projects root
