@@ -34,6 +34,7 @@ public class JGitBuildNumberAntTask {
      *     <li>{@code git.tag}</li>
      *     <li>{@code git.commitsCount}</li>
      *     <li>{@code git.buildnumber}</li>
+     *     <li>{@code git.authorDate}</li>
      *     <li>{@code git.commitDate}</li>
      * </ul>
      *
@@ -49,6 +50,7 @@ public class JGitBuildNumberAntTask {
         project.setProperty("git.tag", bn.getTag());
         project.setProperty("git.commitsCount", bn.getCommitsCountAsString());
         project.setProperty("git.buildnumber", bn.defaultBuildnumber());
+        project.setProperty("git.authorDate", bn.getAuthorDate());
         project.setProperty("git.commitDate", bn.getCommitDate());
     }
 }

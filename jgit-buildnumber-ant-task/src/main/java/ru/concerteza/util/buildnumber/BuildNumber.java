@@ -13,6 +13,7 @@ public class BuildNumber {
     private final String tag;
     private final String parent;
     private final int commitsCount;
+    private final String authorDate;
     private final String commitDate;
 
     /**
@@ -21,14 +22,16 @@ public class BuildNumber {
      * @param tag git tag name or multiple names concatenated with ";"
      * @param parent git revision or multiple revisions concatenated with ";"
      * @param commitsCount number of commits in current branch
+     * @param authorDate authored date of current revision
      * @param commitDate committed date of current revision
      */
-    public BuildNumber(String revision, String branch, String tag, String parent, int commitsCount, String commitDate) {
+    public BuildNumber(String revision, String branch, String tag, String parent, int commitsCount, String authorDate, String commitDate) {
         this.revision = revision;
         this.branch = branch;
         this.tag = tag;
         this.parent = parent;
         this.commitsCount = commitsCount;
+        this.authorDate = authorDate;
         this.commitDate = commitDate;
     }
 
@@ -90,6 +93,11 @@ public class BuildNumber {
     }
 
     /**
+     * @return authorDate of current commit
+     */
+    public String getAuthorDate() { return authorDate; }
+    
+    /**
      * @return commitDate of current commit
      */
     public String getCommitDate() { return commitDate; }
@@ -117,6 +125,7 @@ public class BuildNumber {
         sb.append(", tag='").append(tag).append('\'');
         sb.append(", parent='").append(parent).append('\'');
         sb.append(", commitsCount=").append(commitsCount);
+        sb.append(", authorDate=").append(authorDate);
         sb.append(", commitDate=").append(commitDate);
         sb.append('}');
         return sb.toString();

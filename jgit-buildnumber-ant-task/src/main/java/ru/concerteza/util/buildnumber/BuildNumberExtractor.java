@@ -53,9 +53,11 @@ public class BuildNumberExtractor {
             String parent = readCurrentParent(repo, revision);
             // count total commits
             int commitsCount = countCommits(repo, revisionObject);
+            // extract authored date of current revision
+            String authorDate = readAuthoredDate(repo, revision);
             // extract committed date of current revision
             String commitDate = readCommittedDate(repo, revision);
-            return new BuildNumber(revision, branch, tag, parent, commitsCount, commitDate);
+            return new BuildNumber(revision, branch, tag, parent, commitsCount, authorDate, commitDate);
         } finally {
             repo.close();
         }
@@ -94,6 +96,18 @@ public class BuildNumberExtractor {
             }
         }
         return parentsFormat;
+    }
+
+    /** @return authored date of the commit identified by `revision` as yyyy-MM-dd string */
+    private static String readAuthoredDate(FileRepository repo, String revision) throws IOException {
+        DateFormat df = new SimpleDateFormat("yyyy-MM-dd");
+        ObjectId rev = repo.resolve(revision);
+        if (null == rev) return EMPTY_STRING;
+        RevWalk rw = new RevWalk(repo);
+        RevCommit commit = rw.parseCommit(rev);
+        PersonIdent author = commit.getAuthorIdent();
+        Date authorDate = author.getWhen();
+        return df.format(authorDate);
     }
 
     /** @return committed date of the commit identified by `revision` as yyyy-MM-dd string */
