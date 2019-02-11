@@ -53,8 +53,8 @@ public class BuildNumberExtractor {
             String parent = readCurrentParent(repo, revision);
             // count total commits
             int commitsCount = countCommits(repo, revisionObject);
-			// extract date of current commit
-			String commitDate = readCurrentCommitDate(repo, revision);
+            // extract committed date of current revision
+            String commitDate = readCommittedDate(repo, revision);
             return new BuildNumber(revision, branch, tag, parent, commitsCount, commitDate);
         } finally {
             repo.close();
@@ -96,16 +96,17 @@ public class BuildNumberExtractor {
         return parentsFormat;
     }
 
-	private static String readCurrentCommitDate(FileRepository repo, String revision) throws IOException {
-		DateFormat df = new SimpleDateFormat("yyyy-MM-dd");
-		ObjectId rev = repo.resolve(revision);
-		if (null == rev) return EMPTY_STRING;
-		RevWalk rw = new RevWalk(repo);
-		RevCommit commit = rw.parseCommit(rev);
-		PersonIdent author = commit.getAuthorIdent();
-		Date commitDate = author.getWhen();
-		return df.format(commitDate);
-	}
+    /** @return committed date of the commit identified by `revision` as yyyy-MM-dd string */
+    private static String readCommittedDate(FileRepository repo, String revision) throws IOException {
+        DateFormat df = new SimpleDateFormat("yyyy-MM-dd");
+        ObjectId rev = repo.resolve(revision);
+        if (null == rev) return EMPTY_STRING;
+        RevWalk rw = new RevWalk(repo);
+        RevCommit commit = rw.parseCommit(rev);
+        PersonIdent committer = commit.getCommitterIdent();
+        Date committedDate = committer.getWhen();
+        return df.format(committedDate);
+    }
 
     // sha1 -> tag name
     private static Map<String, String> loadTagsMap(FileRepository repo) {

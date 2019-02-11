@@ -141,7 +141,7 @@ public class JGitBuildNumberMojo extends AbstractMojo {
                 props.setProperty(tagProperty, bn.getTag());
                 props.setProperty(parentProperty, bn.getParent());
                 props.setProperty(commitsCountProperty, bn.getCommitsCountAsString());
-				props.setProperty(commitDateProperty, bn.getCommitDate());
+                props.setProperty(commitDateProperty, bn.getCommitDate());
                 // create composite buildnumber
                 String composite = createBuildnumber(bn);
                 props.setProperty(buildnumberProperty, composite);
@@ -185,7 +185,7 @@ public class JGitBuildNumberMojo extends AbstractMojo {
         props.setProperty(parentProperty, "UNKNOWN_PARENT");
         props.setProperty(commitsCountProperty, "-1");
         props.setProperty(buildnumberProperty, "UNKNOWN_BUILDNUMBER");
-		props.setProperty(commitDateProperty, "UNKNOWN_COMMIT_DATE");
+        props.setProperty(commitDateProperty, "UNKNOWN_COMMIT_DATE");
     }
 
     private String createBuildnumber(BuildNumber bn) throws ScriptException {
@@ -201,7 +201,7 @@ public class JGitBuildNumberMojo extends AbstractMojo {
         jsEngine.put("parent", bn.getParent());
         jsEngine.put("shortRevision", bn.getShortRevision());
         jsEngine.put("commitsCount", bn.getCommitsCount());
-		jsEngine.put("commitDate", bn.getCommitDate());
+        jsEngine.put("commitDate", bn.getCommitDate());
         Object res = jsEngine.eval(javaScriptBuildnumberCallback);
         if(null == res) throw new IllegalStateException("JS buildnumber callback returns null");
         return res.toString();

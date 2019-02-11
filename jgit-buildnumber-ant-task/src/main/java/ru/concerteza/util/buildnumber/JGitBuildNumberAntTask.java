@@ -49,6 +49,6 @@ public class JGitBuildNumberAntTask {
         project.setProperty("git.tag", bn.getTag());
         project.setProperty("git.commitsCount", bn.getCommitsCountAsString());
         project.setProperty("git.buildnumber", bn.defaultBuildnumber());
-		project.setProperty("git.commitDate", bn.getCommitDate());
+        project.setProperty("git.commitDate", bn.getCommitDate());
     }
 }
