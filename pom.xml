@@ -6,14 +6,14 @@
         <artifactId>oss-parent</artifactId>
         <version>7</version>
     </parent>
-    <groupId>ru.concerteza.buildnumber</groupId>
+    <groupId>com.labun.buildnumber</groupId>
     <artifactId>jgit-buildnumber-parent</artifactId>
     <version>1.2.11-SNAPSHOT</version>
     <packaging>pom</packaging>
     <name>JGit Build Number Plugins For Maven And Ant</name>
 
     <description>Maven plugin and Ant task, extract buildnumbers from project's Git repository without Git command line tool</description>
-    <url>https://github.com/alx3apps/jgit-buildnumber</url>
+    <url>https://github.com/elab/jgit-buildnumber</url>
     <licenses>
         <license>
             <name>Apache License 2.0</name>
@@ -21,9 +21,9 @@
         </license>
     </licenses>
     <scm>
-        <url>https://github.com/alx3apps/jgit-buildnumber</url>
-        <connection>scm:git:https://github.com/alx3apps/jgit-buildnumber.git</connection>
-        <developerConnection>scm:git:https://github.com/alx3apps/jgit-buildnumber.git</developerConnection>
+        <url>https://github.com/elab/jgit-buildnumber</url>
+        <connection>scm:git:https://github.com/elab/jgit-buildnumber.git</connection>
+        <developerConnection>scm:git:https://github.com/elab/jgit-buildnumber.git</developerConnection>
       <tag>HEAD</tag>
   </scm>
     <developers>

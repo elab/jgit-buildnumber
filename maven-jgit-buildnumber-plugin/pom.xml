@@ -2,17 +2,17 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
-        <groupId>ru.concerteza.buildnumber</groupId>
+        <groupId>com.labun.buildnumber</groupId>
         <artifactId>jgit-buildnumber-parent</artifactId>
         <version>1.2.11-SNAPSHOT</version>
     </parent>
-    <artifactId>maven-jgit-buildnumber-plugin</artifactId>
+    <artifactId>jgit-buildnumber-maven-plugin</artifactId>
     <packaging>maven-plugin</packaging>
-    <name>Maven JGit Build Number Plugin</name>
+    <name>JGit Build Number Maven Plugin</name>
 
     <description>Maven plugin, extracts buildnumbers from project's Git repository without Git command line tool
     </description>
-    <url>https://github.com/alx3apps/jgit-buildnumber</url>
+    <url>https://github.com/elab/jgit-buildnumber</url>
     <licenses>
         <license>
             <name>Apache License 2.0</name>
@@ -20,8 +20,8 @@
         </license>
     </licenses>
     <scm>
-        <url>https://github.com/alx3apps/jgit-buildnumber</url>
-        <connection>scm:git:https://github.com/alx3apps/jgit-buildnumber.git</connection>
+        <url>https://github.com/elab/jgit-buildnumber</url>
+        <connection>scm:git:https://github.com/elab/jgit-buildnumber.git</connection>
         <tag>HEAD</tag>
     </scm>
     <developers>

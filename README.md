@@ -5,8 +5,8 @@ Allows to get git buildnumbers, while building java projects, in pure Java witho
 
 Note: Maven already has ubiquitous [buildnumber-maven-plugin](http://mojo.codehaus.org/buildnumber-maven-plugin/) , this project is NIH substitution for it with Git support only.
 
-Plugin was added to [Maven central](http://repo1.maven.org/maven2/ru/concerteza/buildnumber/maven-jgit-buildnumber-plugin/).
-Maven-generated site is available [here](http://alx3apps.github.com/jgit-buildnumber).
+Plugin was added to [Maven central](http://repo1.maven.org/maven2/com/labun/jgit-buildnumber-maven-plugin/).
+Maven-generated site is available [here](http://elab.github.com/jgit-buildnumber).
 
 Build number
 ------------
@@ -49,8 +49,8 @@ Plugin config:
 
     <!-- enable JGit plugin -->
     <plugin>
-        <groupId>ru.concerteza.buildnumber</groupId>
-        <artifactId>maven-jgit-buildnumber-plugin</artifactId>
+        <groupId>com.labun.buildnumber</groupId>
+        <artifactId>jgit-buildnumber-maven-plugin</artifactId>
         <version>1.2.9</version>
         <executions>
             <execution>
@@ -109,8 +109,8 @@ by [Rhino JS engine](http://www.mozilla.org/rhino/) included with JDK6.
 Configuration example:
 
     <plugin>
-        <groupId>ru.concerteza.buildnumber</groupId>
-        <artifactId>maven-jgit-buildnumber-plugin</artifactId>
+        <groupId>com.labun.buildnumber</groupId>
+        <artifactId>jgit-buildnumber-maven-plugin</artifactId>
         <version>1.2.9</version>
         <executions>
             <execution>
