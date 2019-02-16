@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<lifecycleMappingMetadata>
+    <pluginExecutions>
+        <pluginExecution>
+            <pluginExecutionFilter>
+                <goals>
+                    <goal>extract-buildnumber</goal>
+                </goals>
+            </pluginExecutionFilter>
+            <action>
+                <!-- enable plugin for m2e builds, e.g. triggered by local deployments to JEE application servers -->
+                <execute>
+                    <!-- we are fast enough to run always: 20-50 ms on average -->
+                    <runOnIncremental>true</runOnIncremental>
+                    <runOnConfiguration>true</runOnConfiguration>
+                    <!-- no need to use plexus-build-api BuildContext, since we don't process/change any resources -->
+                </execute>
+            </action>
+        </pluginExecution>
+    </pluginExecutions>
+</lifecycleMappingMetadata>
