@@ -51,7 +51,7 @@
     </developers>
 
     <modules>
-        <module>maven-jgit-buildnumber-plugin</module>
+        <module>jgit-buildnumber-maven-plugin</module>
         <module>jgit-buildnumber-ant-task</module>
     </modules>
 
