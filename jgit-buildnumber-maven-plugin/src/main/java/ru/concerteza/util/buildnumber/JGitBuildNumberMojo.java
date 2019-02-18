@@ -26,86 +26,86 @@ public class JGitBuildNumberMojo extends AbstractMojo {
     /**
      * Revision property name
      *
-     * @parameter expression="${revisionProperty}"
+     * @parameter property="revisionProperty"
      */
     private String revisionProperty = "git.revision";
     /**
      * Short revision property name
      *
-     * @parameter expression="${shortRevisionProperty}"
+     * @parameter property="shortRevisionProperty"
      */
     private String shortRevisionProperty = "git.shortRevision";
 
     /**
      * Branch property name
      *
-     * @parameter expression="${branchProperty}"
+     * @parameter property="branchProperty"
      */
     private String branchProperty = "git.branch";
     /**
      * Tag property name
      *
-     * @parameter expression="${tagProperty}"
+     * @parameter property="tagProperty"
      */
     private String tagProperty = "git.tag";
     /**
      * Parent property name
      *
-     * @parameter expression="${parentProperty}"
+     * @parameter property="parentProperty"
      */
     private String parentProperty = "git.parent";
     /**
      * Commits count property name
      *
-     * @parameter expression="${commitsCountProperty}"
+     * @parameter property="commitsCountProperty"
      */
     private String commitsCountProperty = "git.commitsCount";
     /**
      * Buildnumber property name
      *
-     * @parameter expression="${buildnumberProperty}"
+     * @parameter property="buildnumberProperty"
      */
     private String buildnumberProperty = "git.buildnumber";
     /**
      * authorDate property name
      *
-     * @parameter expression="${authorDateProperty}"
+     * @parameter property="authorDateProperty"
      */
     private String authorDateProperty = "git.authorDate";
     /**
      * commitDate property name
      *
-     * @parameter expression="${commitDateProperty}"
+     * @parameter property="commitDateProperty"
      */
     private String commitDateProperty = "git.commitDate";
     /**
      * Java Script buildnumber callback
      *
-     * @parameter expression="${javaScriptBuildnumberCallback}"
+     * @parameter property="javaScriptBuildnumberCallback"
      */
     private String javaScriptBuildnumberCallback = null;
     /**
      * Setting this parameter to 'false' allows to execute plugin in every
      * submodule, not only in root one.
      *
-     * @parameter expression="${runOnlyAtExecutionRoot}" default-value="true"
+     * @parameter property="runOnlyAtExecutionRoot" default-value="true"
      */
     private boolean runOnlyAtExecutionRoot;
     /**
      * Directory to start searching git root from, should contain '.git' directory
      * or be a subdirectory of such directory. '${project.basedir}' is used by default.
      *
-     * @parameter expression="${repositoryDirectory}" default-value="${project.basedir}"
+     * @parameter property="repositoryDirectory" default-value="${project.basedir}"
      */
     private File repositoryDirectory;
     /**
-     * @parameter expression="${project.basedir}"
+     * @parameter property="project.basedir"
      * @required
      * @readonly
      */
     private File baseDirectory;
     /**
-     * @parameter expression="${session.executionRootDirectory}"
+     * @parameter property="session.executionRootDirectory"
      * @required
      * @readonly
      */
@@ -113,14 +113,14 @@ public class JGitBuildNumberMojo extends AbstractMojo {
     /**
      * The maven project.
      *
-     * @parameter expression="${project}"
+     * @parameter property="project"
      * @readonly
      */
     private MavenProject project;
      /**
      * The maven parent project.
      *
-     * @parameter expression="${project.parent}"
+     * @parameter property="project.parent"
      * @readonly
      */
     private MavenProject parentProject;
