@@ -32,7 +32,7 @@ public class BuildNumberExtractor {
      * @param repoDirectory directory to start searching git root from, should contain '.git' directory
      *                      or be a subdirectory of such directory
      * @return extracted buildnumber object
-     * @throws IOException
+     * @throws IOException if git repo not found or cannot be read
      */
     public static BuildNumber extract(File repoDirectory) throws IOException {
         if(!(repoDirectory.exists() && repoDirectory.isDirectory())) throw new IOException(

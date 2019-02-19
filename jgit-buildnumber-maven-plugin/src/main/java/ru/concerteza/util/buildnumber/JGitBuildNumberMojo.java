@@ -1,136 +1,121 @@
 package ru.concerteza.util.buildnumber;
 
-/**
- * User: alexey
- * Date: 11/16/11
- */
+import java.io.File;
+import java.util.List;
+import java.util.Properties;
+
+import javax.script.ScriptEngine;
+import javax.script.ScriptEngineFactory;
+import javax.script.ScriptEngineManager;
+import javax.script.ScriptException;
 
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
+import org.apache.maven.plugins.annotations.LifecyclePhase;
+import org.apache.maven.plugins.annotations.Mojo;
+import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
-
-import javax.script.ScriptEngine;
-import javax.script.ScriptEngineManager;
-import javax.script.ScriptException;
-import java.io.File;
-import java.util.Properties;
 
 /**
  * Goal which creates build number.
- *
- * @goal extract-buildnumber
- * @phase prepare-package
  */
+@Mojo(name = "extract-buildnumber", defaultPhase = LifecyclePhase.PREPARE_PACKAGE)
 public class JGitBuildNumberMojo extends AbstractMojo {
     /**
      * Revision property name
      *
-     * @parameter property="revisionProperty"
      */
+    @Parameter(property = "revisionProperty")
     private String revisionProperty = "git.revision";
     /**
      * Short revision property name
      *
-     * @parameter property="shortRevisionProperty"
      */
+    @Parameter(property = "shortRevisionProperty")
     private String shortRevisionProperty = "git.shortRevision";
 
     /**
      * Branch property name
      *
-     * @parameter property="branchProperty"
      */
+    @Parameter(property = "branchProperty")
     private String branchProperty = "git.branch";
     /**
      * Tag property name
      *
-     * @parameter property="tagProperty"
      */
+    @Parameter(property = "tagProperty")
     private String tagProperty = "git.tag";
     /**
      * Parent property name
      *
-     * @parameter property="parentProperty"
      */
+    @Parameter(property = "parentProperty")
     private String parentProperty = "git.parent";
     /**
      * Commits count property name
      *
-     * @parameter property="commitsCountProperty"
      */
+    @Parameter(property = "commitsCountProperty")
     private String commitsCountProperty = "git.commitsCount";
     /**
      * Buildnumber property name
      *
-     * @parameter property="buildnumberProperty"
      */
+    @Parameter(property = "buildnumberProperty")
     private String buildnumberProperty = "git.buildnumber";
     /**
      * authorDate property name
      *
-     * @parameter property="authorDateProperty"
      */
+    @Parameter(property = "authorDateProperty")
     private String authorDateProperty = "git.authorDate";
     /**
      * commitDate property name
      *
-     * @parameter property="commitDateProperty"
      */
+    @Parameter(property = "commitDateProperty")
     private String commitDateProperty = "git.commitDate";
     /**
      * Java Script buildnumber callback
      *
-     * @parameter property="javaScriptBuildnumberCallback"
      */
+    @Parameter(property = "javaScriptBuildnumberCallback")
     private String javaScriptBuildnumberCallback = null;
     /**
      * Setting this parameter to 'false' allows to execute plugin in every
      * submodule, not only in root one.
      *
-     * @parameter property="runOnlyAtExecutionRoot" default-value="true"
      */
+    @Parameter(property = "runOnlyAtExecutionRoot", defaultValue = "true")
     private boolean runOnlyAtExecutionRoot;
     /**
      * Directory to start searching git root from, should contain '.git' directory
      * or be a subdirectory of such directory. '${project.basedir}' is used by default.
-     *
-     * @parameter property="repositoryDirectory" default-value="${project.basedir}"
      */
+    @Parameter(property = "repositoryDirectory", defaultValue = "${project.basedir}")
     private File repositoryDirectory;
-    /**
-     * @parameter property="project.basedir"
-     * @required
-     * @readonly
-     */
+
+    @Parameter(property = "project.basedir", readonly = true, required = true)
     private File baseDirectory;
-    /**
-     * @parameter property="session.executionRootDirectory"
-     * @required
-     * @readonly
-     */
+
+    @Parameter(property = "session.executionRootDirectory", readonly = true, required = true)
     private File executionRootDirectory;
     /**
      * The maven project.
-     *
-     * @parameter property="project"
-     * @readonly
      */
+    @Parameter(property = "project", readonly = true)
     private MavenProject project;
      /**
      * The maven parent project.
-     *
-     * @parameter property="project.parent"
-     * @readonly
      */
+    @Parameter(property = "project.parent", readonly = true)
     private MavenProject parentProject;
 
     /**
      * Extracts buildnumber fields from git repository and publishes them as maven properties.
      * Executes only once per build. Return default (unknown) buildnumber fields on error.
-     *
-     * @throws MojoExecutionException
-     * @throws MojoFailureException
      */
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {

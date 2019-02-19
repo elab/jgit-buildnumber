@@ -37,8 +37,7 @@ public class JGitBuildNumberAntTask {
      *     <li>{@code git.authorDate}</li>
      *     <li>{@code git.commitDate}</li>
      * </ul>
-     *
-     * @throws IOException
+     * @throws IOException if git repo not found or cannot be read
      */
     public void execute() throws IOException {
         String repoDirString = project.getProperty("git.repositoryDirectory");
