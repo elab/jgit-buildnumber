@@ -10,8 +10,7 @@
     <packaging>maven-plugin</packaging>
     <name>JGit Build Number Maven Plugin</name>
 
-    <description>Maven plugin, extracts buildnumbers from project's Git repository without Git command line tool
-    </description>
+    <description>Maven plugin, extracts buildnumbers from project's Git repository without Git command line tool</description>
     <url>https://github.com/elab/jgit-buildnumber</url>
     <licenses>
         <license>
@@ -66,7 +65,6 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-source-plugin</artifactId>
-                <version>2.1.2</version>
             </plugin>
         </plugins>
     </build>
@@ -76,7 +74,6 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-plugin-plugin</artifactId>
-                <version>3.1</version>
             </plugin>
         </plugins>
     </reporting>

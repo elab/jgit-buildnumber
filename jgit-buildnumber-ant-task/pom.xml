@@ -21,8 +21,8 @@
     <scm>
         <url>https://github.com/elab/jgit-buildnumber</url>
         <connection>scm:git:https://github.com/elab/jgit-buildnumber.git</connection>
-      <tag>HEAD</tag>
-  </scm>
+        <tag>HEAD</tag>
+    </scm>
     <developers>
         <developer>
             <name>Alex Kasko (alx3apps)</name>
