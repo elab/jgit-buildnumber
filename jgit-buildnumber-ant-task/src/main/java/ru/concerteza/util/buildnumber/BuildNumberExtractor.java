@@ -1,14 +1,5 @@
 package ru.concerteza.util.buildnumber;
 
-import org.eclipse.jgit.lib.Constants;
-import org.eclipse.jgit.lib.ObjectId;
-import org.eclipse.jgit.lib.PersonIdent;
-import org.eclipse.jgit.lib.Ref;
-import org.eclipse.jgit.revwalk.RevCommit;
-import org.eclipse.jgit.revwalk.RevWalk;
-import org.eclipse.jgit.storage.file.FileRepository;
-import org.eclipse.jgit.storage.file.FileRepositoryBuilder;
-
 import java.io.File;
 import java.io.IOException;
 import java.text.DateFormat;
@@ -16,6 +7,15 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+
+import org.eclipse.jgit.lib.Constants;
+import org.eclipse.jgit.lib.ObjectId;
+import org.eclipse.jgit.lib.PersonIdent;
+import org.eclipse.jgit.lib.Ref;
+import org.eclipse.jgit.lib.Repository;
+import org.eclipse.jgit.lib.RepositoryBuilder;
+import org.eclipse.jgit.revwalk.RevCommit;
+import org.eclipse.jgit.revwalk.RevWalk;
 
 /**
  * Extracts buildnumber fields from git repository. Put it here, not in common module, because we don't want
@@ -39,7 +39,7 @@ public class BuildNumberExtractor {
                 "Invalid repository directory provided: " + repoDirectory.getAbsolutePath());
         // open repo, jgit has some problems with not canonical paths
         File canonicalRepo = repoDirectory.getCanonicalFile();
-        FileRepository repo = new FileRepositoryBuilder().findGitDir(canonicalRepo).build();
+        Repository repo = new RepositoryBuilder().findGitDir(canonicalRepo).build();
         try {
             // extract HEAD revision
             ObjectId revisionObject = repo.resolve(Constants.HEAD);
@@ -63,7 +63,7 @@ public class BuildNumberExtractor {
         }
     }
 
-    private static String readCurrentBranch(FileRepository repo, String revision) throws IOException {
+    private static String readCurrentBranch(Repository repo, String revision) throws IOException {
         String branch = repo.getBranch();
         // should not happen
         if (null == branch) return EMPTY_STRING;
@@ -71,14 +71,14 @@ public class BuildNumberExtractor {
         return branch;
     }
 
-    private static String readCurrentTag(FileRepository repo, String revision) {
+    private static String readCurrentTag(Repository repo, String revision) {
         Map<String, String> tagMap = loadTagsMap(repo);
         String tag = tagMap.get(revision);
         if (null == tag) return EMPTY_STRING;
         return tag;
     }
 
-    private static String readCurrentParent(FileRepository repo, String revision) throws IOException {
+    private static String readCurrentParent(Repository repo, String revision) throws IOException {
         ObjectId rev = repo.resolve(revision);
         if (null == rev) return EMPTY_STRING;
         RevWalk rw = new RevWalk(repo);
@@ -99,7 +99,7 @@ public class BuildNumberExtractor {
     }
 
     /** @return authored date of the commit identified by `revision` as yyyy-MM-dd string */
-    private static String readAuthoredDate(FileRepository repo, String revision) throws IOException {
+    private static String readAuthoredDate(Repository repo, String revision) throws IOException {
         DateFormat df = new SimpleDateFormat("yyyy-MM-dd");
         ObjectId rev = repo.resolve(revision);
         if (null == rev) return EMPTY_STRING;
@@ -111,7 +111,7 @@ public class BuildNumberExtractor {
     }
 
     /** @return committed date of the commit identified by `revision` as yyyy-MM-dd string */
-    private static String readCommittedDate(FileRepository repo, String revision) throws IOException {
+    private static String readCommittedDate(Repository repo, String revision) throws IOException {
         DateFormat df = new SimpleDateFormat("yyyy-MM-dd");
         ObjectId rev = repo.resolve(revision);
         if (null == rev) return EMPTY_STRING;
@@ -123,7 +123,7 @@ public class BuildNumberExtractor {
     }
 
     // sha1 -> tag name
-    private static Map<String, String> loadTagsMap(FileRepository repo) {
+    private static Map<String, String> loadTagsMap(Repository repo) {
         Map<String, Ref> refMap = repo.getTags();
         Map<String, String> res = new HashMap<String, String>(refMap.size());
         for (Map.Entry<String, Ref> en : refMap.entrySet()) {
@@ -141,14 +141,14 @@ public class BuildNumberExtractor {
     }
 
     // search for sha1 corresponding to annotated tag
-    private static String extractPeeledSha1(FileRepository repo, Ref ref) {
+    private static String extractPeeledSha1(Repository repo, Ref ref) {
         Ref peeled = repo.peel(ref);
         ObjectId oid = peeled.getPeeledObjectId();
         return null != oid ? oid.name() : peeled.getObjectId().name();
     }
 
     // takes about 1 sec to count 69939 in intellijidea repo
-    private static int countCommits(FileRepository repo, ObjectId revision) throws IOException {
+    private static int countCommits(Repository repo, ObjectId revision) throws IOException {
         RevWalk walk = new RevWalk(repo);
         walk.setRetainBody(false);
         RevCommit head = walk.parseCommit(revision);

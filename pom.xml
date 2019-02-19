@@ -57,6 +57,7 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <jgit.version>5.2.1.201812262042-r</jgit.version>
     </properties>
 
     <build>
@@ -70,6 +71,12 @@
                         <source>1.6</source>
                         <target>1.6</target>
                     </configuration>
+                </plugin>
+                <!-- https://stackoverflow.com/questions/38547239/maven-plugin-plugindescriptor-goal-fails-at-the-and-of-file -->
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-plugin-plugin</artifactId>
+                    <version>3.4</version>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
