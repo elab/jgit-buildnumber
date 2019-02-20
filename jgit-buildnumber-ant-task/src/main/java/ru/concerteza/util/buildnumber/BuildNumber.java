@@ -15,6 +15,7 @@ public class BuildNumber {
     private final int commitsCount;
     private final String authorDate;
     private final String commitDate;
+    private final String describe;
 
     /**
      * @param revision git revision
@@ -25,7 +26,7 @@ public class BuildNumber {
      * @param authorDate authored date of current revision
      * @param commitDate committed date of current revision
      */
-    public BuildNumber(String revision, String branch, String tag, String parent, int commitsCount, String authorDate, String commitDate) {
+    public BuildNumber(String revision, String branch, String tag, String parent, int commitsCount, String authorDate, String commitDate, String describe) {
         this.revision = revision;
         this.branch = branch;
         this.tag = tag;
@@ -33,6 +34,7 @@ public class BuildNumber {
         this.commitsCount = commitsCount;
         this.authorDate = authorDate;
         this.commitDate = commitDate;
+        this.describe = describe;
     }
 
     /**
@@ -103,6 +105,11 @@ public class BuildNumber {
     public String getCommitDate() { return commitDate; }
 
     /**
+     * @return describe result of current commit
+     */
+    public String getDescribe() { return describe; }
+
+    /**
      * @return buildnumber string in form {@code <tag or branch>.<commitsCount>.<shortRevision>}
      */
     public String defaultBuildnumber() {
@@ -127,6 +134,7 @@ public class BuildNumber {
         sb.append(", commitsCount=").append(commitsCount);
         sb.append(", authorDate=").append(authorDate);
         sb.append(", commitDate=").append(commitDate);
+        sb.append(", describe=").append(describe);
         sb.append('}');
         return sb.toString();
     }

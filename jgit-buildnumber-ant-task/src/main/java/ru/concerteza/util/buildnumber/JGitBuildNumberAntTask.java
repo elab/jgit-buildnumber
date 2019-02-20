@@ -1,9 +1,8 @@
 package ru.concerteza.util.buildnumber;
 
-import org.apache.tools.ant.Project;
-
 import java.io.File;
-import java.io.IOException;
+
+import org.apache.tools.ant.Project;
 
 /**
  * Ant task, extracts buildnumber fields from git repository and publishes them as ant properties
@@ -37,9 +36,9 @@ public class JGitBuildNumberAntTask {
      *     <li>{@code git.authorDate}</li>
      *     <li>{@code git.commitDate}</li>
      * </ul>
-     * @throws IOException if git repo not found or cannot be read
+     * @throws Exception if git repo not found or cannot be read
      */
-    public void execute() throws IOException {
+    public void execute() throws Exception {
         String repoDirString = project.getProperty("git.repositoryDirectory");
         File repoDir = null != repoDirString ? new File(repoDirString) :  new File(".");
         BuildNumber bn = BuildNumberExtractor.extract(repoDir);

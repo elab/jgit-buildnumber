@@ -8,6 +8,8 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.eclipse.jgit.api.Git;
+import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.lib.Constants;
 import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.PersonIdent;
@@ -32,9 +34,9 @@ public class BuildNumberExtractor {
      * @param repoDirectory directory to start searching git root from, should contain '.git' directory
      *                      or be a subdirectory of such directory
      * @return extracted buildnumber object
-     * @throws IOException if git repo not found or cannot be read
+     * @throws Exception if git repo not found or cannot be read
      */
-    public static BuildNumber extract(File repoDirectory) throws IOException {
+    public static BuildNumber extract(File repoDirectory) throws Exception {
         if(!(repoDirectory.exists() && repoDirectory.isDirectory())) throw new IOException(
                 "Invalid repository directory provided: " + repoDirectory.getAbsolutePath());
         // open repo, jgit has some problems with not canonical paths
@@ -57,7 +59,9 @@ public class BuildNumberExtractor {
             String authorDate = readAuthoredDate(repo, revision);
             // extract committed date of current revision
             String commitDate = readCommittedDate(repo, revision);
-            return new BuildNumber(revision, branch, tag, parent, commitsCount, authorDate, commitDate);
+            // extract describe result of current revision
+            String describe = readDescribe(repo);
+            return new BuildNumber(revision, branch, tag, parent, commitsCount, authorDate, commitDate, describe);
         } finally {
             repo.close();
         }
@@ -120,6 +124,10 @@ public class BuildNumberExtractor {
         PersonIdent committer = commit.getCommitterIdent();
         Date committedDate = committer.getWhen();
         return df.format(committedDate);
+    }
+
+    private static String readDescribe(Repository repo) throws IOException, GitAPIException {
+        return new Git(repo).describe().setLong(true).call();
     }
 
     // sha1 -> tag name

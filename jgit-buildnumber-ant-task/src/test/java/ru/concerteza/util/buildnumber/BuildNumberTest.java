@@ -14,7 +14,7 @@ public class BuildNumberTest {
 
     @Before
     public void beforeEachTest() throws IOException {
-	buildNumber = new BuildNumber("1234567890", "branch", "tag", "parent", 37, "2019-01-01", "2019-02-20");
+	buildNumber = new BuildNumber("1234567890", "branch", "tag", "parent", 37, "2019-01-01", "2019-02-20", "1.2.10-15-g4942ddb");
     }
 
     @Test
@@ -54,13 +54,13 @@ public class BuildNumberTest {
 
     @Test
     public void setsBranchAsNameIfTagIsNotPresent() throws IOException {
-	BuildNumber buildNumber = new BuildNumber("1234567890", "branch", "", "parent", 37, "2019-01-01", "2019-02-20");
+	BuildNumber buildNumber = new BuildNumber("1234567890", "branch", "", "parent", 37, "2019-01-01", "2019-02-20", "1.2.10-15-g4942ddb");
 	assertThat(buildNumber.defaultBuildnumber(), is("branch.37.1234567"));
     }
 
     @Test
     public void setsUNNAMEDAsNameIdTagAndBranchAreNotPresent() throws IOException {
-	BuildNumber buildNumber = new BuildNumber("1234567890", "", "", "parent", 37, "2019-01-01", "2019-02-20");
+	BuildNumber buildNumber = new BuildNumber("1234567890", "", "", "parent", 37, "2019-01-01", "2019-02-20", "1.2.10-15-g4942ddb");
 	assertThat(buildNumber.defaultBuildnumber(), is("UNNAMED.37.1234567"));
     }
 }

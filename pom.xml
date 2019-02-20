@@ -60,8 +60,17 @@
             <url>https://github.com/teleshoes</url>
         </developer>
         <developer>
+            <name>Eugen Labun</name>
+            <email>labun@gmx.net</email>
+            <url>https://github.com/elab</url>
+        </developer>
+        <developer>
             <name>Mikhail Kopylov</name>
             <url>https://github.com/mih-kopylov</url>
+        </developer>
+        <developer>
+            <name>Rick Osborne</name>
+            <url>https://github.com/rickosborne</url>
         </developer>
     </developers>
 

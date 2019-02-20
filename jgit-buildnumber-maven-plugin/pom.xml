@@ -29,6 +29,15 @@
             <email>alx3apps@gmail.com</email>
             <url>http://alexkasko.com</url>
         </developer>
+        <developer>
+            <name>Eugen Labun</name>
+            <email>labun@gmx.net</email>
+            <url>https://github.com/elab</url>
+        </developer>
+        <developer>
+            <name>Rick Osborne</name>
+            <url>https://github.com/rickosborne</url>
+        </developer>
     </developers>
 
     <dependencies>
