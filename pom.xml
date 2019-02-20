@@ -59,6 +59,10 @@
             <name>Elliot Wolk</name>
             <url>https://github.com/teleshoes</url>
         </developer>
+        <developer>
+            <name>Mikhail Kopylov</name>
+            <url>https://github.com/mih-kopylov</url>
+        </developer>
     </developers>
 
     <modules>

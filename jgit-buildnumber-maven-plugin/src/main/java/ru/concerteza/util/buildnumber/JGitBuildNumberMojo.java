@@ -188,7 +188,11 @@ public class JGitBuildNumberMojo extends AbstractMojo {
     }
 
     private String buildnumberFromJS(BuildNumber bn) throws ScriptException {
-        ScriptEngine jsEngine = new ScriptEngineManager().getEngineByName("JavaScript");
+        String engineName = "JavaScript";
+        ScriptEngine jsEngine = new ScriptEngineManager().getEngineByName(engineName);
+        if (jsEngine == null) {
+            jsEngine = new ScriptEngineManager(null).getEngineByName(engineName);
+        }
         jsEngine.put("tag", bn.getTag());
         jsEngine.put("branch", bn.getBranch());
         jsEngine.put("revision", bn.getRevision());
