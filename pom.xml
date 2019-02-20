@@ -72,6 +72,11 @@
             <name>Rick Osborne</name>
             <url>https://github.com/rickosborne</url>
         </developer>
+        <developer>
+            <name>Austin Doupnik</name>
+            <email>austin.doupnik@bina.roche.com</email>
+            <url>https://github.com/binalabs</url>
+        </developer>
     </developers>
 
     <modules>

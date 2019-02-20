@@ -38,6 +38,11 @@
             <email>labun@gmx.net</email>
             <url>https://github.com/elab</url>
         </developer>
+        <developer>
+            <name>Austin Doupnik</name>
+            <email>austin.doupnik@bina.roche.com</email>
+            <url>https://github.com/binalabs</url>
+        </developer>
     </developers>
 
     <dependencies>
