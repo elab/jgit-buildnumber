@@ -31,24 +31,30 @@ public class JGitBuildNumberAntTask {
      *     <li>{@code git.shortRevision}</li>
      *     <li>{@code git.branch}</li>
      *     <li>{@code git.tag}</li>
+     *     <li>{@code git.parent}</li>
      *     <li>{@code git.commitsCount}</li>
-     *     <li>{@code git.buildnumber}</li>
      *     <li>{@code git.authorDate}</li>
      *     <li>{@code git.commitDate}</li>
+     *     <li>{@code git.describe}</li>
+     *     <li>{@code git.buildDate}</li>
+     *     <li>{@code git.buildnumber}</li>
      * </ul>
      * @throws Exception if git repo not found or cannot be read
      */
     public void execute() throws Exception {
         String repoDirString = project.getProperty("git.repositoryDirectory");
         File repoDir = null != repoDirString ? new File(repoDirString) :  new File(".");
-        BuildNumber bn = BuildNumberExtractor.extract(repoDir);
+        BuildNumber bn = BuildNumberExtractor.extract(repoDir, "yyyy-MM-dd", "yyyy-MM-dd HH:mm:ss");
         project.setProperty("git.revision", bn.getRevision());
         project.setProperty("git.shortRevision", bn.getShortRevision());
         project.setProperty("git.branch", bn.getBranch());
         project.setProperty("git.tag", bn.getTag());
+        project.setProperty("git.parent", bn.getParent());
         project.setProperty("git.commitsCount", bn.getCommitsCountAsString());
-        project.setProperty("git.buildnumber", bn.defaultBuildnumber());
         project.setProperty("git.authorDate", bn.getAuthorDate());
         project.setProperty("git.commitDate", bn.getCommitDate());
+        project.setProperty("git.describe", bn.getDescribe());
+        project.setProperty("git.buildDate", bn.getBuildDate());
+        project.setProperty("git.buildnumber", bn.defaultBuildnumber());
     }
 }

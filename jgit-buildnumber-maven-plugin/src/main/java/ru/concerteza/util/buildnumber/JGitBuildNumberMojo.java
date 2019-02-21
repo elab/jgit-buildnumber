@@ -37,9 +37,6 @@ public class JGitBuildNumberMojo extends AbstractMojo {
     @Parameter(property = "commitsCountProperty")
     private String commitsCountProperty = "git.commitsCount";
 
-    @Parameter(property = "buildnumberProperty")
-    private String buildnumberProperty = "git.buildnumber";
-
     @Parameter(property = "authorDateProperty")
     private String authorDateProperty = "git.authorDate";
 
@@ -49,12 +46,30 @@ public class JGitBuildNumberMojo extends AbstractMojo {
     @Parameter(property = "describeProperty")
     private String describeProperty = "git.describe";
 
+    @Parameter(property = "buildDateProperty", readonly = true)
+    private String buildDateProperty = "git.buildDate";
+
+    @Parameter(property = "buildnumberProperty")
+    private String buildnumberProperty = "git.buildnumber";
+
+    /** Which format to use for Git authorDate and Git commitDate. */
+    @Parameter(property = "gitDateFormat", defaultValue = "yyyy-MM-dd")
+    private String gitDateFormat;
+
+    /** Which format to use for buildDate. */
+    @Parameter(property = "buildDateFormat", defaultValue = "yyyy-MM-dd HH:mm:ss")
+    private String buildDateFormat;
+    
     @Parameter(property = "javaScriptBuildnumberCallback")
-    private String javaScriptBuildnumberCallback = null;
+    private String javaScriptBuildnumberCallback;
 
     /** Setting this parameter to 'false' allows to execute plugin in every submodule, not only in root one. */
     @Parameter(property = "runOnlyAtExecutionRoot", defaultValue = "true")
     private boolean runOnlyAtExecutionRoot;
+
+    /** Setting this parameter to 'true' will skip plugin execution. */
+    @Parameter(property = "skip", defaultValue = "false")
+    private boolean skip;
 
     /** Directory to start searching git root from, should contain '.git' directory
      *  or be a subdirectory of such directory. '${project.basedir}' is used by default. */
@@ -79,14 +94,25 @@ public class JGitBuildNumberMojo extends AbstractMojo {
      *  Executes only once per build. Return default (unknown) buildnumber fields on error. */
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
+        if (skip) {
+            getLog().info("Execution of plugin is skipped by configuration.");
+            return;
+        }
+        
         Properties props = project.getProperties();
         try {
+            getLog().info("executionRootDirectory: " + executionRootDirectory + ", runOnlyAtExecutionRoot: " + runOnlyAtExecutionRoot + ", baseDirectory: " + baseDirectory + ", repositoryDirectory: " + repositoryDirectory);
+
             // executes only once per build
             // http://www.sonatype.com/people/2009/05/how-to-make-a-plugin-run-once-during-a-build/
-            if (executionRootDirectory.equals(baseDirectory) || !runOnlyAtExecutionRoot) {
+            if (!runOnlyAtExecutionRoot || executionRootDirectory.equals(baseDirectory) 
+                || (executionRootDirectory.equals(repositoryDirectory.getParentFile()) && runOnlyAtExecutionRoot )) {
+                getLog().info("Getting git info from repositoryDirectory: " + repositoryDirectory);
+
                 long startMillis = System.currentTimeMillis();
+                
                 // build started from this projects root
-                BuildNumber bn = BuildNumberExtractor.extract(repositoryDirectory);
+                BuildNumber bn = BuildNumberExtractor.extract(repositoryDirectory, gitDateFormat, buildDateFormat);
                 props.setProperty(revisionProperty, bn.getRevision());
                 props.setProperty(shortRevisionProperty, bn.getShortRevision());
                 props.setProperty(branchProperty, bn.getBranch());
@@ -96,13 +122,15 @@ public class JGitBuildNumberMojo extends AbstractMojo {
                 props.setProperty(authorDateProperty, bn.getAuthorDate());
                 props.setProperty(commitDateProperty, bn.getCommitDate());
                 props.setProperty(describeProperty, bn.getDescribe());
+                props.setProperty(buildDateProperty, bn.getBuildDate());
                 // create composite buildnumber
                 String composite = createBuildnumber(bn);
                 props.setProperty(buildnumberProperty, composite);
+                
                 long durationMillis = System.currentTimeMillis() - startMillis;
                 getLog().info(String.format(
-                    "Git info extracted in %d ms, shortRevision: '%s', branch: '%s', tag: '%s', commitsCount: '%d', authorDate: '%s', commitDate: '%s', describe: '%s', buildNumber: '%s'",
-                    durationMillis, bn.getShortRevision(), bn.getBranch(), bn.getTag(), bn.getCommitsCount(), bn.getAuthorDate(), bn.getCommitDate(), bn.getDescribe(), composite
+                    "Git info extracted in %d ms, shortRevision: '%s', branch: '%s', tag: '%s', commitsCount: '%d', authorDate: '%s', commitDate: '%s', describe: '%s', buildDate: '%s', buildNumber: '%s'",
+                    durationMillis, bn.getShortRevision(), bn.getBranch(), bn.getTag(), bn.getCommitsCount(), bn.getAuthorDate(), bn.getCommitDate(), bn.getDescribe(), bn.getBuildDate(), composite
                     ));
             } else if("pom".equals(parentProject.getPackaging())) {
                 // build started from parent, we are in subproject, lets provide parent properties to our project
@@ -111,7 +139,7 @@ public class JGitBuildNumberMojo extends AbstractMojo {
                 if(null == revision) {
                     // we are in subproject, but parent project wasn't build this time,
                     // maybe build is running from parent with custom module list - 'pl' argument
-                    getLog().info("Cannot extract Git info, maybe custom build with 'pl' argument is running");
+                    getLog().warn("Cannot extract Git info, maybe custom build with 'pl' argument is running");
                     fillPropsUnknown(props);
                     return;
                 }
@@ -124,6 +152,7 @@ public class JGitBuildNumberMojo extends AbstractMojo {
                 props.setProperty(authorDateProperty, parentProps.getProperty(authorDateProperty));
                 props.setProperty(commitDateProperty, parentProps.getProperty(commitDateProperty));
                 props.setProperty(describeProperty, parentProps.getProperty(describeProperty));
+                props.setProperty(buildDateProperty, parentProps.getProperty(buildDateProperty));
                 props.setProperty(buildnumberProperty, parentProps.getProperty(buildnumberProperty));
             } else {
                 // should not happen
@@ -146,6 +175,7 @@ public class JGitBuildNumberMojo extends AbstractMojo {
         props.setProperty(authorDateProperty, "UNKNOWN_AUTHOR_DATE");
         props.setProperty(commitDateProperty, "UNKNOWN_COMMIT_DATE");
         props.setProperty(describeProperty, "UNKNOWN_DESCRIBE");
+        props.setProperty(buildDateProperty, "UNKNOWN_BUILD_DATE");
         props.setProperty(buildnumberProperty, "UNKNOWN_BUILDNUMBER");
     }
 

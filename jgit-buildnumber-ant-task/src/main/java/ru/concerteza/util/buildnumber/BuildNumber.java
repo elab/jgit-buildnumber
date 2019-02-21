@@ -16,6 +16,7 @@ public class BuildNumber {
     private final String authorDate;
     private final String commitDate;
     private final String describe;
+    private final String buildDate;
 
     /**
      * @param revision git revision
@@ -25,8 +26,10 @@ public class BuildNumber {
      * @param commitsCount number of commits in current branch
      * @param authorDate authored date of current revision
      * @param commitDate committed date of current revision
+     * @param describe git "describe" result of current revision
+     * @param buildDate buildDate timestamp
      */
-    public BuildNumber(String revision, String branch, String tag, String parent, int commitsCount, String authorDate, String commitDate, String describe) {
+    public BuildNumber(String revision, String branch, String tag, String parent, int commitsCount, String authorDate, String commitDate, String describe, String buildDate) {
         this.revision = revision;
         this.branch = branch;
         this.tag = tag;
@@ -35,6 +38,7 @@ public class BuildNumber {
         this.authorDate = authorDate;
         this.commitDate = commitDate;
         this.describe = describe;
+        this.buildDate = buildDate;
     }
 
     /**
@@ -105,9 +109,14 @@ public class BuildNumber {
     public String getCommitDate() { return commitDate; }
 
     /**
-     * @return describe result of current commit
+     * @return git "describe" result of current commit
      */
     public String getDescribe() { return describe; }
+
+    /**
+     * @return buildDate timestamp
+     */
+    public String getBuildDate() { return buildDate; }
 
     /**
      * @return buildnumber string in form {@code <tag or branch>.<commitsCount>.<shortRevision>}
@@ -135,6 +144,7 @@ public class BuildNumber {
         sb.append(", authorDate=").append(authorDate);
         sb.append(", commitDate=").append(commitDate);
         sb.append(", describe=").append(describe);
+        sb.append(", buildDate=").append(buildDate);
         sb.append('}');
         return sb.toString();
     }

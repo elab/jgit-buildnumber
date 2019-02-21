@@ -41,7 +41,7 @@ Usage in Maven 3
 
 Note: this plugin accesses Git repo only once during multi-module build.
 
-###Store raw buildnumber parts in MANIFEST.MF file
+### Store raw buildnumber parts in MANIFEST.MF file
 
 In this case extracted buildnumber parts are stored in manifest as is, and may be read from there on startup and composed into buildnumber.
 
@@ -96,7 +96,7 @@ Results exmple (from MANIFEST.MF):
     X-Git-Commits-Count: 30
     X-Git-Tag: 1.3.7
 
-###Create ready to use buildnumber
+### Create ready to use buildnumber
 
 Plugin may be configured to produce ready-to-use buildnumber into `git.buildnumber` property.
 By default buildnumber created as `<tag or branch>.<commitsCount>.<shortRevision>`.
@@ -134,7 +134,7 @@ Script engine is initialized only if `javaScriptBuildnumberCallback` is provided
 
 If JS snippet failed to execute, it won't break build process, Rhino error will be printed to Maven output and all properties will get "UNKNOWN" values.
 
-###Maven properties configuration:
+### Maven properties configuration:
 
  * `revisionProperty`, default: `git.revision`
  * `branchProperty`, default: `git.branch`
@@ -142,11 +142,21 @@ If JS snippet failed to execute, it won't break build process, Rhino error will 
  * `commitsCountProperty`, default: `git.commitsCount`
  * `buildnumberProperty`, default: `git.buildnumber`
  * `repositoryDirectory` -  directory to start searching git root from, should contain '.git' directory
- or be a subdirectory of such directory, deafault: `${project.basedir}`
+ or be a subdirectory of such directory, default: `${project.basedir}`
  * `runOnlyAtExecutionRoot`: setting this parameter to 'false' allows to execute plugin
  in every submodule, not only in root one. Default: `true`.
  This feature was added by [bradszabo](https://github.com/bradszabo).
+ * `commitDateProperty`- the "committed date" of the last commit, default: `git.commitDate`
+ (Warning: before 1.3.0 this property returned "authored date" of the last commit which may significantly differ from the "committed date". Fixed by [elab](https://github.com/elab) in 1.3.0)
+ 
+ The following properties were added by [akuhtz](https://github.com/akuhtz) and [elab](https://github.com/elab):
+ * `gitDateFormat` - the format used for Git authored date and Git committed date, default: `yyyy-MM-dd`
+ * `buildDateProperty` - the current date when the plugin was executed during the build
 
+ The following properties were added by [elab](https://github.com/elab):
+ * `authorDateProperty` - the "authoredd date" of the last commit, default: `git.authorDate`
+ * `buildDateFormat` - the format used for build date, default:`yyyy-MM-dd HH:mm:ss`
+ 
 Usage in Ant
 ------------
 
@@ -156,7 +166,7 @@ To use buildnumber ant task you need this jars on your classpath:
  - `org.eclipse.jgit-2.0.0.201206130900-r.jar`
 
 Project directory that contains `.git` directory may be provided with `git.repositoryDirectory` property.
-Curent work directory is used by defuault.
+Curent work directory is used by default.
 
 Extracted properties are put into:
 
@@ -174,7 +184,7 @@ build.xml usage snippet:
         <echo>Git version extracted ${git.commitsCount} (${git.shortRevision})</echo>
     </target>
 
-###Ready to use buildnumber
+### Ready to use buildnumber
 
 Default buildnumber in form `<tag or branch>.<commitsCount>.<shortRevision>` will be put into property `git.buildnumber`.
 If you want to customize it, you can use Ant [Script task](http://ant.apache.org/manual/Tasks/script.html) like this:

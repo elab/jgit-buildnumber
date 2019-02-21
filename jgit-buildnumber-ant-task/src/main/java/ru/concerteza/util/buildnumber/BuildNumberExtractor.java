@@ -34,10 +34,12 @@ public class BuildNumberExtractor {
     /**
      * @param repoDirectory directory to start searching git root from, should contain '.git' directory
      *                      or be a subdirectory of such directory
+     * @param gitDateFormat date format for Git authorDate and Git commitDate 
+     * @param buildDateFormat date format for buildDate 
      * @return extracted buildnumber object
      * @throws Exception if git repo not found or cannot be read
      */
-    public static BuildNumber extract(File repoDirectory) throws Exception {
+    public static BuildNumber extract(File repoDirectory, String gitDateFormat, String buildDateFormat) throws Exception {
         if(!(repoDirectory.exists() && repoDirectory.isDirectory())) throw new IOException(
                 "Invalid repository directory provided: " + repoDirectory.getAbsolutePath());
         // open repo, jgit has some problems with not canonical paths
@@ -57,12 +59,13 @@ public class BuildNumberExtractor {
             // count total commits
             int commitsCount = countCommits(repo, revisionObject);
             // extract authored date of current revision
-            String authorDate = readAuthoredDate(repo, revision);
+            String authorDate = readAuthoredDate(repo, revision, gitDateFormat);
             // extract committed date of current revision
-            String commitDate = readCommittedDate(repo, revision);
-            // extract describe result of current revision
+            String commitDate = readCommittedDate(repo, revision, gitDateFormat);
+            // extract git "describe" result of current revision
             String describe = readDescribe(repo);
-            return new BuildNumber(revision, branch, tag, parent, commitsCount, authorDate, commitDate, describe);
+            String buildDate = getCurrentBuildDate(buildDateFormat); 
+            return new BuildNumber(revision, branch, tag, parent, commitsCount, authorDate, commitDate, describe, buildDate);
         } finally {
             repo.close();
         }
@@ -103,9 +106,9 @@ public class BuildNumberExtractor {
         return parentsFormat;
     }
 
-    /** @return authored date of the commit identified by `revision` as yyyy-MM-dd string */
-    private static String readAuthoredDate(Repository repo, String revision) throws IOException {
-        DateFormat df = new SimpleDateFormat("yyyy-MM-dd");
+    /** @return authored date of the commit identified by `revision` formatted according to 'dateFormat' */
+    private static String readAuthoredDate(Repository repo, String revision, String dateFormat) throws IOException {
+        DateFormat df = new SimpleDateFormat(dateFormat);
         ObjectId rev = repo.resolve(revision);
         if (null == rev) return EMPTY_STRING;
         RevWalk rw = new RevWalk(repo);
@@ -115,9 +118,9 @@ public class BuildNumberExtractor {
         return df.format(authorDate);
     }
 
-    /** @return committed date of the commit identified by `revision` as yyyy-MM-dd string */
-    private static String readCommittedDate(Repository repo, String revision) throws IOException {
-        DateFormat df = new SimpleDateFormat("yyyy-MM-dd");
+    /** @return committed date of the commit identified by `revision` formatted according to 'dateFormat' */
+    private static String readCommittedDate(Repository repo, String revision, String dateFormat) throws IOException {
+        DateFormat df = new SimpleDateFormat(dateFormat);
         ObjectId rev = repo.resolve(revision);
         if (null == rev) return EMPTY_STRING;
         RevWalk rw = new RevWalk(repo);
@@ -129,6 +132,10 @@ public class BuildNumberExtractor {
 
     private static String readDescribe(Repository repo) throws IOException, GitAPIException {
         return new Git(repo).describe().setLong(true).call();
+    }
+
+    private static String getCurrentBuildDate(String dateFormat) {
+    	return new SimpleDateFormat(dateFormat).format(new Date());
     }
 
     // sha1 -> tag name

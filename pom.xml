@@ -77,6 +77,11 @@
             <email>austin.doupnik@bina.roche.com</email>
             <url>https://github.com/binalabs</url>
         </developer>
+        <developer>
+            <name>Andreas Kuhtz</name>
+            <email>andreas.kuhtz@gmail.com</email>
+            <url>https://github.com/akuhtz</url>
+        </developer>
     </developers>
 
     <modules>
@@ -197,8 +202,8 @@
                     <tagNameFormat>@{project.version}</tagNameFormat>
                     <localCheckout>true</localCheckout>
                     <useReleaseProfile>false</useReleaseProfile>
-                    <mavenExecutorId>forked-path</mavenExecutorId><!-- ? (from oss-parent-9.pom) -->
-                    <arguments>${arguments} -Psonatype-oss-release</arguments><!-- ? (from oss-parent-9.pom) -->
+                    <arguments>-Prelease-sign-artifacts,release -Dgpg.passphrase=${gpg.passphrase}</arguments>
+                    <autoVersionSubmodules>true</autoVersionSubmodules>
                 </configuration>
             </plugin>
         </plugins>

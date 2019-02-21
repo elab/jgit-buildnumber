@@ -8,18 +8,20 @@ import org.gradle.api.tasks.TaskAction;
 
 public class JGitBuildNumberGradleTask extends DefaultTask {
 
-	@TaskAction
-	public void jGitBuildnumber_ExtractBuildnumber() throws Exception {
-		BuildNumber buildNumber = BuildNumberExtractor.extract(new File("."));
-		ExtraPropertiesExtension props = getProject().getExtensions().getExtraProperties();
-		props.set("gitBranch", buildNumber.getBranch());
-		props.set("gitCommitsCount", buildNumber.getCommitsCountAsString());
-		props.set("gitTag", buildNumber.getTag());
-		props.set("gitRevision", buildNumber.getRevision());
-		props.set("gitShortRevision", buildNumber.getShortRevision());
-		props.set("gitParent", buildNumber.getParent());
-		props.set("gitAuthorDate", buildNumber.getAuthorDate());
-		props.set("gitCommitDate", buildNumber.getCommitDate());
-		props.set("gitBuildnumber", buildNumber.defaultBuildnumber());
-	}
+    @TaskAction
+    public void jGitBuildnumber_ExtractBuildnumber() throws Exception {
+        BuildNumber bn = BuildNumberExtractor.extract(new File("."), "yyyy-MM-dd", "yyyy-MM-dd HH:mm:ss");
+        ExtraPropertiesExtension props = getProject().getExtensions().getExtraProperties();
+        props.set("gitRevision", bn.getRevision());
+        props.set("gitShortRevision", bn.getShortRevision());
+        props.set("gitBranch", bn.getBranch());
+        props.set("gitTag", bn.getTag());
+        props.set("gitParent", bn.getParent());
+        props.set("gitCommitsCount", bn.getCommitsCountAsString());
+        props.set("gitAuthorDate", bn.getAuthorDate());
+        props.set("gitCommitDate", bn.getCommitDate());
+        props.set("gitDescribe", bn.getDescribe());
+        props.set("gitBuildDate", bn.getBuildDate());
+        props.set("gitBuildnumber", bn.defaultBuildnumber());
+    }
 }
