@@ -18,7 +18,7 @@ import org.apache.maven.project.MavenProject;
 /**
  * Goal which creates build number.
  */
-@Mojo(name = "extract-buildnumber", defaultPhase = LifecyclePhase.PREPARE_PACKAGE)
+@Mojo(name = "extract-buildnumber", defaultPhase = LifecyclePhase.VALIDATE)
 public class JGitBuildNumberMojo extends AbstractMojo {
     /**
      * Revision property name
