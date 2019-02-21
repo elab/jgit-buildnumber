@@ -11,18 +11,12 @@
     <name>JGit Build Number Gradle Plugin</name>
 
     <description>Gradle plugin, extracts buildnumbers from project's Git repository without Git command line tool</description>
-    <url>https://github.com/elab/jgit-buildnumber</url>
     <licenses>
         <license>
             <name>Apache License 2.0</name>
             <url>http://www.apache.org/licenses/LICENSE-2.0</url>
         </license>
     </licenses>
-    <scm>
-        <url>https://github.com/elab/jgit-buildnumber</url>
-        <connection>scm:git:https://github.com/elab/jgit-buildnumber.git</connection>
-        <tag>HEAD</tag>
-    </scm>
     <developers>
         <developer>
             <name>George Theofanous</name>
