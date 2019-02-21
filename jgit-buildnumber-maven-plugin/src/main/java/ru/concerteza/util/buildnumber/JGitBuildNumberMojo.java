@@ -84,6 +84,7 @@ public class JGitBuildNumberMojo extends AbstractMojo {
             // executes only once per build
             // http://www.sonatype.com/people/2009/05/how-to-make-a-plugin-run-once-during-a-build/
             if (executionRootDirectory.equals(baseDirectory) || !runOnlyAtExecutionRoot) {
+                long startMillis = System.currentTimeMillis();
                 // build started from this projects root
                 BuildNumber bn = BuildNumberExtractor.extract(repositoryDirectory);
                 props.setProperty(revisionProperty, bn.getRevision());
@@ -98,9 +99,10 @@ public class JGitBuildNumberMojo extends AbstractMojo {
                 // create composite buildnumber
                 String composite = createBuildnumber(bn);
                 props.setProperty(buildnumberProperty, composite);
+                long durationMillis = System.currentTimeMillis() - startMillis;
                 getLog().info(String.format(
-                    "Git info extracted, shortRevision: '%s', branch: '%s', tag: '%s', commitsCount: '%d', authorDate: '%s', commitDate: '%s', describe: '%s', buildNumber: '%s'",
-                    bn.getShortRevision(), bn.getBranch(), bn.getTag(), bn.getCommitsCount(), bn.getAuthorDate(), bn.getCommitDate(), bn.getDescribe(), composite
+                    "Git info extracted in %d ms, shortRevision: '%s', branch: '%s', tag: '%s', commitsCount: '%d', authorDate: '%s', commitDate: '%s', describe: '%s', buildNumber: '%s'",
+                    durationMillis, bn.getShortRevision(), bn.getBranch(), bn.getTag(), bn.getCommitsCount(), bn.getAuthorDate(), bn.getCommitDate(), bn.getDescribe(), composite
                     ));
             } else if("pom".equals(parentProject.getPackaging())) {
                 // build started from parent, we are in subproject, lets provide parent properties to our project
@@ -154,9 +156,16 @@ public class JGitBuildNumberMojo extends AbstractMojo {
 
     private String buildnumberFromJS(BuildNumber bn) throws ScriptException {
         String engineName = "JavaScript";
+        // find JavaScript engine using context class loader
         ScriptEngine jsEngine = new ScriptEngineManager().getEngineByName(engineName);
         if (jsEngine == null) {
+            // may be null when running within Eclipse using m2e, maybe due to OSGi class loader;
+            // this does work in Eclipse, see ScriptEngineManager constructor Javadoc for what passing a null means here
             jsEngine = new ScriptEngineManager(null).getEngineByName(engineName);
+        }
+        if (jsEngine == null) {
+            getLog().error(engineName + " not found");
+            return "UNKNOWN_JS_BUILDNUMBER";
         }
         jsEngine.put("revision", bn.getRevision());
         jsEngine.put("shortRevision", bn.getShortRevision());

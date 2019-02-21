@@ -38,6 +38,10 @@
             <name>Rick Osborne</name>
             <url>https://github.com/rickosborne</url>
         </developer>
+        <developer>
+            <name>Jörg von Frantzius</name>
+            <email>joerg.frantzius@aperto.com</email>
+        </developer>
     </developers>
 
     <dependencies>
