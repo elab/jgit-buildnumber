@@ -15,89 +15,49 @@ import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
 
-/**
- * Goal which creates build number.
- */
+/** Goal which creates build number. */
 @Mojo(name = "extract-buildnumber", defaultPhase = LifecyclePhase.VALIDATE)
 public class JGitBuildNumberMojo extends AbstractMojo {
-    /**
-     * Revision property name
-     *
-     */
+
     @Parameter(property = "revisionProperty")
     private String revisionProperty = "git.revision";
-    /**
-     * Short revision property name
-     *
-     */
+
     @Parameter(property = "shortRevisionProperty")
     private String shortRevisionProperty = "git.shortRevision";
 
-    /**
-     * Branch property name
-     *
-     */
     @Parameter(property = "branchProperty")
     private String branchProperty = "git.branch";
-    /**
-     * Tag property name
-     *
-     */
+
     @Parameter(property = "tagProperty")
     private String tagProperty = "git.tag";
-    /**
-     * Parent property name
-     *
-     */
+
     @Parameter(property = "parentProperty")
     private String parentProperty = "git.parent";
-    /**
-     * Commits count property name
-     *
-     */
+
     @Parameter(property = "commitsCountProperty")
     private String commitsCountProperty = "git.commitsCount";
-    /**
-     * Buildnumber property name
-     *
-     */
+
     @Parameter(property = "buildnumberProperty")
     private String buildnumberProperty = "git.buildnumber";
-    /**
-     * authorDate property name
-     *
-     */
+
     @Parameter(property = "authorDateProperty")
     private String authorDateProperty = "git.authorDate";
-    /**
-     * commitDate property name
-     *
-     */
+
     @Parameter(property = "commitDateProperty")
     private String commitDateProperty = "git.commitDate";
-    /**
-     * describeProperty property name
-     *
-     */
+
     @Parameter(property = "describeProperty")
     private String describeProperty = "git.describe";
-    /**
-     * Java Script buildnumber callback
-     *
-     */
+
     @Parameter(property = "javaScriptBuildnumberCallback")
     private String javaScriptBuildnumberCallback = null;
-    /**
-     * Setting this parameter to 'false' allows to execute plugin in every
-     * submodule, not only in root one.
-     *
-     */
+
+    /** Setting this parameter to 'false' allows to execute plugin in every submodule, not only in root one. */
     @Parameter(property = "runOnlyAtExecutionRoot", defaultValue = "true")
     private boolean runOnlyAtExecutionRoot;
-    /**
-     * Directory to start searching git root from, should contain '.git' directory
-     * or be a subdirectory of such directory. '${project.basedir}' is used by default.
-     */
+
+    /** Directory to start searching git root from, should contain '.git' directory
+     *  or be a subdirectory of such directory. '${project.basedir}' is used by default. */
     @Parameter(property = "repositoryDirectory", defaultValue = "${project.basedir}")
     private File repositoryDirectory;
 
@@ -106,21 +66,17 @@ public class JGitBuildNumberMojo extends AbstractMojo {
 
     @Parameter(property = "session.executionRootDirectory", readonly = true, required = true)
     private File executionRootDirectory;
-    /**
-     * The maven project.
-     */
+    
+    /** The maven project. */
     @Parameter(property = "project", readonly = true)
     private MavenProject project;
-     /**
-     * The maven parent project.
-     */
+    
+     /** The maven parent project. */
     @Parameter(property = "project.parent", readonly = true)
     private MavenProject parentProject;
 
-    /**
-     * Extracts buildnumber fields from git repository and publishes them as maven properties.
-     * Executes only once per build. Return default (unknown) buildnumber fields on error.
-     */
+    /** Extracts buildnumber fields from git repository and publishes them as maven properties.
+     *  Executes only once per build. Return default (unknown) buildnumber fields on error. */
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
         Properties props = project.getProperties();
