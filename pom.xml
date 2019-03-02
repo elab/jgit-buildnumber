@@ -5,15 +5,17 @@
     <groupId>com.labun.buildnumber</groupId>
     <artifactId>jgit-buildnumber-parent</artifactId>
     <version>2.0.0-SNAPSHOT</version>
+
     <packaging>pom</packaging>
     <name>JGit Buildnumber for Maven, Ant, and Gradle</name>
-
     <description>Extract buildnumber from project's Git repository without Git command line tool</description>
+
     <url>https://github.com/elab/jgit-buildnumber</url>
+
     <licenses>
         <license>
             <name>Apache License 2.0</name>
-            <url>http://www.apache.org/licenses/LICENSE-2.0</url>
+            <url>https://www.apache.org/licenses/LICENSE-2.0</url>
         </license>
     </licenses>
 
@@ -44,6 +46,11 @@
             <url>http://alexkasko.com</url>
         </developer>
         <developer>
+            <name>Eugen Labun</name>
+            <email>labun@gmx.net</email>
+            <url>https://github.com/elab</url>
+        </developer>
+        <developer>
             <name>Peter Levart</name>
             <url>https://github.com/plevart</url>
         </developer>
@@ -58,11 +65,6 @@
         <developer>
             <name>Elliot Wolk</name>
             <url>https://github.com/teleshoes</url>
-        </developer>
-        <developer>
-            <name>Eugen Labun</name>
-            <email>labun@gmx.net</email>
-            <url>https://github.com/elab</url>
         </developer>
         <developer>
             <name>Mikhail Kopylov</name>

@@ -287,4 +287,4 @@ This exceptions will be reported by JGit if provided `repositoryDirectory` direc
 License information
 -------------------
 
-This project is released under the [Apache License 2.0](http://www.apache.org/licenses/LICENSE-2.0)
+This project is released under the [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0)
