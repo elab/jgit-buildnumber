@@ -51,7 +51,7 @@ Plugin config:
     <plugin>
         <groupId>com.labun.buildnumber</groupId>
         <artifactId>jgit-buildnumber-maven-plugin</artifactId>
-        <version>1.2.9</version>
+        <version>2.0.0</version>
         <executions>
             <execution>
                 <id>git-buildnumber</id>
@@ -66,7 +66,7 @@ Plugin config:
     <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-jar-plugin</artifactId>
-        <version>2.3.2</version>
+        <version>3.1.1</version>
         <configuration>
             <archive>
                 <manifestEntries>
@@ -103,7 +103,7 @@ By default buildnumber created as `<tag or branch>.<commitsCount>.<shortRevision
 
 Plugin also support custom buildnumber composition using JavaScript. This feature was added by [plevart](https://github.com/plevart).
 
-JS snippet can be provided to `javaScriptBuildnumberCallback` configuration property. Snippet will be executed
+JS snippet can be provided to `buildnumberFormat` configuration property. Snippet will be executed
 by [Rhino JS engine](http://www.mozilla.org/rhino/) included with JDK6.
 
 Configuration example:
@@ -111,7 +111,7 @@ Configuration example:
     <plugin>
         <groupId>com.labun.buildnumber</groupId>
         <artifactId>jgit-buildnumber-maven-plugin</artifactId>
-        <version>1.2.9</version>
+        <version>2.0.0</version>
         <executions>
             <execution>
                 <id>git-buildnumber</id>
@@ -120,9 +120,9 @@ Configuration example:
                 </goals>
                 <phase>prepare-package</phase>
                 <configuration>
-                    <javaScriptBuildnumberCallback>
+                    <buildnumberFormat>
                         tag + "_" + branch + "_" + revision.substring(10, 20) + "_" + shortRevision + "_" + commitsCount*42
-                    </javaScriptBuildnumberCallback>
+                    </buildnumberFormat>
                 </configuration>
             </execution>
         </executions>
@@ -130,7 +130,7 @@ Configuration example:
 
 `tag`, `branch`, `revision`, `shortRevision` and `commitsCount` are exposed to JavaScript as global variables (`commitsCount` as numeric).
 
-Script engine is initialized only if `javaScriptBuildnumberCallback` is provided so it won't break cross-platform support.
+Script engine is initialized only if `buildnumberFormat` is provided so it won't break cross-platform support.
 
 If JS snippet failed to execute, it won't break build process, Rhino error will be printed to Maven output and all properties will get "UNKNOWN" values.
 
@@ -147,8 +147,8 @@ If JS snippet failed to execute, it won't break build process, Rhino error will 
  in every submodule, not only in root one. Default: `true`.
  This feature was added by [bradszabo](https://github.com/bradszabo).
  * `commitDateProperty`- the "committed date" of the last commit, default: `git.commitDate`
- (Warning: before 1.3.0 this property returned "authored date" of the last commit which may significantly differ from the "committed date". Fixed by [elab](https://github.com/elab) in 1.3.0)
- 
+ (Warning: before 2.0.0 this property returned "authored date" of the last commit which may significantly differ from the "committed date". Fixed by [elab](https://github.com/elab) in 2.0.0)
+
  The following properties were added by [akuhtz](https://github.com/akuhtz) and [elab](https://github.com/elab):
  * `gitDateFormat` - the format used for Git authored date and Git committed date, default: `yyyy-MM-dd`
  * `buildDateProperty` - the current date when the plugin was executed during the build
@@ -156,14 +156,14 @@ If JS snippet failed to execute, it won't break build process, Rhino error will 
  The following properties were added by [elab](https://github.com/elab):
  * `authorDateProperty` - the "authoredd date" of the last commit, default: `git.authorDate`
  * `buildDateFormat` - the format used for build date, default:`yyyy-MM-dd HH:mm:ss`
- 
+
 Usage in Ant
 ------------
 
 To use buildnumber ant task you need this jars on your classpath:
 
- - `jgit-buildnumber-ant-task-1.2.9.jar`
- - `org.eclipse.jgit-2.0.0.201206130900-r.jar`
+ - `jgit-buildnumber-ant-task-2.0.0.jar`
+ - `org.eclipse.jgit-5.2.1.201812262042-r.jar`
 
 Project directory that contains `.git` directory may be provided with `git.repositoryDirectory` property.
 Curent work directory is used by default.
@@ -206,16 +206,16 @@ Usage in Gradle
  - Add the plugin dependency in your build.gradle `classpath 'ru.concerteza.buildnumber:jgit-buildnumber-gradle-plugin:1.2.9-SNAPSHOT'`
  - Apply the plugin in one of the following ways `apply plugin: 'jgit-buildnumber-gradle-plugin'` or `apply plugin: ru.concerteza.util.buildnumber.plugin.JGitBuildNumberPlugin`
  - Execute the jGitBuildnumber_ExtractBuildnumber task `tasks.jGitBuildnumber_ExtractBuildnumber.execute()`
- 
+
  Extracted properties are put into:
- 
+
   - `project.gitTag`
   - `project.gitBranch`
   - `project.gitRevision`
   - `project.gitBuildnumber`
   - `project.gitCommitsCount`
   - `project.gitParent`
-  
+
   Example setup in build.gradle:
 
     ```
@@ -229,19 +229,19 @@ Usage in Gradle
     }  
     apply plugin: 'jgit-buildnumber-gradle-plugin'  
     ```
-    
+
   The default working directory in the plugin is "." i.e this directory, if you wish to set a custom directory then the following should be added to your build.gradle
-   
+
     ```
     task jGitBuildnumber_ExtractBuildnumber() {
        dir = projectDir;
     }
     ```
-        
+
   projectDir is just an example.
-    
+
   Example usage:
-  
+
     ```
     jar() {
         manifest {
@@ -258,7 +258,7 @@ Usage in Gradle
         }
     }  
     ```
-    
+
   Results example (from MANIFEST.MF):
     ```
     Manifest-Version: 1.0
@@ -272,9 +272,9 @@ Usage in Gradle
     Version: 82
     Branch: master
     ```
-    
+
 ###Ready to use buildnumber
-  
+
   Default buildnumber in form `<tag or branch>.<commitsCount>.<shortRevision>` will be put into property `project.gitBuildnumber`.
 
 Common errors

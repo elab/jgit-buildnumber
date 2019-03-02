@@ -1,23 +1,16 @@
 package ru.concerteza.util.buildnumber;
 
 import java.io.File;
+import java.util.Map;
 
 import org.apache.tools.ant.Project;
 
-/**
- * Ant task, extracts buildnumber fields from git repository and publishes them as ant properties
- *
- * @author alexey
- * Date: 11/16/11
- * @see BuildNumber
- * @see BuildNumberExtractor
- */
+/** Ant task, extracts buildnumber fields from git repository and publishes them as ant properties.
+ *  @see BuildNumberExtractor */
 public class JGitBuildNumberAntTask {
     private Project project;
 
-    /**
-     * @param project ant project setter
-     */
+    /** @param project ant project setter */
     public void setProject(Project project) {
         this.project = project;
     }
@@ -29,6 +22,7 @@ public class JGitBuildNumberAntTask {
      * <ul>
      *     <li>{@code git.revision}</li>
      *     <li>{@code git.shortRevision}</li>
+     *     <li>{@code git.dirty}</li>
      *     <li>{@code git.branch}</li>
      *     <li>{@code git.tag}</li>
      *     <li>{@code git.parent}</li>
@@ -44,17 +38,15 @@ public class JGitBuildNumberAntTask {
     public void execute() throws Exception {
         String repoDirString = project.getProperty("git.repositoryDirectory");
         File repoDir = null != repoDirString ? new File(repoDirString) :  new File(".");
-        BuildNumber bn = BuildNumberExtractor.extract(repoDir, "yyyy-MM-dd", "yyyy-MM-dd HH:mm:ss");
-        project.setProperty("git.revision", bn.getRevision());
-        project.setProperty("git.shortRevision", bn.getShortRevision());
-        project.setProperty("git.branch", bn.getBranch());
-        project.setProperty("git.tag", bn.getTag());
-        project.setProperty("git.parent", bn.getParent());
-        project.setProperty("git.commitsCount", bn.getCommitsCountAsString());
-        project.setProperty("git.authorDate", bn.getAuthorDate());
-        project.setProperty("git.commitDate", bn.getCommitDate());
-        project.setProperty("git.describe", bn.getDescribe());
-        project.setProperty("git.buildDate", bn.getBuildDate());
-        project.setProperty("git.buildnumber", bn.defaultBuildnumber());
+        String gitDateFormat = project.getProperty("git.gitDateFormat");
+        String buildDateFormat = project.getProperty("git.buildDateFormat");
+        String dateFormatTimeZone = null;
+        String countCommitsSinceInclusive = project.getProperty("git.countCommitsSinceInclusive");
+        String countCommitsSinceExclusive = project.getProperty("git.countCommitsSinceExclusive");
+        String dirtyValue = project.getProperty("git.dirtyValue");
+
+        Map<String, String> bn = new BuildNumberExtractor(repoDir).extract(gitDateFormat, buildDateFormat, dateFormatTimeZone, countCommitsSinceInclusive, countCommitsSinceExclusive, dirtyValue);
+
+        for (Map.Entry<String,String> e : bn.entrySet()) project.setProperty("git." + e.getKey(), e.getValue());
     }
 }

@@ -1,7 +1,13 @@
 package ru.concerteza.util.buildnumber;
 
 import java.io.File;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.Properties;
+import java.util.TimeZone;
 
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
@@ -10,128 +16,201 @@ import javax.script.ScriptException;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
+import org.apache.maven.plugins.annotations.Component;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
+import org.sonatype.plexus.build.incremental.BuildContext;
 
 /** Goal which creates build number. */
 @Mojo(name = "extract-buildnumber", defaultPhase = LifecyclePhase.VALIDATE)
 public class JGitBuildNumberMojo extends AbstractMojo {
 
-    @Parameter(property = "revisionProperty")
+    @Component
+    private BuildContext buildContext;
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////
+
+    @Parameter(readonly = true)
     private String revisionProperty = "git.revision";
 
-    @Parameter(property = "shortRevisionProperty")
+    /** {@link #dirtyValue} if differences exist between working-tree, index, and HEAD; empty string otherwise. */
+    @Parameter(readonly = true)
+    private String dirtyProperty = "git.dirty";
+
+    @Parameter(readonly = true)
     private String shortRevisionProperty = "git.shortRevision";
 
-    @Parameter(property = "branchProperty")
+    @Parameter(readonly = true)
     private String branchProperty = "git.branch";
 
-    @Parameter(property = "tagProperty")
+    @Parameter(readonly = true)
     private String tagProperty = "git.tag";
 
-    @Parameter(property = "parentProperty")
+    @Parameter(readonly = true)
     private String parentProperty = "git.parent";
 
-    @Parameter(property = "commitsCountProperty")
+    @Parameter(readonly = true)
     private String commitsCountProperty = "git.commitsCount";
 
-    @Parameter(property = "authorDateProperty")
+    @Parameter(readonly = true)
     private String authorDateProperty = "git.authorDate";
 
-    @Parameter(property = "commitDateProperty")
+    @Parameter(readonly = true)
     private String commitDateProperty = "git.commitDate";
 
-    @Parameter(property = "describeProperty")
+    @Parameter(readonly = true)
     private String describeProperty = "git.describe";
 
-    @Parameter(property = "buildDateProperty", readonly = true)
+    @Parameter(readonly = true)
     private String buildDateProperty = "git.buildDate";
 
-    @Parameter(property = "buildnumberProperty")
+    /** Default value is equivalent to the JavaScript:
+     * <pre>
+     * name = (tag.length > 0) ? tag : (branch.length > 0) ? branch : "UNNAMED";
+     * name + "." + commitsCount + "." + shortRevision + (dirty.length > 0 ? "-" + dirty : "");
+     * </pre>
+     * It can be overwritten using {@link #buildnumberFormat}.
+     *  */
+    @Parameter(readonly = true)
     private String buildnumberProperty = "git.buildnumber";
 
-    /** Which format to use for Git authorDate and Git commitDate. */
-    @Parameter(property = "gitDateFormat", defaultValue = "yyyy-MM-dd")
+    ///////////////////////////////////////////////////////////////////////////////////////////////
+
+    /** Which string to use for `dirty` property. */
+    @Parameter(defaultValue = "dirty")
+    private String dirtyValue;
+
+    /** Which format to use for Git authorDate and Git commitDate. The default locale will be used. TimeZone can be specified, see {@link #dateFormatTimeZone}. */
+    @Parameter(defaultValue = "yyyy-MM-dd")
     private String gitDateFormat;
 
-    /** Which format to use for buildDate. */
-    @Parameter(property = "buildDateFormat", defaultValue = "yyyy-MM-dd HH:mm:ss")
+    /** Which format to use for buildDate.  The default locale will be used. TimeZone can be specified, see {@link #dateFormatTimeZone}. */
+    @Parameter(defaultValue = "yyyy-MM-dd HH:mm:ss")
     private String buildDateFormat;
-    
-    @Parameter(property = "javaScriptBuildnumberCallback")
-    private String javaScriptBuildnumberCallback;
+
+    /** TimeZone for {@link #gitDateFormat} and {@link #buildDateFormat}. Default: current default TimeZone, as returned by {@link TimeZone#getDefault()}. 
+     * For possible values see {@link TimeZone#getTimeZone(String)}. */
+    @Parameter
+    private String dateFormatTimeZone;
+
+    /** Since which ancestor commit (inclusive) to count commits. Can be specified as tag (annotated or lightweight) or SHA-1 (complete or abbreviated).
+     *  If such commit is not found, all commits get counted. 
+     *  See also {@link #countCommitsSinceExclusive}. If both, inclusive and exclusive "countCommitsSince" parameters are specified, the {@link #countCommitsSinceInclusive} wins. */
+    @Parameter
+    private String countCommitsSinceInclusive;
+
+    /** Since which ancestor commit (exclusive) to count commits. Can be specified as tag (annotated or lightweight) or SHA-1 (complete or abbreviated).
+     *  If such commit is not found, all commits get counted.  
+     *  See also {@link #countCommitsSinceInclusive}. If both, inclusive and exclusive "countCommitsSince" parameters are specified, the {@link #countCommitsSinceInclusive} wins. */
+    @Parameter
+    private String countCommitsSinceExclusive;
+
+    /** JavaScript expression to format/compose the buildnumber. All properties can be used (without prefix), e.g. 
+     * <pre>branch + "." + commitsCount + "/" + commitDate + "/" + shortRevision + (dirty.length > 0 ? "-" + dirty : "");</pre>
+     * See also {@link #buildnumberProperty}. */
+    @Parameter
+    private String buildnumberFormat;
 
     /** Setting this parameter to 'false' allows to execute plugin in every submodule, not only in root one. */
-    @Parameter(property = "runOnlyAtExecutionRoot", defaultValue = "true")
+    @Parameter(defaultValue = "true")
     private boolean runOnlyAtExecutionRoot;
 
     /** Setting this parameter to 'true' will skip plugin execution. */
-    @Parameter(property = "skip", defaultValue = "false")
+    @Parameter(defaultValue = "false")
     private boolean skip;
 
     /** Directory to start searching git root from, should contain '.git' directory
      *  or be a subdirectory of such directory. '${project.basedir}' is used by default. */
-    @Parameter(property = "repositoryDirectory", defaultValue = "${project.basedir}")
+    @Parameter(defaultValue = "${project.basedir}")
     private File repositoryDirectory;
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////
 
     @Parameter(property = "project.basedir", readonly = true, required = true)
     private File baseDirectory;
 
     @Parameter(property = "session.executionRootDirectory", readonly = true, required = true)
     private File executionRootDirectory;
-    
+
     /** The maven project. */
     @Parameter(property = "project", readonly = true)
     private MavenProject project;
-    
+
      /** The maven parent project. */
     @Parameter(property = "project.parent", readonly = true)
     private MavenProject parentProject;
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////
 
     /** Extracts buildnumber fields from git repository and publishes them as maven properties.
      *  Executes only once per build. Return default (unknown) buildnumber fields on error. */
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
+        getLog().info("JGit BuildNumber Maven Plugin - start");
+        long start = System.currentTimeMillis();
+
+        executeImpl();
+
+        long duration = System.currentTimeMillis() - start;
+        getLog().info(String.format("JGit BuildNumber Maven Plugin - end (execution time: %d ms)", duration));
+    }
+
+    public void executeImpl() throws MojoExecutionException, MojoFailureException {
         if (skip) {
             getLog().info("Execution of plugin is skipped by configuration.");
             return;
         }
-        
-        Properties props = project.getProperties();
+
+        getLog().info("executionRootDirectory: " + executionRootDirectory + ", runOnlyAtExecutionRoot: " + runOnlyAtExecutionRoot + ", baseDirectory: " + baseDirectory + ", repositoryDirectory: " + repositoryDirectory);
+
         try {
-            getLog().info("executionRootDirectory: " + executionRootDirectory + ", runOnlyAtExecutionRoot: " + runOnlyAtExecutionRoot + ", baseDirectory: " + baseDirectory + ", repositoryDirectory: " + repositoryDirectory);
 
             // executes only once per build
             // http://www.sonatype.com/people/2009/05/how-to-make-a-plugin-run-once-during-a-build/
-            if (!runOnlyAtExecutionRoot || executionRootDirectory.equals(baseDirectory) 
-                || (executionRootDirectory.equals(repositoryDirectory.getParentFile()) && runOnlyAtExecutionRoot )) {
-                getLog().info("Getting git info from repositoryDirectory: " + repositoryDirectory);
+            if (!runOnlyAtExecutionRoot || 
+                executionRootDirectory.equals(baseDirectory) || 
+                (executionRootDirectory.equals(repositoryDirectory.getParentFile()) && runOnlyAtExecutionRoot )) {
 
-                long startMillis = System.currentTimeMillis();
-                
-                // build started from this projects root
-                BuildNumber bn = BuildNumberExtractor.extract(repositoryDirectory, gitDateFormat, buildDateFormat);
-                props.setProperty(revisionProperty, bn.getRevision());
-                props.setProperty(shortRevisionProperty, bn.getShortRevision());
-                props.setProperty(branchProperty, bn.getBranch());
-                props.setProperty(tagProperty, bn.getTag());
-                props.setProperty(parentProperty, bn.getParent());
-                props.setProperty(commitsCountProperty, bn.getCommitsCountAsString());
-                props.setProperty(authorDateProperty, bn.getAuthorDate());
-                props.setProperty(commitDateProperty, bn.getCommitDate());
-                props.setProperty(describeProperty, bn.getDescribe());
-                props.setProperty(buildDateProperty, bn.getBuildDate());
-                // create composite buildnumber
-                String composite = createBuildnumber(bn);
-                props.setProperty(buildnumberProperty, composite);
-                
-                long durationMillis = System.currentTimeMillis() - startMillis;
-                getLog().info(String.format(
-                    "Git info extracted in %d ms, shortRevision: '%s', branch: '%s', tag: '%s', commitsCount: '%d', authorDate: '%s', commitDate: '%s', describe: '%s', buildDate: '%s', buildNumber: '%s'",
-                    durationMillis, bn.getShortRevision(), bn.getBranch(), bn.getTag(), bn.getCommitsCount(), bn.getAuthorDate(), bn.getCommitDate(), bn.getDescribe(), bn.getBuildDate(), composite
-                    ));
+                long t = System.currentTimeMillis();
+                BuildNumberExtractor extractor = new BuildNumberExtractor(repositoryDirectory);
+                getLog().info("initializing git repo, get base data: " + (System.currentTimeMillis() - t) + " ms");
+
+                String headSha1 = extractor.getHeadSha1Short();
+                String dirty = extractor.isGitStatusDirty() ? dirtyValue : null;
+
+                List<String> params = Arrays.asList(headSha1, dirty, gitDateFormat, buildDateFormat, dateFormatTimeZone, countCommitsSinceInclusive, countCommitsSinceExclusive,  buildnumberFormat);
+                getLog().info("params: " + params);
+                String paramsKey = "jgitParams";
+                String resultKey = "jgitResult";
+
+                // note: saving/loading custom classes doesn't work (due to different classloaders?, "cannot be cast" error);
+                // when saving Properties object, or values don't survive; 
+                // therefore we use a Map here
+                Map<String, String> result = getCachedResultFromBuildConext(paramsKey, params, resultKey);
+                if (result != null) {
+                    getLog().info("using cached result");
+                } else {
+                    t = System.currentTimeMillis();
+                    result = extractor.extract(gitDateFormat, buildDateFormat, dateFormatTimeZone, countCommitsSinceInclusive, countCommitsSinceExclusive, dirtyValue);
+                    getLog().info("extracting properties for buildnumber: " + (System.currentTimeMillis() - t) + " ms");
+
+                    if (buildnumberFormat != null) {
+                        t = System.currentTimeMillis();
+                        String jsBuildnumber = formatBuildnumberWithJS(result);
+                        // overwrite the default buildnumber
+                        String defaultBuildnumber = result.put("buildnumber", jsBuildnumber);
+                        getLog().info("overwriting default buildnumber: " + defaultBuildnumber);
+                        getLog().info("formatting buildnumber with JS: " + (System.currentTimeMillis() - t) + " ms");
+                    }
+                }
+
+                getLog().info("BUILDNUMBER: " + result.get("buildnumber"));
+                getLog().info("full result: " + result);
+                setProperties(result, project.getProperties());
+                saveResultToBuildContext(paramsKey, params, resultKey, result);
+
             } else if("pom".equals(parentProject.getPackaging())) {
                 // build started from parent, we are in subproject, lets provide parent properties to our project
                 Properties parentProps = parentProject.getProperties();
@@ -140,38 +219,94 @@ public class JGitBuildNumberMojo extends AbstractMojo {
                     // we are in subproject, but parent project wasn't build this time,
                     // maybe build is running from parent with custom module list - 'pl' argument
                     getLog().warn("Cannot extract Git info, maybe custom build with 'pl' argument is running");
-                    fillPropsUnknown(props);
+                    fillPropsUnknown();
                     return;
                 }
-                props.setProperty(revisionProperty, revision);
-                props.setProperty(shortRevisionProperty, parentProps.getProperty(shortRevisionProperty));
-                props.setProperty(branchProperty, parentProps.getProperty(branchProperty));
-                props.setProperty(tagProperty, parentProps.getProperty(tagProperty));
-                props.setProperty(parentProperty, parentProps.getProperty(parentProperty));
-                props.setProperty(commitsCountProperty, parentProps.getProperty(commitsCountProperty));
-                props.setProperty(authorDateProperty, parentProps.getProperty(authorDateProperty));
-                props.setProperty(commitDateProperty, parentProps.getProperty(commitDateProperty));
-                props.setProperty(describeProperty, parentProps.getProperty(describeProperty));
-                props.setProperty(buildDateProperty, parentProps.getProperty(buildDateProperty));
-                props.setProperty(buildnumberProperty, parentProps.getProperty(buildnumberProperty));
+                copyProperties(parentProject.getProperties(), project.getProperties());
+
             } else {
                 // should not happen
                 getLog().warn("Cannot extract JGit version: something wrong with build process, we're not in parent, not in subproject!");
-                fillPropsUnknown(props);
+                fillPropsUnknown();
             }
         } catch (Exception e) {
             getLog().error(e);
-            fillPropsUnknown(props);
+            fillPropsUnknown();
         }
     }
 
-    private void fillPropsUnknown(Properties props) {
+    // m2e build? => save extracted values to BuildContext
+    private void saveResultToBuildContext(String paramsKey, List<String> currentParams, String resultKey, Map<String, String> result) {
+        if (buildContext != null) {
+            buildContext.setValue(paramsKey, currentParams);
+            buildContext.setValue(resultKey, result);
+        }
+    }
+
+    // m2e incremental build and input params (HEAD, etc.) not changed? => try to get previously extracted values from BuildContext
+    // note: buildContext != null only in m2e builds in Eclipse
+    private Map<String, String> getCachedResultFromBuildConext(String paramsKey, List<String> currentParams, String resultKey) {
+        if (buildContext != null && buildContext.isIncremental()) {
+            getLog().info("m2e incremental build detected");
+            // getLog().info("buildContext.getClass(): " + buildContext.getClass()); // org.eclipse.m2e.core.internal.embedder.EclipseBuildContext
+            List<String> cachedParams = (List<String>) buildContext.getValue(paramsKey);
+            // getLog().info("cachedParams: " + cachedParams);
+            if (Objects.equals(cachedParams,  currentParams)) {
+                Map<String,String> cachedResult = (Map<String,String>) buildContext.getValue(resultKey);
+                // getLog().info("cachedResult: " + cachedResult);
+                return cachedResult;
+            }
+        }
+        return null;
+    }
+
+    private Map<String, String> toMap(Properties props) {
+        Map<String, String> map = new HashMap<>();
+
+        map.put(revisionProperty, props.getProperty(revisionProperty));
+        map.put(dirtyProperty, props.getProperty(dirtyProperty));
+        map.put(shortRevisionProperty, props.getProperty(shortRevisionProperty));
+        map.put(branchProperty, props.getProperty(branchProperty));
+        map.put(tagProperty, props.getProperty(tagProperty));
+        map.put(parentProperty, props.getProperty(parentProperty));
+        map.put(commitsCountProperty, props.getProperty(commitsCountProperty));
+        map.put(authorDateProperty, props.getProperty(authorDateProperty));
+        map.put(commitDateProperty, props.getProperty(commitDateProperty));
+        map.put(describeProperty, props.getProperty(describeProperty));
+        map.put(buildDateProperty, props.getProperty(buildDateProperty));
+        map.put(buildnumberProperty, props.getProperty(buildnumberProperty));
+        return map;
+    }
+
+    private void setProperties(Map<String,String> source, Properties target) {
+        for (Map.Entry<String,String> e : source.entrySet()) target.setProperty("git." + e.getKey(), e.getValue());
+    }
+
+    private void copyProperties(Properties source, Properties target) {
+        target.setProperty(revisionProperty, source.getProperty(revisionProperty));
+        target.setProperty(shortRevisionProperty, source.getProperty(shortRevisionProperty));
+        target.setProperty(dirtyProperty, source.getProperty(dirtyProperty));
+        target.setProperty(branchProperty, source.getProperty(branchProperty));
+        target.setProperty(tagProperty, source.getProperty(tagProperty));
+        target.setProperty(parentProperty, source.getProperty(parentProperty));
+        target.setProperty(commitsCountProperty, source.getProperty(commitsCountProperty));
+        target.setProperty(authorDateProperty, source.getProperty(authorDateProperty));
+        target.setProperty(commitDateProperty, source.getProperty(commitDateProperty));
+        target.setProperty(describeProperty, source.getProperty(describeProperty));
+        target.setProperty(buildDateProperty, source.getProperty(buildDateProperty));
+        target.setProperty(buildnumberProperty, source.getProperty(buildnumberProperty));
+
+    }
+
+    private void fillPropsUnknown() {
+        Properties props = project.getProperties();
         props.setProperty(revisionProperty, "UNKNOWN_REVISION");
-        props.setProperty(shortRevisionProperty, "UNKNOWN_REVISION");
+        props.setProperty(shortRevisionProperty, "UNKNOWN_SHORT_REVISION");
+        props.setProperty(dirtyProperty, "UNKNOWN_DIRTY");
         props.setProperty(branchProperty, "UNKNOWN_BRANCH");
         props.setProperty(tagProperty, "UNKNOWN_TAG");
         props.setProperty(parentProperty, "UNKNOWN_PARENT");
-        props.setProperty(commitsCountProperty, "-1");
+        props.setProperty(commitsCountProperty, "UNKNOWN_COMMITS_COUNT");
         props.setProperty(authorDateProperty, "UNKNOWN_AUTHOR_DATE");
         props.setProperty(commitDateProperty, "UNKNOWN_COMMIT_DATE");
         props.setProperty(describeProperty, "UNKNOWN_DESCRIBE");
@@ -179,12 +314,7 @@ public class JGitBuildNumberMojo extends AbstractMojo {
         props.setProperty(buildnumberProperty, "UNKNOWN_BUILDNUMBER");
     }
 
-    private String createBuildnumber(BuildNumber bn) throws ScriptException {
-        if(null != javaScriptBuildnumberCallback) return buildnumberFromJS(bn);
-        return bn.defaultBuildnumber();
-    }
-
-    private String buildnumberFromJS(BuildNumber bn) throws ScriptException {
+    private String formatBuildnumberWithJS(Map<String, String> bn) throws ScriptException {
         String engineName = "JavaScript";
         // find JavaScript engine using context class loader
         ScriptEngine jsEngine = new ScriptEngineManager().getEngineByName(engineName);
@@ -197,17 +327,10 @@ public class JGitBuildNumberMojo extends AbstractMojo {
             getLog().error(engineName + " not found");
             return "UNKNOWN_JS_BUILDNUMBER";
         }
-        jsEngine.put("revision", bn.getRevision());
-        jsEngine.put("shortRevision", bn.getShortRevision());
-        jsEngine.put("branch", bn.getBranch());
-        jsEngine.put("tag", bn.getTag());
-        jsEngine.put("parent", bn.getParent());
-        jsEngine.put("commitsCount", bn.getCommitsCount());
-        jsEngine.put("authorDate", bn.getAuthorDate());
-        jsEngine.put("commitDate", bn.getCommitDate());
-        jsEngine.put("describe", bn.getDescribe());
-        Object res = jsEngine.eval(javaScriptBuildnumberCallback);
-        if(null == res) throw new IllegalStateException("JS buildnumber callback returns null");
+
+        for (Map.Entry<String,String> e : bn.entrySet()) jsEngine.put(e.getKey(), e.getValue());
+        Object res = jsEngine.eval(buildnumberFormat);
+        if (res == null) throw new IllegalStateException("JS buildnumber is null");
         return res.toString();
     }
 }

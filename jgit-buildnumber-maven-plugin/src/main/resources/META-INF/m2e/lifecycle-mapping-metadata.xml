@@ -8,11 +8,10 @@
                 </goals>
             </pluginExecutionFilter>
             <action>
-                <!-- enable plugin for m2e builds, e.g. triggered by local deployments to JEE application servers -->
+                <!-- enable plugin also for incremental Eclipse m2e builds, e.g. triggered by local deployments to JEE application servers -->
                 <execute>
                     <runOnIncremental>true</runOnIncremental>
-                    <runOnConfiguration>true</runOnConfiguration>
-                    <!-- no need to use plexus-build-api BuildContext, since we don't process/change any resources -->
+                    <runOnConfiguration>false</runOnConfiguration>
                 </execute>
             </action>
         </pluginExecution>

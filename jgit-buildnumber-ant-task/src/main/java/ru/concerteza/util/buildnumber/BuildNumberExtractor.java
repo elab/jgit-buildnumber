@@ -7,93 +7,141 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.TimeZone;
 
 import org.eclipse.jgit.api.Git;
-import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.errors.RevWalkException;
 import org.eclipse.jgit.lib.Constants;
 import org.eclipse.jgit.lib.ObjectId;
-import org.eclipse.jgit.lib.PersonIdent;
 import org.eclipse.jgit.lib.Ref;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.lib.RepositoryBuilder;
 import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.revwalk.RevWalk;
 
-/**
- * Extracts buildnumber fields from git repository. Put it here, not in common module, because we don't want
- * any ant task dependencies except jgit and ant
- *
- * @author alexey
- * Date: 11/16/11
- * @see BuildNumber
- */
+/** Extracts buildnumber fields from git repository. */
 public class BuildNumberExtractor {
     private static final String EMPTY_STRING = "";
 
-    /**
-     * @param repoDirectory directory to start searching git root from, should contain '.git' directory
-     *                      or be a subdirectory of such directory
-     * @param gitDateFormat date format for Git authorDate and Git commitDate 
-     * @param buildDateFormat date format for buildDate 
-     * @return extracted buildnumber object
-     * @throws Exception if git repo not found or cannot be read
-     */
-    public static BuildNumber extract(File repoDirectory, String gitDateFormat, String buildDateFormat) throws Exception {
+    File gitDir;
+    Git git;
+    Repository repo;
+
+    ObjectId headObjectId;
+    String headSha1;
+    String headSha1Short;
+
+    boolean gitStatusDirty;
+
+    /** initializes values which are always required, regardless of full or incremental build */
+    public BuildNumberExtractor(File repoDirectory) throws Exception {
         if(!(repoDirectory.exists() && repoDirectory.isDirectory())) throw new IOException(
                 "Invalid repository directory provided: " + repoDirectory.getAbsolutePath());
-        // open repo, jgit has some problems with not canonical paths
+
+        // (previously, jgit had some problems with not canonical paths; is it still the case?)
         File canonicalRepo = repoDirectory.getCanonicalFile();
-        Repository repo = new RepositoryBuilder().findGitDir(canonicalRepo).build();
-        try {
-            // extract HEAD revision
-            ObjectId revisionObject = repo.resolve(Constants.HEAD);
-            if (null == revisionObject) throw new IOException("Cannot read current revision from repository: " + repo);
-            String revision = revisionObject.name();
-            // extract current branch
-            String branch = readCurrentBranch(repo, revision);
-            // extract current tag
-            String tag = readCurrentTag(repo, revision);
-            // extract current parent
-            String parent = readCurrentParent(repo, revision);
-            // count total commits
-            int commitsCount = countCommits(repo, revisionObject);
-            // extract authored date of current revision
-            String authorDate = readAuthoredDate(repo, revision, gitDateFormat);
-            // extract committed date of current revision
-            String commitDate = readCommittedDate(repo, revision, gitDateFormat);
-            // extract git "describe" result of current revision
-            String describe = readDescribe(repo);
-            String buildDate = getCurrentBuildDate(buildDateFormat); 
-            return new BuildNumber(revision, branch, tag, parent, commitsCount, authorDate, commitDate, describe, buildDate);
-        } finally {
-            repo.close();
-        }
+        RepositoryBuilder builder = new RepositoryBuilder().findGitDir(canonicalRepo);
+
+        gitDir = builder.getGitDir();
+        git = Git.open(gitDir);
+        repo = git.getRepository();
+
+        Ref headRef = repo.exactRef(Constants.HEAD);
+        if (headRef == null) throw new IOException("Cannot read current revision from repository: " + repo);
+
+        headObjectId = headRef.getObjectId();
+        headSha1 = headObjectId.name();
+        headSha1Short = abbreviateSha1(headSha1);
+
+        // long t = System.currentTimeMillis();
+        gitStatusDirty = !git.status().call().isClean();
+        // System.out.println("dirty: " + gitStatusDirty + " (" + (System.currentTimeMillis() - t) + " ms)");
     }
 
-    private static String readCurrentBranch(Repository repo, String revision) throws IOException {
+    @Override
+    protected void finalize() throws Throwable {
+        git.close(); // also closes the `repo`
+    }
+
+    public String getHeadSha1() { return headSha1; }
+    public String getHeadSha1Short() { return headSha1Short; }
+    public boolean isGitStatusDirty() { return gitStatusDirty; }
+
+    public Map<String, String> extract(String gitDateFormat, String buildDateFormat, String dateFormatTimeZone, String countCommitsSinceInclusive, String countCommitsSinceExclusive, String dirtyValue) throws Exception {
+        try (RevWalk revWalk = new RevWalk(repo)) {
+            String branch = readCurrentBranch(repo, headSha1);
+            String tag = readTag(repo, headSha1);
+
+            RevCommit headCommit = revWalk.parseCommit(headObjectId);
+
+            String parent = readParent(headCommit);
+            int commitsCount = countCommits(repo, headCommit, countCommitsSinceInclusive, countCommitsSinceExclusive);
+
+            DateFormat dfGitDate = new SimpleDateFormat(gitDateFormat); // default locale
+            if (dateFormatTimeZone != null) dfGitDate.setTimeZone(TimeZone.getTimeZone(dateFormatTimeZone));
+            String authorDate = dfGitDate.format(headCommit.getAuthorIdent().getWhen());
+            String commitDate = dfGitDate.format(headCommit.getCommitterIdent().getWhen());
+
+            String describe = git.describe().setLong(true).call();
+
+            SimpleDateFormat dfBuildDate = new SimpleDateFormat(buildDateFormat);
+            if (dateFormatTimeZone != null) dfBuildDate.setTimeZone(TimeZone.getTimeZone(dateFormatTimeZone));
+            String buildDate = dfBuildDate.format(new Date());
+
+            String revision = headSha1;
+            String shortRevision = abbreviateSha1(headSha1);
+            String dirty = gitStatusDirty ? dirtyValue : "";
+            String commitsCountAsString = Integer.toString(commitsCount);
+
+            String buildnumber = defaultBuildnumber(tag, branch, commitsCountAsString, shortRevision, dirty);
+
+            Map<String, String> res = new HashMap<>();
+            res.put("revision", revision);
+            res.put("shortRevision", shortRevision);
+            res.put("dirty", dirty);
+            res.put("branch", branch);
+            res.put("tag", tag);
+            res.put("parent", parent);
+            res.put("commitsCount", commitsCountAsString);
+            res.put("authorDate", authorDate);
+            res.put("commitDate", commitDate);
+            res.put("describe", describe);
+            res.put("buildDate", buildDate);
+            res.put("buildnumber", buildnumber);
+
+            return res;
+        }
+
+    }
+
+    private String abbreviateSha1(String sha1) {
+        return (sha1 != null && sha1.length() > 7) ? sha1.substring(0, 7) : sha1;
+    }
+
+    public String defaultBuildnumber(String tag, String branch, String commitsCount, String shortRevision, String dirty) {
+        String name = (tag.length() > 0) ? tag : (branch.length() > 0) ? branch : "UNNAMED";
+        return name + "." + commitsCount + "." + shortRevision + (dirty.length() > 0 ? "-" + dirty : "");
+    }
+
+    private static String readCurrentBranch(Repository repo, String headSha1) throws IOException {
         String branch = repo.getBranch();
         // should not happen
         if (null == branch) return EMPTY_STRING;
-        if (revision.equals(branch)) return EMPTY_STRING;
+        if (headSha1.equals(branch)) return EMPTY_STRING;
         return branch;
     }
 
-    private static String readCurrentTag(Repository repo, String revision) {
+    private static String readTag(Repository repo, String sha1) {
         Map<String, String> tagMap = loadTagsMap(repo);
-        String tag = tagMap.get(revision);
+        String tag = tagMap.get(sha1);
         if (null == tag) return EMPTY_STRING;
         return tag;
     }
 
-    private static String readCurrentParent(Repository repo, String revision) throws IOException {
-        ObjectId rev = repo.resolve(revision);
-        if (null == rev) return EMPTY_STRING;
-        RevWalk rw = new RevWalk(repo);
-        RevCommit commit = rw.parseCommit(rev);
+    private static String readParent(RevCommit commit) throws IOException {
+        if (commit == null) return EMPTY_STRING;
         RevCommit[] parents = commit.getParents();
         if (null == parents || parents.length == 0) return EMPTY_STRING;
-        rw.dispose();
         String parentsFormat = null;
         for (RevCommit p : parents) {
             String sha1 = p.getId().name();
@@ -106,38 +154,6 @@ public class BuildNumberExtractor {
         return parentsFormat;
     }
 
-    /** @return authored date of the commit identified by `revision` formatted according to 'dateFormat' */
-    private static String readAuthoredDate(Repository repo, String revision, String dateFormat) throws IOException {
-        DateFormat df = new SimpleDateFormat(dateFormat);
-        ObjectId rev = repo.resolve(revision);
-        if (null == rev) return EMPTY_STRING;
-        RevWalk rw = new RevWalk(repo);
-        RevCommit commit = rw.parseCommit(rev);
-        PersonIdent author = commit.getAuthorIdent();
-        Date authorDate = author.getWhen();
-        return df.format(authorDate);
-    }
-
-    /** @return committed date of the commit identified by `revision` formatted according to 'dateFormat' */
-    private static String readCommittedDate(Repository repo, String revision, String dateFormat) throws IOException {
-        DateFormat df = new SimpleDateFormat(dateFormat);
-        ObjectId rev = repo.resolve(revision);
-        if (null == rev) return EMPTY_STRING;
-        RevWalk rw = new RevWalk(repo);
-        RevCommit commit = rw.parseCommit(rev);
-        PersonIdent committer = commit.getCommitterIdent();
-        Date committedDate = committer.getWhen();
-        return df.format(committedDate);
-    }
-
-    private static String readDescribe(Repository repo) throws IOException, GitAPIException {
-        return new Git(repo).describe().setLong(true).call();
-    }
-
-    private static String getCurrentBuildDate(String dateFormat) {
-    	return new SimpleDateFormat(dateFormat).format(new Date());
-    }
-
     // sha1 -> tag name
     private static Map<String, String> loadTagsMap(Repository repo) {
         Map<String, Ref> refMap = repo.getTags();
@@ -145,12 +161,7 @@ public class BuildNumberExtractor {
         for (Map.Entry<String, Ref> en : refMap.entrySet()) {
             String sha1 = extractPeeledSha1(repo, en.getValue());
             String existed = res.get(sha1);
-            final String value;
-            if (null == existed) {
-                value = en.getKey();
-            } else {
-                value = existed + ";" + en.getKey();
-            }
+            final String value = (existed == null) ? en.getKey() : existed + ";" + en.getKey();
             res.put(sha1, value);
         }
         return res;
@@ -163,21 +174,33 @@ public class BuildNumberExtractor {
         return null != oid ? oid.name() : peeled.getObjectId().name();
     }
 
-    // takes about 1 sec to count 69939 in intellijidea repo
-    private static int countCommits(Repository repo, ObjectId revision) throws IOException {
-        RevWalk walk = new RevWalk(repo);
-        walk.setRetainBody(false);
-        RevCommit head = walk.parseCommit(revision);
-        walk.markStart(head);
-        int res = 0;
-        try {
-            for (RevCommit commit : walk) res += 1;
+    private int countCommits(Repository repo, RevCommit headCommit, String countCommitsSinceInclusive, String countCommitsSinceExclusive) throws Exception {
+        try (RevWalk walk = new RevWalk(repo)) {
+            walk.setRetainBody(false);
+            walk.markStart(headCommit);
+            int res = 0;
+            if (countCommitsSinceInclusive != null) {
+                String ancestorSha1 = getSha1(countCommitsSinceInclusive);
+                for (RevCommit commit : walk) { res += 1; if (commit.getId().getName().startsWith(ancestorSha1)) break; }
+            } else if (countCommitsSinceExclusive != null) {
+                String ancestorSha1 = getSha1(countCommitsSinceExclusive);
+                for (RevCommit commit : walk) { if (commit.getId().getName().startsWith(ancestorSha1)) break; res += 1; }
+            } else {
+                for (RevCommit commit : walk) { res += 1; }
+            }
+            return res;
         } catch (RevWalkException ex) {
             // ignore exception thrown by JGit when walking shallow clone, return -1 to indicate shallow
             return -1;
-        } finally {
-            walk.dispose();
         }
-        return res;
     }
+
+    /** If the parameter is a tag, returns SHA-1 of the commit it points to; otherwise returns the parameter unchanged. 
+     * @param tagOrSha1 tag (annotated or lightweight) or SHA-1 (complete or abbreviated) 
+     * @return SHA-1 (complete or abbreviated) */
+    private String getSha1(String tagOrSha1) throws Exception {
+        Ref ref = repo.exactRef(Constants.R_TAGS + tagOrSha1);
+        return (ref != null)? ref.getPeeledObjectId().name() : tagOrSha1;
+    }
+
 }
