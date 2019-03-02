@@ -33,7 +33,10 @@ public class BuildNumberExtractor {
 
     boolean gitStatusDirty;
 
-    /** initializes values which are always required, regardless of full or incremental build */
+	/** Initializes values which are always required, regardless of full or incremental build. 
+	 *  @param repoDirectory directory to start searching git root from, should contain '.git' directory or be a subdirectory of such directory.
+	 *  @throws Exception if git repo not found or repo reading error happened
+	 */
     public BuildNumberExtractor(File repoDirectory) throws Exception {
         if(!(repoDirectory.exists() && repoDirectory.isDirectory())) throw new IOException(
                 "Invalid repository directory provided: " + repoDirectory.getAbsolutePath());
