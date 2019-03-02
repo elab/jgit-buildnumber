@@ -6,9 +6,9 @@
     <artifactId>jgit-buildnumber-parent</artifactId>
     <version>2.0.0-SNAPSHOT</version>
     <packaging>pom</packaging>
-    <name>JGit Build Number Plugins For Maven And Ant</name>
+    <name>JGit Buildnumber for Maven, Ant, and Gradle</name>
 
-    <description>Maven plugin and Ant task, extract buildnumbers from project's Git repository without Git command line tool</description>
+    <description>Extract buildnumber from project's Git repository without Git command line tool</description>
     <url>https://github.com/elab/jgit-buildnumber</url>
     <licenses>
         <license>
@@ -85,6 +85,7 @@
     </developers>
 
     <modules>
+        <module>jgit-buildnumber-common</module>
         <module>jgit-buildnumber-maven-plugin</module>
         <module>jgit-buildnumber-ant-task</module>
         <module>jgit-buildnumber-gradle-plugin</module>

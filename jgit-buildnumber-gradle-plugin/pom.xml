@@ -8,7 +8,7 @@
     </parent>
     <artifactId>jgit-buildnumber-gradle-plugin</artifactId>
     <packaging>jar</packaging>
-    <name>JGit Build Number Gradle Plugin</name>
+    <name>JGit Buildnumber Gradle Plugin</name>
 
     <description>Gradle plugin, extracts buildnumbers from project's Git repository without Git command line tool</description>
     <licenses>
@@ -32,7 +32,7 @@
     <dependencies>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>jgit-buildnumber-ant-task</artifactId>
+            <artifactId>jgit-buildnumber-common</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>

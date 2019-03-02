@@ -23,7 +23,7 @@ import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
 import org.sonatype.plexus.build.incremental.BuildContext;
 
-/** Goal which creates build number. */
+/** Goal which creates buildnumber. */
 @Mojo(name = "extract-buildnumber", defaultPhase = LifecyclePhase.VALIDATE)
 public class JGitBuildNumberMojo extends AbstractMojo {
 

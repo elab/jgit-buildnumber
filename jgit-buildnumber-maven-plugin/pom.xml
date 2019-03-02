@@ -8,7 +8,7 @@
     </parent>
     <artifactId>jgit-buildnumber-maven-plugin</artifactId>
     <packaging>maven-plugin</packaging>
-    <name>JGit Build Number Maven Plugin</name>
+    <name>JGit Buildnumber Maven Plugin</name>
 
     <description>Maven plugin, extracts buildnumbers from project's Git repository without Git command line tool</description>
     <licenses>
@@ -39,16 +39,10 @@
     </developers>
 
     <dependencies>
-        <!-- this dependency doesn't pull ant with it - we won't use ant here -->
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>jgit-buildnumber-ant-task</artifactId>
+            <artifactId>jgit-buildnumber-common</artifactId>
             <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.eclipse.jgit</groupId>
-            <artifactId>org.eclipse.jgit</artifactId>
-            <version>${jgit.version}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.maven</groupId>

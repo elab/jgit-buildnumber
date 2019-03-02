@@ -6,11 +6,11 @@
         <artifactId>jgit-buildnumber-parent</artifactId>
         <version>2.0.0-SNAPSHOT</version>
     </parent>
-    <artifactId>jgit-buildnumber-ant-task</artifactId>
+    <artifactId>jgit-buildnumber-common</artifactId>
     <packaging>jar</packaging>
-    <name>JGit Buildnumber Ant Task</name>
+    <name>JGit Buildnumber Common</name>
 
-    <description>Ant task, extracts buildnumbers from project's Git repository without Git command line tool</description>
+    <description>Extracts buildnumbers from project's Git repository without Git command line tool</description>
     <licenses>
         <license>
             <name>Apache License 2.0</name>
@@ -24,23 +24,26 @@
             <url>http://alexkasko.com</url>
         </developer>
         <developer>
+            <name>George Theofanous</name>
+            <url>https://github.com/ael1930</url>
+        </developer>
+        <developer>
             <name>Eugen Labun</name>
             <email>labun@gmx.net</email>
             <url>https://github.com/elab</url>
+        </developer>
+        <developer>
+            <name>Austin Doupnik</name>
+            <email>austin.doupnik@bina.roche.com</email>
+            <url>https://github.com/binalabs</url>
         </developer>
     </developers>
 
     <dependencies>
         <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>jgit-buildnumber-common</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.ant</groupId>
-            <artifactId>ant</artifactId>
-            <version>1.7.0</version>
-            <scope>provided</scope>
+            <groupId>org.eclipse.jgit</groupId>
+            <artifactId>org.eclipse.jgit</artifactId>
+            <version>${jgit.version}</version>
         </dependency>
     </dependencies>
 
