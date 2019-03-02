@@ -1,4 +1,4 @@
-package ru.concerteza.util.buildnumber;
+package com.labun.buildnumber;
 
 import java.io.File;
 import java.util.Arrays;

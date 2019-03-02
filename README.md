@@ -179,7 +179,7 @@ Extracted properties are put into:
 build.xml usage snippet:
 
     <target name="git-revision">
-        <taskdef name="jgit-buildnumber" classname="ru.concerteza.util.buildnumber.JGitBuildNumberAntTask" classpathref="lib.static.classpath"/>
+        <taskdef name="jgit-buildnumber" classname="com.labun.buildnumber.JGitBuildNumberAntTask" classpathref="lib.static.classpath"/>
         <jgit-buildnumber/>
         <echo>Git version extracted ${git.commitsCount} (${git.shortRevision})</echo>
     </target>
@@ -190,7 +190,7 @@ Default buildnumber in form `<tag or branch>.<commitsCount>.<shortRevision>` wil
 If you want to customize it, you can use Ant [Script task](http://ant.apache.org/manual/Tasks/script.html) like this:
 
     <target name="git-revision">
-        <taskdef name="jgit-buildnumber" classname="ru.concerteza.util.buildnumber.JGitBuildNumberAntTask" classpathref="lib.static.classpath"/>
+        <taskdef name="jgit-buildnumber" classname="com.labun.buildnumber.JGitBuildNumberAntTask" classpathref="lib.static.classpath"/>
         <jgit-buildnumber/>
         <script language="javascript">
             var tag = project.getProperty("git.tag")
@@ -203,8 +203,8 @@ If you want to customize it, you can use Ant [Script task](http://ant.apache.org
 Usage in Gradle
 ----------------
 
- - Add the plugin dependency in your build.gradle `classpath 'ru.concerteza.buildnumber:jgit-buildnumber-gradle-plugin:1.2.9-SNAPSHOT'`
- - Apply the plugin in one of the following ways `apply plugin: 'jgit-buildnumber-gradle-plugin'` or `apply plugin: ru.concerteza.util.buildnumber.plugin.JGitBuildNumberPlugin`
+ - Add the plugin dependency in your build.gradle `classpath 'com.labun.buildnumber:jgit-buildnumber-gradle-plugin:2.0.0'`
+ - Apply the plugin in one of the following ways `apply plugin: 'jgit-buildnumber-gradle-plugin'` or `apply plugin: com.labun.buildnumber.JGitBuildNumberGradlePlugin`
  - Execute the jGitBuildnumber_ExtractBuildnumber task `tasks.jGitBuildnumber_ExtractBuildnumber.execute()`
 
  Extracted properties are put into:
@@ -224,7 +224,7 @@ Usage in Gradle
          mavenLocal()  
       }  
       dependencies {  
-         classpath 'ru.concerteza.buildnumber:jgit-buildnumber-gradle-plugin:1.2.9-SNAPSHOT'  
+         classpath 'com.labun.buildnumber:jgit-buildnumber-gradle-plugin:2.0.0'  
       }  
     }  
     apply plugin: 'jgit-buildnumber-gradle-plugin'  
