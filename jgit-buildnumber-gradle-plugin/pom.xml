@@ -10,8 +10,8 @@
 
     <artifactId>jgit-buildnumber-gradle-plugin</artifactId>
     <packaging>jar</packaging>
-    <name>JGit Buildnumber Gradle Plugin</name>
-    <description>Gradle plugin, extracts buildnumbers from project's Git repository without Git command line tool</description>
+    <name>JGit Build Number Gradle Plugin</name>
+    <description>Extracts Git metadata and a freely composable build number in pure Java without Git command-line tool.</description>
 
     <licenses>
         <license>

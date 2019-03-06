@@ -23,25 +23,25 @@ import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
 import org.sonatype.plexus.build.incremental.BuildContext;
 
-/** Goal which creates buildnumber. */
+/** Goal which extracts Git metadata and creates build number. */
 @Mojo(name = "extract-buildnumber", defaultPhase = LifecyclePhase.VALIDATE)
 public class JGitBuildNumberMojo extends AbstractMojo {
 
     @Component
     private BuildContext buildContext;
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////
+    // ---------- extracted properties ----------
 
     @Parameter(readonly = true)
     private String revisionProperty = "git.revision";
 
-    /** {@link #dirtyValue} if differences exist between working-tree, index, and HEAD; empty string otherwise. */
-    @Parameter(readonly = true)
-    private String dirtyProperty = "git.dirty";
-
     @Parameter(readonly = true)
     private String shortRevisionProperty = "git.shortRevision";
 
+    /** {@link #dirtyValue} if differences exist between working-tree, index, and HEAD; empty string otherwise. */
+    @Parameter(readonly = true)
+    private String dirtyProperty = "git.dirty";
+    
     @Parameter(readonly = true)
     private String branchProperty = "git.branch";
 
@@ -76,7 +76,7 @@ public class JGitBuildNumberMojo extends AbstractMojo {
     @Parameter(readonly = true)
     private String buildNumberProperty = "git.buildNumber";
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////
+    // ---------- parameters (user configurable) ----------
 
     /** Which string to use for `dirty` property. */
     @Parameter(defaultValue = "dirty")
@@ -113,6 +113,11 @@ public class JGitBuildNumberMojo extends AbstractMojo {
     @Parameter
     private String buildNumberFormat;
 
+    /** Directory to start searching Git root from, should contain '.git' directory
+     *  or be a subdirectory of such directory. '${project.basedir}' is used by default. */
+    @Parameter(defaultValue = "${project.basedir}")
+    private File repositoryDirectory;
+
     /** Setting this parameter to 'false' allows to execute plugin in every submodule, not only in root one. */
     @Parameter(defaultValue = "true")
     private boolean runOnlyAtExecutionRoot;
@@ -121,12 +126,7 @@ public class JGitBuildNumberMojo extends AbstractMojo {
     @Parameter(defaultValue = "false")
     private boolean skip;
 
-    /** Directory to start searching git root from, should contain '.git' directory
-     *  or be a subdirectory of such directory. '${project.basedir}' is used by default. */
-    @Parameter(defaultValue = "${project.basedir}")
-    private File repositoryDirectory;
-
-    ///////////////////////////////////////////////////////////////////////////////////////////////
+    // ---------- parameters (read only) ----------
 
     @Parameter(property = "project.basedir", readonly = true, required = true)
     private File baseDirectory;
@@ -142,7 +142,7 @@ public class JGitBuildNumberMojo extends AbstractMojo {
     @Parameter(property = "project.parent", readonly = true)
     private MavenProject parentProject;
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////
+    // ---------- implementation ----------
 
     /** Extracts buildnumber fields from git repository and publishes them as maven properties.
      *  Executes only once per build. Return default (unknown) buildnumber fields on error. */
@@ -264,8 +264,8 @@ public class JGitBuildNumberMojo extends AbstractMojo {
         Map<String, String> map = new HashMap<>();
 
         map.put(revisionProperty, props.getProperty(revisionProperty));
-        map.put(dirtyProperty, props.getProperty(dirtyProperty));
         map.put(shortRevisionProperty, props.getProperty(shortRevisionProperty));
+        map.put(dirtyProperty, props.getProperty(dirtyProperty));
         map.put(branchProperty, props.getProperty(branchProperty));
         map.put(tagProperty, props.getProperty(tagProperty));
         map.put(parentProperty, props.getProperty(parentProperty));

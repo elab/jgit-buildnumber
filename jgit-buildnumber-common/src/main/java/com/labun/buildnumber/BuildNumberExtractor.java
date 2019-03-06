@@ -19,7 +19,7 @@ import org.eclipse.jgit.lib.RepositoryBuilder;
 import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.revwalk.RevWalk;
 
-/** Extracts buildnumber fields from git repository. */
+/** Extracts Git metadata and creates build number. */
 public class BuildNumberExtractor {
     private static final String EMPTY_STRING = "";
 
@@ -33,10 +33,11 @@ public class BuildNumberExtractor {
 
     boolean gitStatusDirty;
 
-	/** Initializes values which are always required, regardless of full or incremental build. 
-	 *  @param repoDirectory directory to start searching git root from, should contain '.git' directory or be a subdirectory of such directory.
-	 *  @throws Exception if git repo not found or repo reading error happened
-	 */
+    /** Initializes values from Git repo, which are always required, regardless of full or incremental build.
+     * 
+     * @param repoDirectory directory to start searching git root from, should contain '.git' directory or be a subdirectory of such directory.
+     * @throws Exception if git repo not found or repo reading error happened
+     */
     public BuildNumberExtractor(File repoDirectory) throws Exception {
         if(!(repoDirectory.exists() && repoDirectory.isDirectory())) throw new IOException(
                 "Invalid repository directory provided: " + repoDirectory.getAbsolutePath());
@@ -110,7 +111,7 @@ public class BuildNumberExtractor {
             res.put("commitDate", commitDate);
             res.put("describe", describe);
             res.put("buildDate", buildDate);
-			res.put("buildNumber", buildNumber);
+            res.put("buildNumber", buildNumber);
 
             return res;
         }
@@ -145,16 +146,16 @@ public class BuildNumberExtractor {
         if (commit == null) return EMPTY_STRING;
         RevCommit[] parents = commit.getParents();
         if (null == parents || parents.length == 0) return EMPTY_STRING;
-        String parentsFormat = null;
+        String result = null;
         for (RevCommit p : parents) {
             String sha1 = p.getId().name();
-            if (null == parentsFormat) {
-                parentsFormat = sha1;
+            if (null == result) {
+                result = sha1;
             } else {
-                parentsFormat += ";" + sha1;
+                result += ";" + sha1;
             }
         }
-        return parentsFormat;
+        return result;
     }
 
     // sha1 -> tag name

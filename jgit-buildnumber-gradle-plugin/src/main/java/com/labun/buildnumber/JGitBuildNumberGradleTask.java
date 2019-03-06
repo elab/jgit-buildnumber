@@ -8,7 +8,8 @@ import org.gradle.api.DefaultTask;
 import org.gradle.api.plugins.ExtraPropertiesExtension;
 import org.gradle.api.tasks.TaskAction;
 
-/** <pre>
+/** Extracts Git metadata and creates build number. Publishes them as following project properties:
+<pre>
 gitRevision
 gitShortRevision
 gitDirty
@@ -16,12 +17,13 @@ gitBranch
 gitTag
 gitParent
 gitCommitsCount
-gitAuthorDate 
-gitCommitDate 
+gitAuthorDate
+gitCommitDate
 gitDescribe
 gitBuildDate
 gitBuildNumber
-</pre> */
+</pre>
+ */
 public class JGitBuildNumberGradleTask extends DefaultTask {
 
     @TaskAction

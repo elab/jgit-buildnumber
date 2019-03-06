@@ -1,110 +1,169 @@
-Git buildnumber plugin for Maven, Gradle and Ant based on JGit
-==============================================================
+JGit Build Number for Maven, Ant, and Gradle
+============================================
 
-Allows to get git buildnumbers, while building java projects, in pure Java without Git command-line tool.
+Extracts Git metadata and a freely composable build number in pure Java without Git command-line tool. Eclipse m2e compatible.
 
-Note: Maven already has ubiquitous [buildnumber-maven-plugin](http://mojo.codehaus.org/buildnumber-maven-plugin/) , this project is NIH substitution for it with Git support only.
+Based on the [work of Alex Kasko](https://github.com/alx3apps/jgit-buildnumber) with [merged changes from other forks](https://github.com/elab/jgit-buildnumber/network). Thank you, [guys](https://github.com/elab/jgit-buildnumber/graphs/contributors), for contribution! Additionally, contains bug fixes, new features, and performance improvements.
 
-Plugin was added to [Maven central](http://repo1.maven.org/maven2/com/labun/jgit-buildnumber-maven-plugin/).
-Maven-generated site is available [here](http://elab.github.com/jgit-buildnumber).
+Available from [Maven central](http://repo1.maven.org/maven2/com/labun/buildnumber/).
 
-Build number
+
+Build Number
 ------------
 
-Build number is project-build's id, it is generated during build process, stored in MANIFEST.MF file. On application startup it is retrived from MANIFEST.MF to be showed in -v ouput or in webpage footer.
+Build number should identify the code state of the project, from which it has been created. 
+Particularly, it should *not* depend on: 
+- where the build takes place (locally, build server);
+- how many times the same project state has been build (i.e. no simple increment).
 
-In our case buildnumber consists of:
+In our case the __default BuildNumber__ looks like `v19.3351.ddda02b` and consists of:
 
-__Human__ __readable__ __id__: tag name or branch name
+- _human readable id_: tag name or branch name `v19`
+  ```
+  git describe --exact-match --tags HEAD # tag name
+  git symbolic-ref -q HEAD # branch name
+  ```
 
-    git describe --exact-match --tags HEAD # tag name
-    git symbolic-ref -q HEAD # branch name
+- _build incremental id_: commits count (closely resembles SVN revision number) `3351`
+  ```
+  git rev-list HEAD | wc -l
+  ```
 
-__Globally__ __unique__ __id__: commit sha1
+- _globally unique id_: commit SHA-1 `ddda02b`
+  ```
+  git rev-parse HEAD # revision
+  git rev-parse --short HEAD # short revision
+  ```
 
-    git rev-parse HEAD # revision
-    git rev-parse --short HEAD # short revision
+- _dirty flag_: if differences exist between working-tree, index, and HEAD; you cannot trust the build in this case :)<br>
+  the whole BuildNumber would look like `v19.3351.ddda02b-dirty`;
+  ```
+  git status
+  ```
 
-__Build__ __incremental__ __id__: commits count in this branch
+Instead of the Git CLI commands above, the pure Java [JGit](http://www.jgit.org/) API is used.
+Note: The JGit output (intentionally) doesn't coincide exactly with the output of Git CLI. 
+E.g. branch and tag names are returned without the `refs/...` prefix.
 
-    git rev-list HEAD | wc -l
+**The default BuildNumber can be easily redefined using extracted properties (see [buildNumberFormat](#buildNumberFormat)).**
+ 
+All properties, including BuildNumber, are available in Maven, Ant, or Gradle build for the entire application.
 
-This plugin will extract parameters above and expose them as Maven or Ant properties.
-It does __NOT__ use Git CLI commands above, it uses pure java [JGit](http://www.jgit.org/) API instead.
-
-*Note: result properties won't coincide exactly with output of git CLI commands above,
-there are differences that are not taken into consideration - checkouted tag or not, all tags returned instead of latest,
-commits are counted form HEAD to root without branches*
 
 Usage in Maven 3
 ----------------
 
-Note: this plugin accesses Git repo only once during multi-module build.
+Typical usage with writing extracted properties to the MANIFEST.MF file:
 
-### Store raw buildnumber parts in MANIFEST.MF file
+```xml
+<build>
+    <plugins>
 
-In this case extracted buildnumber parts are stored in manifest as is, and may be read from there on startup and composed into buildnumber.
+        <plugin>
+            <groupId>com.labun.buildnumber</groupId>
+            <artifactId>jgit-buildnumber-maven-plugin</artifactId>
+            <version>2.0.0</version>
+            <executions>
+                <execution>
+                    <id>git-buildnumber</id>
+                    <goals>
+                        <goal>extract-buildnumber</goal>
+                    </goals>
+                </execution>
+            </executions>
+        </plugin>
 
-Plugin config:
+        <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-jar-plugin</artifactId>
+            <version>3.1.1</version>
+            <configuration>
+                <archive>
+                    <manifestEntries>
+                        <Version>${git.buildNumber}</Version>
+                        <Build-Time>${git.buildDate}</Build-Time>
+                    </manifestEntries>
+                </archive>
+            </configuration>
+        </plugin>
 
-    <!-- enable JGit plugin -->
-    <plugin>
-        <groupId>com.labun.buildnumber</groupId>
-        <artifactId>jgit-buildnumber-maven-plugin</artifactId>
-        <version>2.0.0</version>
-        <executions>
-            <execution>
-                <id>git-buildnumber</id>
+    </plugins>
+</build>
+```
+
+You can also write the extracted properties into arbitrary files (.properties, .java, ...) using [Maven resource filtering](https://maven.apache.org/plugins/maven-resources-plugin/examples/filter.html).
+
+The plugin binds per default to the `validate` phase, the first Maven life cycle phase, so that the extracted properties are available in all other phases. 
+
+If the plugin is used in the parent module of a multi-module project, it will access the Git repo only once. (If you will change that, see [runOnlyAtExecutionRoot](#runOnlyAtExecutionRoot).)
+
+In the build log (or in Eclipse Maven console) you can see all the extracted properties and execution time.
+
+In __Eclipse__, plugin will also be executed in m2e incremental builds (yet not on configuration). 
+This is particularly important for local deployments to a JEE server from within Eclipse, if you want to see the proper build number in your web application. (Local deployment somehow depends on m2e incremental build).
+
+__Execution time__ depends first of all on the complexity of Git repo (especially on the number of tags, followed by the number of commits) and whether you use a custom JS `buildNumberFormat` or not. Without custom `buildNumberFormat`, you should expect regular Maven execution time of 0.5 - 1.5 s. Add 0.5 s. if custom `buildNumberFormat` is used. Eclipse m2e incremental execution is much faster (often factor of 2) than the regular Maven execution. 64 bit JRE is significantly faster than 32 bit JRE, warm is faster than cold, and so on.
+
+> Only if you issuing performance problems due to continuous plugin execution by Eclipse m2e incremental build (please report), "Run on incremental" can be disabled by adding the following to the m2e workspace `lifecycle-mapping-metadata.xml` (Eclipse > Window > Preferences > Maven > Lifecycle Mappings):
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<lifecycleMappingMetadata>
+    <pluginExecutions>
+        <pluginExecution>
+            <pluginExecutionFilter>
+                <groupId>com.labun.buildnumber</groupId>
+                <artifactId>jgit-buildnumber-maven-plugin</artifactId>
+                <versionRange>[0.0,)</versionRange>
                 <goals>
                     <goal>extract-buildnumber</goal>
                 </goals>
-                <phase>prepare-package</phase>
-            </execution>
-        </executions>
-    </plugin> 
-    <!-- specify manifest fields -->
-    <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-jar-plugin</artifactId>
-        <version>3.1.1</version>
-        <configuration>
-            <archive>
-                <manifestEntries>
-                    <Specification-Title>${project.name}</Specification-Title>
-                    <Specification-Version>${project.version}</Specification-Version>
-                    <Specification-Vendor>${project.specification_vendor}</Specification-Vendor>
-                    <Implementation-Title>${project.groupId}.${project.artifactId}</Implementation-Title>
-                    <Implementation-Version>${git.revision}</Implementation-Version>
-                    <Implementation-Vendor>${project.implementation_vendor}</Implementation-Vendor>
-                    <X-Git-Branch>${git.branch}</X-Git-Branch>
-                    <X-Git-Tag>${git.tag}</X-Git-Tag>
-                    <X-Git-Commits-Count>${git.commitsCount}</X-Git-Commits-Count>
-                </manifestEntries>
-            </archive>
-        </configuration>
-    </plugin>
+            </pluginExecutionFilter>
+            <action>
+                <!-- disables plugin for m2e incremental builds -->
+                <ignore/>
+            </action>
+        </pluginExecution>
+    </pluginExecutions>
+</lifecycleMappingMetadata>
+```
+> Restart Eclipse thereafter ("apply" in Preferences is not enough).
 
-Results exmple (from MANIFEST.MF):
+### Extracted properties
 
-    Implementation-Title: ru.concerteza.util.ctz-common-utils
-    Implementation-Vendor: Con Certeza LLC
-    Implementation-Version: bc810bdf4665d8a294da0d0efb47d98463bf0ff6
-    Specification-Title: Con Certeza Common Utilities Library
-    Specification-Vendor: Con Certeza LLC
-    Specification-Version: 1.3.7
-    X-Git-Branch: 
-    X-Git-Commits-Count: 30
-    X-Git-Tag: 1.3.7
+property          | desc
+------------------|----------------
+git.revision      | HEAD SHA-1
+git.shortRevision | HEAD SHA-1 abbreviated (7 chars)
+git.dirty         | [dirtyValue](#dirtyValue) if differences exist between working-tree, index, and HEAD; empty string otherwise
+git.branch        | branch name; empty string for detached HEAD
+git.tag           | tag name; empty string if no tags defined; multiple tags separated with `;`
+git.parent        | SHA-1 of the parent commit; multiple parents separated with `;`
+git.commitsCount  | commits count; computed by traversing the history from HEAD backwards; returns -1 for a Git shallow clone
+git.authorDate    | when HEAD commit has been authored
+git.commitDate    | when HEAD commit has been committed
+git.describe      | result of Git `describe` command
+git.buildDate     | when build has started
+git.buildNumber   | composed from other properties according to [buildNumberFormat](#buildNumberFormat) parameter 
 
-### Create ready to use buildnumber
 
-Plugin may be configured to produce ready-to-use buildnumber into `git.buildnumber` property.
-By default buildnumber created as `<tag or branch>.<commitsCount>.<shortRevision>`.
+### Configuration
 
-Plugin also support custom buildnumber composition using JavaScript. This feature was added by [plevart](https://github.com/plevart).
+All parameters are optional. 
+Configuration goes under `<configuration>` tag under `<execution>` section.
 
-JS snippet can be provided to `buildnumberFormat` configuration property. Snippet will be executed
-by [Rhino JS engine](http://www.mozilla.org/rhino/) included with JDK6.
+param                                                        | desc
+-------------------------------------------------------------|----------------------------------------------
+<a name="dirtyValue">dirtyValue</a>                          | Value for `git.dirty` flag; default: String `dirty`.
+gitDateFormat                                                | Format for `git.authorDate` and `git.commitDate` (see Java `SimpleDateFormat`). The default locale will be used. TimeZone can be specified with `dateFormatTimeZone`.<br>Default: `yyyy-MM-dd`.
+buildDateFormat                                              | Format for `git.buildDate` (see Java `SimpleDateFormat`). The default locale will be used. TimeZone can be specified with `dateFormatTimeZone`.<br>Default: `yyyy-MM-dd HH:mm:ss`.
+dateFormatTimeZone                                           | TimeZone for `gitDateFormat` and `buildDateFormat`. For possible values see Java `TimeZone#getTimeZone(String)`.<br>Default: current default TimeZone, as returned by Java `TimeZone#getDefault()`.
+countCommitsSince*Inclusive*<br>countCommitsSince*Exclusive* | Specifies since which ancestor commit (inclusive or exclusive) to count commits. Can be specified as tag (annotated or lightweight) or SHA-1 (complete or abbreviated).<br>If such commit is not found, all commits get counted. If both, inclusive and exclusive parameters are specified, the "inclusive" version wins.<br><br>Useful if you only want to count commits since start of the current development iteration.<br>Default: not set (all commits get counted). 
+<a name="buildNumberFormat">buildNumberFormat</a>            | JavaScript expression to format/compose the `git.buildNumber`. Uses JS engine from JDK. All properties are exposed to JavaScript as global String variables (names without `git.` prefix). JavaScript engine is initialized only if `buildNumberFormat` is provided.<br><br>Example: `branch + "." + commitsCount + "/" + commitDate + "/" + shortRevision + (dirty.length > 0 ? "-" + dirty : "");`<br><br>Default: `<tag or branch>.<commitsCount>.<shortRevision>-<dirty>`<br> or, more precisely, equivalent of JavaScript (evaluation result of the last line gets returned; real implementation is in Java for performance):<br>`name = (tag.length > 0) ? tag : (branch.length > 0) ? branch : "UNNAMED";`<br>`name + "." + commitsCount + "." + shortRevision + (dirty.length > 0 ? "-" + dirty : "");`
+repositoryDirectory                                          | Directory to start searching Git root from, should contain `.git` directory or be a subdirectory of such directory. Default: `${project.basedir}`.
+<a name="runOnlyAtExecutionRoot">runOnlyAtExecutionRoot</a>  | Setting this parameter to `false` allows to re-read metadata from Git repo in every submodule of a multi-module project, not only in the root one. Note: the properties extracted in parent module get propagated to child modules anyway; this parameter is merely a workaround if something goes wrong. Default: `true`.
+skip                                                         | Setting this parameter to `true` will skip plugin execution. Default: `false`.
+
 
 Configuration example:
 
@@ -118,63 +177,30 @@ Configuration example:
                 <goals>
                     <goal>extract-buildnumber</goal>
                 </goals>
-                <phase>prepare-package</phase>
                 <configuration>
-                    <buildnumberFormat>
-                        tag + "_" + branch + "_" + revision.substring(10, 20) + "_" + shortRevision + "_" + commitsCount*42
-                    </buildnumberFormat>
+                    <countCommitsSinceInclusive>v18-start</countCommitsSinceInclusive>
+                    <dirtyValue>DEV</dirtyValue>
+                    <buildNumberFormat>
+                        branch + "." + commitsCount + "/" + commitDate + "/" + shortRevision + (dirty.length > 0 ? "-" + dirty : "");
+                    </buildNumberFormat>
                 </configuration>
             </execution>
         </executions>
     </plugin>
 
-`tag`, `branch`, `revision`, `shortRevision` and `commitsCount` are exposed to JavaScript as global variables (`commitsCount` as numeric).
-
-Script engine is initialized only if `buildnumberFormat` is provided so it won't break cross-platform support.
-
-If JS snippet failed to execute, it won't break build process, Rhino error will be printed to Maven output and all properties will get "UNKNOWN" values.
-
-### Maven properties configuration:
-
- * `revisionProperty`, default: `git.revision`
- * `branchProperty`, default: `git.branch`
- * `tagProperty`, default: `git.tag`
- * `commitsCountProperty`, default: `git.commitsCount`
- * `buildnumberProperty`, default: `git.buildnumber`
- * `repositoryDirectory` -  directory to start searching git root from, should contain '.git' directory
- or be a subdirectory of such directory, default: `${project.basedir}`
- * `runOnlyAtExecutionRoot`: setting this parameter to 'false' allows to execute plugin
- in every submodule, not only in root one. Default: `true`.
- This feature was added by [bradszabo](https://github.com/bradszabo).
- * `commitDateProperty`- the "committed date" of the last commit, default: `git.commitDate`
- (Warning: before 2.0.0 this property returned "authored date" of the last commit which may significantly differ from the "committed date". Fixed by [elab](https://github.com/elab) in 2.0.0)
-
- The following properties were added by [akuhtz](https://github.com/akuhtz) and [elab](https://github.com/elab):
- * `gitDateFormat` - the format used for Git authored date and Git committed date, default: `yyyy-MM-dd`
- * `buildDateProperty` - the current date when the plugin was executed during the build
-
- The following properties were added by [elab](https://github.com/elab):
- * `authorDateProperty` - the "authoredd date" of the last commit, default: `git.authorDate`
- * `buildDateFormat` - the format used for build date, default:`yyyy-MM-dd HH:mm:ss`
 
 Usage in Ant
 ------------
 
-To use buildnumber ant task you need this jars on your classpath:
+To use JGit BuildNumber Ant task you need these jars on your classpath:
 
  - `jgit-buildnumber-ant-task-2.0.0.jar`
  - `org.eclipse.jgit-5.2.1.201812262042-r.jar`
 
 Project directory that contains `.git` directory may be provided with `git.repositoryDirectory` property.
-Curent work directory is used by default.
+Current work directory is used by default.
 
-Extracted properties are put into:
-
- - `git.tag`
- - `git.branch`
- - `git.revision`
- - `git.shortRevision`
- - `git.commitsCount`
+Extracted properties are the same as with Maven.
 
 build.xml usage snippet:
 
@@ -184,10 +210,7 @@ build.xml usage snippet:
         <echo>Git version extracted ${git.commitsCount} (${git.shortRevision})</echo>
     </target>
 
-### Ready to use buildnumber
-
-Default buildnumber in form `<tag or branch>.<commitsCount>.<shortRevision>` will be put into property `git.buildnumber`.
-If you want to customize it, you can use Ant [Script task](http://ant.apache.org/manual/Tasks/script.html) like this:
+If you want to customize the default `git.buildNumber`, you can use Ant [Script task](http://ant.apache.org/manual/Tasks/script.html) like this:
 
     <target name="git-revision">
         <taskdef name="jgit-buildnumber" classname="com.labun.buildnumber.JGitBuildNumberAntTask" classpathref="lib.static.classpath"/>
@@ -195,30 +218,37 @@ If you want to customize it, you can use Ant [Script task](http://ant.apache.org
         <script language="javascript">
             var tag = project.getProperty("git.tag")
             var revision = project.getProperty("git.shortRevision")
-            var buildnumber = tag + "_" + revision
-            project.setProperty("git.buildnumber", buildnumber)
+            var buildNumber = tag + "_" + revision
+            project.setProperty("git.buildNumber", buildNumber)
         </script>
     </target>
+
 
 Usage in Gradle
 ----------------
 
- - Add the plugin dependency in your build.gradle `classpath 'com.labun.buildnumber:jgit-buildnumber-gradle-plugin:2.0.0'`
- - Apply the plugin in one of the following ways `apply plugin: 'jgit-buildnumber-gradle-plugin'` or `apply plugin: com.labun.buildnumber.JGitBuildNumberGradlePlugin`
- - Execute the jGitBuildnumber_ExtractBuildnumber task `tasks.jGitBuildnumber_ExtractBuildnumber.execute()`
+ - Add the plugin dependency in your build.gradle: `classpath 'com.labun.buildnumber:jgit-buildnumber-gradle-plugin:2.0.0'`
+ - Apply the plugin in one of the following ways: `apply plugin: 'jgit-buildnumber-gradle-plugin'` or `apply plugin: com.labun.buildnumber.JGitBuildNumberGradlePlugin`
+ - Execute the jGitBuildNumber_ExtractBuildNumber task: `tasks.jGitBuildNumber_ExtractBuildNumber.execute()`
 
- Extracted properties are put into:
+Extracted properties are put into: 
 
-  - `project.gitTag`
-  - `project.gitBranch`
-  - `project.gitRevision`
-  - `project.gitBuildnumber`
-  - `project.gitCommitsCount`
-  - `project.gitParent`
+ - `project.gitRevision`
+ - `project.gitShortRevision`
+ - `project.gitDirty`
+ - `project.gitBranch`
+ - `project.gitTag`
+ - `project.gitParent`
+ - `project.gitCommitsCount`
+ - `project.gitAuthorDate`
+ - `project.gitCommitDate`
+ - `project.gitDescribe`
+ - `project.gitBuildDate`
+ - `project.gitBuildNumber`
 
-  Example setup in build.gradle:
 
-    ```
+Example setup in build.gradle:
+
     buildscript {
       repositories{  
          mavenLocal()  
@@ -228,21 +258,16 @@ Usage in Gradle
       }  
     }  
     apply plugin: 'jgit-buildnumber-gradle-plugin'  
-    ```
 
-  The default working directory in the plugin is "." i.e this directory, if you wish to set a custom directory then the following should be added to your build.gradle
+The default working directory in the plugin is ".", i.e current directory. 
+If you wish to set a custom directory then the following should be added to your build.gradle (`projectDir` is just an example):
 
-    ```
-    task jGitBuildnumber_ExtractBuildnumber() {
+    task jGitBuildNumber_ExtractBuildNumber() {
        dir = projectDir;
     }
-    ```
 
-  projectDir is just an example.
+Usage example (write extracted properties into MANIFEST.MF file):
 
-  Example usage:
-
-    ```
     jar() {
         manifest {
             attributes(
@@ -257,10 +282,9 @@ Usage in Gradle
             )
         }
     }  
-    ```
 
-  Results example (from MANIFEST.MF):
-    ```
+Result example (from MANIFEST.MF):
+
     Manifest-Version: 1.0
     Main-Class: SearchService.application.SearchServiceMain
     Implementation-Title: SearchService
@@ -271,20 +295,10 @@ Usage in Gradle
     X-Git-Tag: 
     Version: 82
     Branch: master
-    ```
 
-###Ready to use buildnumber
-
-  Default buildnumber in form `<tag or branch>.<commitsCount>.<shortRevision>` will be put into property `project.gitBuildnumber`.
-
-Common errors
--------------
-
-This exceptions will be reported by JGit if provided `repositoryDirectory` directory doesn't contain Git repository.
-
-    java.lang.IllegalArgumentException: One of setGitDir or setWorkTree must be called
 
 License information
 -------------------
 
 This project is released under the [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0)
+

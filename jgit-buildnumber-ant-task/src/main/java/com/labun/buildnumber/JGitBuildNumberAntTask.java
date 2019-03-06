@@ -5,12 +5,11 @@ import java.util.Map;
 
 import org.apache.tools.ant.Project;
 
-/** Ant task, extracts buildnumber fields from git repository and publishes them as ant properties.
- *  @see BuildNumberExtractor */
+/** Extracts Git metadata and creates build number. Publishes them as Ant properties. See {@link JGitBuildNumberAntTask#execute()}. */
 public class JGitBuildNumberAntTask {
     private Project project;
 
-    /** @param project ant project setter */
+    /** @param project Ant project setter */
     public void setProject(Project project) {
         this.project = project;
     }
