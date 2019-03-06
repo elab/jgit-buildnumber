@@ -96,7 +96,7 @@ public class BuildNumberExtractor {
             String dirty = gitStatusDirty ? dirtyValue : "";
             String commitsCountAsString = Integer.toString(commitsCount);
 
-            String buildnumber = defaultBuildnumber(tag, branch, commitsCountAsString, shortRevision, dirty);
+            String buildNumber = defaultBuildNumber(tag, branch, commitsCountAsString, shortRevision, dirty);
 
             Map<String, String> res = new HashMap<>();
             res.put("revision", revision);
@@ -110,7 +110,7 @@ public class BuildNumberExtractor {
             res.put("commitDate", commitDate);
             res.put("describe", describe);
             res.put("buildDate", buildDate);
-            res.put("buildnumber", buildnumber);
+			res.put("buildNumber", buildNumber);
 
             return res;
         }
@@ -121,7 +121,7 @@ public class BuildNumberExtractor {
         return (sha1 != null && sha1.length() > 7) ? sha1.substring(0, 7) : sha1;
     }
 
-    public String defaultBuildnumber(String tag, String branch, String commitsCount, String shortRevision, String dirty) {
+    public String defaultBuildNumber(String tag, String branch, String commitsCount, String shortRevision, String dirty) {
         String name = (tag.length() > 0) ? tag : (branch.length() > 0) ? branch : "UNNAMED";
         return name + "." + commitsCount + "." + shortRevision + (dirty.length() > 0 ? "-" + dirty : "");
     }

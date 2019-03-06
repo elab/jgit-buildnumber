@@ -31,7 +31,7 @@ public class JGitBuildNumberAntTask {
      *     <li>{@code git.commitDate}</li>
      *     <li>{@code git.describe}</li>
      *     <li>{@code git.buildDate}</li>
-     *     <li>{@code git.buildnumber}</li>
+     *     <li>{@code git.buildNumber}</li>
      * </ul>
      * @throws Exception if git repo not found or cannot be read
      */

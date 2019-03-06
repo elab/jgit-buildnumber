@@ -71,10 +71,10 @@ public class JGitBuildNumberMojo extends AbstractMojo {
      * name = (tag.length > 0) ? tag : (branch.length > 0) ? branch : "UNNAMED";
      * name + "." + commitsCount + "." + shortRevision + (dirty.length > 0 ? "-" + dirty : "");
      * </pre>
-     * It can be overwritten using {@link #buildnumberFormat}.
+     * It can be overwritten using {@link #buildNumberFormat}.
      *  */
     @Parameter(readonly = true)
-    private String buildnumberProperty = "git.buildnumber";
+    private String buildNumberProperty = "git.buildNumber";
 
     ///////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -109,9 +109,9 @@ public class JGitBuildNumberMojo extends AbstractMojo {
 
     /** JavaScript expression to format/compose the buildnumber. All properties can be used (without prefix), e.g. 
      * <pre>branch + "." + commitsCount + "/" + commitDate + "/" + shortRevision + (dirty.length > 0 ? "-" + dirty : "");</pre>
-     * See also {@link #buildnumberProperty}. */
+     * See also {@link #buildNumberProperty}. */
     @Parameter
-    private String buildnumberFormat;
+    private String buildNumberFormat;
 
     /** Setting this parameter to 'false' allows to execute plugin in every submodule, not only in root one. */
     @Parameter(defaultValue = "true")
@@ -175,12 +175,12 @@ public class JGitBuildNumberMojo extends AbstractMojo {
 
                 long t = System.currentTimeMillis();
                 BuildNumberExtractor extractor = new BuildNumberExtractor(repositoryDirectory);
-                getLog().info("initializing git repo, get base data: " + (System.currentTimeMillis() - t) + " ms");
+                getLog().info("initializing Git repo, get base data: " + (System.currentTimeMillis() - t) + " ms");
 
                 String headSha1 = extractor.getHeadSha1Short();
                 String dirty = extractor.isGitStatusDirty() ? dirtyValue : null;
 
-                List<String> params = Arrays.asList(headSha1, dirty, gitDateFormat, buildDateFormat, dateFormatTimeZone, countCommitsSinceInclusive, countCommitsSinceExclusive,  buildnumberFormat);
+                List<String> params = Arrays.asList(headSha1, dirty, gitDateFormat, buildDateFormat, dateFormatTimeZone, countCommitsSinceInclusive, countCommitsSinceExclusive,  buildNumberFormat);
                 getLog().info("params: " + params);
                 String paramsKey = "jgitParams";
                 String resultKey = "jgitResult";
@@ -196,18 +196,18 @@ public class JGitBuildNumberMojo extends AbstractMojo {
                     result = extractor.extract(gitDateFormat, buildDateFormat, dateFormatTimeZone, countCommitsSinceInclusive, countCommitsSinceExclusive, dirtyValue);
                     getLog().info("extracting properties for buildnumber: " + (System.currentTimeMillis() - t) + " ms");
 
-                    if (buildnumberFormat != null) {
+                    if (buildNumberFormat != null) {
                         t = System.currentTimeMillis();
-                        String jsBuildnumber = formatBuildnumberWithJS(result);
-                        // overwrite the default buildnumber
-                        String defaultBuildnumber = result.put("buildnumber", jsBuildnumber);
-                        getLog().info("overwriting default buildnumber: " + defaultBuildnumber);
-                        getLog().info("formatting buildnumber with JS: " + (System.currentTimeMillis() - t) + " ms");
+                        String jsBuildNumber = formatBuildNumberWithJS(result);
+                        // overwrite the default buildNumber
+                        String defaultBuildNumber = result.put("buildNumber", jsBuildNumber);
+                        getLog().info("overwriting default buildNumber: " + defaultBuildNumber);
+                        getLog().info("formatting buildNumber with JS: " + (System.currentTimeMillis() - t) + " ms");
                     }
                 }
 
-                getLog().info("BUILDNUMBER: " + result.get("buildnumber"));
-                getLog().info("full result: " + result);
+                getLog().info("BUILDNUMBER: " + result.get("buildNumber"));
+                getLog().info("all extracted properties: " + result);
                 setProperties(result, project.getProperties());
                 saveResultToBuildContext(paramsKey, params, resultKey, result);
 
@@ -274,7 +274,7 @@ public class JGitBuildNumberMojo extends AbstractMojo {
         map.put(commitDateProperty, props.getProperty(commitDateProperty));
         map.put(describeProperty, props.getProperty(describeProperty));
         map.put(buildDateProperty, props.getProperty(buildDateProperty));
-        map.put(buildnumberProperty, props.getProperty(buildnumberProperty));
+        map.put(buildNumberProperty, props.getProperty(buildNumberProperty));
         return map;
     }
 
@@ -294,7 +294,7 @@ public class JGitBuildNumberMojo extends AbstractMojo {
         target.setProperty(commitDateProperty, source.getProperty(commitDateProperty));
         target.setProperty(describeProperty, source.getProperty(describeProperty));
         target.setProperty(buildDateProperty, source.getProperty(buildDateProperty));
-        target.setProperty(buildnumberProperty, source.getProperty(buildnumberProperty));
+        target.setProperty(buildNumberProperty, source.getProperty(buildNumberProperty));
 
     }
 
@@ -311,10 +311,10 @@ public class JGitBuildNumberMojo extends AbstractMojo {
         props.setProperty(commitDateProperty, "UNKNOWN_COMMIT_DATE");
         props.setProperty(describeProperty, "UNKNOWN_DESCRIBE");
         props.setProperty(buildDateProperty, "UNKNOWN_BUILD_DATE");
-        props.setProperty(buildnumberProperty, "UNKNOWN_BUILDNUMBER");
+        props.setProperty(buildNumberProperty, "UNKNOWN_BUILDNUMBER");
     }
 
-    private String formatBuildnumberWithJS(Map<String, String> bn) throws ScriptException {
+    private String formatBuildNumberWithJS(Map<String, String> bn) throws ScriptException {
         String engineName = "JavaScript";
         // find JavaScript engine using context class loader
         ScriptEngine jsEngine = new ScriptEngineManager().getEngineByName(engineName);
@@ -329,8 +329,8 @@ public class JGitBuildNumberMojo extends AbstractMojo {
         }
 
         for (Map.Entry<String,String> e : bn.entrySet()) jsEngine.put(e.getKey(), e.getValue());
-        Object res = jsEngine.eval(buildnumberFormat);
-        if (res == null) throw new IllegalStateException("JS buildnumber is null");
+        Object res = jsEngine.eval(buildNumberFormat);
+        if (res == null) throw new IllegalStateException("JS buildNumber is null");
         return res.toString();
     }
 }

@@ -20,12 +20,12 @@ gitAuthorDate
 gitCommitDate 
 gitDescribe
 gitBuildDate
-gitBuildnumber
+gitBuildNumber
 </pre> */
 public class JGitBuildNumberGradleTask extends DefaultTask {
 
     @TaskAction
-    public void jGitBuildnumber_ExtractBuildnumber() throws Exception {
+    public void jGitBuildNumber_ExtractBuildNumber() throws Exception {
         File repoDir = new File(".");
         String gitDateFormat = "yyyy-MM-dd";
         String buildDateFormat = "yyyy-MM-dd HH:mm:ss";
