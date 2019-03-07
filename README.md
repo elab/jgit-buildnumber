@@ -95,16 +95,14 @@ You can also write the extracted properties into arbitrary files (.properties, .
 
 The plugin binds per default to the `validate` phase, the first Maven life cycle phase, so that the extracted properties are available in all other phases. 
 
-If the plugin is used in the parent module of a multi-module project, it will access the Git repo only once. (If you will change that, see [runOnlyAtExecutionRoot](#runOnlyAtExecutionRoot).)
-
 In the build log (or in Eclipse Maven console) you can see all the extracted properties and execution time.
 
-In __Eclipse__, plugin will also be executed in m2e incremental builds (yet not on configuration). 
+If the plugin is defined in parent module of a __multi-module project__, it will access the Git repo only once. (If you will change that, see [runOnlyAtExecutionRoot](#runOnlyAtExecutionRoot).) The properties extracted in parent module get propagated to all child modules. It works this way only for normal Maven builds though, not for Eclipse m2e incremental builds, since Eclipse / OSGI has flat workspace and doesn't support nested Maven modules.
+
+The plugin contains lifecycle-mapping-metadata for __Eclipse m2e__, and will be executed in m2e incremental builds (yet not on configuration). 
 This is particularly important for local deployments to a JEE server from within Eclipse, if you want to see the proper build number in your web application. (Local deployment somehow depends on m2e incremental build).
 
-__Execution time__ depends first of all on the complexity of Git repo (especially on the number of tags, followed by the number of commits) and whether you use a custom JS `buildNumberFormat` or not. Without custom `buildNumberFormat`, you should expect regular Maven execution time of 0.5 - 1.5 s. Add 0.5 s. if custom `buildNumberFormat` is used. Eclipse m2e incremental execution is much faster (often factor of 2) than the regular Maven execution. 64 bit JRE is significantly faster than 32 bit JRE, warm is faster than cold, and so on.
-
-> Only if you issuing performance problems due to continuous plugin execution by Eclipse m2e incremental build (please report), "Run on incremental" can be disabled by adding the following to the m2e workspace `lifecycle-mapping-metadata.xml` (Eclipse > Window > Preferences > Maven > Lifecycle Mappings):
+> Only if you issuing performance problems due to continuous plugin execution by Eclipse m2e incremental build, "Run on incremental" can be disabled by adding the following to Eclipse m2e workspace `lifecycle-mapping-metadata.xml` (Eclipse > Window > Preferences > Maven > Lifecycle Mappings):
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
@@ -128,6 +126,9 @@ __Execution time__ depends first of all on the complexity of Git repo (especiall
 </lifecycleMappingMetadata>
 ```
 > Restart Eclipse thereafter ("apply" in Preferences is not enough).
+
+__Execution time__ depends first of all on the complexity of Git repo (especially on the number of tags, followed by the number of commits) and whether you use a custom JS `buildNumberFormat` or not. Without custom `buildNumberFormat`, you should expect regular Maven execution time of 0.5 - 1.5 s. Add 0.5 s. if custom `buildNumberFormat` is used. Eclipse m2e incremental execution is much faster (often factor of 2) than the regular Maven execution. 64 bit JRE is significantly faster than 32 bit JRE, warm is faster than cold, and so on.
+
 
 ### Extracted properties
 
@@ -161,7 +162,7 @@ dateFormatTimeZone                                           | TimeZone for `git
 countCommitsSince*Inclusive*<br>countCommitsSince*Exclusive* | Specifies since which ancestor commit (inclusive or exclusive) to count commits. Can be specified as tag (annotated or lightweight) or SHA-1 (complete or abbreviated).<br>If such commit is not found, all commits get counted. If both, inclusive and exclusive parameters are specified, the "inclusive" version wins.<br><br>Useful if you only want to count commits since start of the current development iteration.<br>Default: not set (all commits get counted). 
 <a name="buildNumberFormat">buildNumberFormat</a>            | JavaScript expression to format/compose the `git.buildNumber`. Uses JS engine from JDK. All properties are exposed to JavaScript as global String variables (names without `git.` prefix). JavaScript engine is initialized only if `buildNumberFormat` is provided.<br><br>Example: `branch + "." + commitsCount + "/" + commitDate + "/" + shortRevision + (dirty.length > 0 ? "-" + dirty : "");`<br><br>Default: `<tag or branch>.<commitsCount>.<shortRevision>-<dirty>`<br> or, more precisely, equivalent of JavaScript (evaluation result of the last line gets returned; real implementation is in Java for performance):<br>`name = (tag.length > 0) ? tag : (branch.length > 0) ? branch : "UNNAMED";`<br>`name + "." + commitsCount + "." + shortRevision + (dirty.length > 0 ? "-" + dirty : "");`
 repositoryDirectory                                          | Directory to start searching Git root from, should contain `.git` directory or be a subdirectory of such directory. Default: `${project.basedir}`.
-<a name="runOnlyAtExecutionRoot">runOnlyAtExecutionRoot</a>  | Setting this parameter to `false` allows to re-read metadata from Git repo in every submodule of a multi-module project, not only in the root one. Note: the properties extracted in parent module get propagated to child modules anyway; this parameter is merely a workaround if something goes wrong. Default: `true`.
+<a name="runOnlyAtExecutionRoot">runOnlyAtExecutionRoot</a>  | Setting this parameter to `false` allows to re-read metadata from Git repo in every submodule of a multi-module project, not only in the root one. Default: `true`.
 skip                                                         | Setting this parameter to `true` will skip plugin execution. Default: `false`.
 
 

@@ -169,9 +169,7 @@ public class JGitBuildNumberMojo extends AbstractMojo {
 
             // executes only once per build
             // http://www.sonatype.com/people/2009/05/how-to-make-a-plugin-run-once-during-a-build/
-            if (!runOnlyAtExecutionRoot || 
-                executionRootDirectory.equals(baseDirectory) || 
-                (executionRootDirectory.equals(repositoryDirectory.getParentFile()) && runOnlyAtExecutionRoot )) {
+            if (!runOnlyAtExecutionRoot || executionRootDirectory.equals(baseDirectory)) {
 
                 long t = System.currentTimeMillis();
                 BuildNumberExtractor extractor = new BuildNumberExtractor(repositoryDirectory);
