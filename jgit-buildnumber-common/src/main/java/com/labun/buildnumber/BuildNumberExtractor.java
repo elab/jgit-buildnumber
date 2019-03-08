@@ -7,7 +7,10 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.SortedSet;
 import java.util.TimeZone;
+import java.util.TreeMap;
+import java.util.TreeSet;
 
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.errors.RevWalkException;
@@ -99,7 +102,7 @@ public class BuildNumberExtractor {
 
             String buildNumber = defaultBuildNumber(tag, branch, commitsCountAsString, shortRevision, dirty);
 
-            Map<String, String> res = new HashMap<>();
+            Map<String, String> res = new TreeMap<>();
             res.put("revision", revision);
             res.put("shortRevision", shortRevision);
             res.put("dirty", dirty);
@@ -136,10 +139,10 @@ public class BuildNumberExtractor {
     }
 
     private static String readTag(Repository repo, String sha1) {
-        Map<String, String> tagMap = loadTagsMap(repo);
-        String tag = tagMap.get(sha1);
-        if (null == tag) return EMPTY_STRING;
-        return tag;
+        Map<String, SortedSet<String>> tagMap = loadTagsMap(repo);
+        SortedSet<String> tags = tagMap.get(sha1);
+        if (tags == null) return EMPTY_STRING;
+        return String.join(";", tags);
     }
 
     private static String readParent(RevCommit commit) throws IOException {
@@ -158,15 +161,13 @@ public class BuildNumberExtractor {
         return result;
     }
 
-    // sha1 -> tag name
-    private static Map<String, String> loadTagsMap(Repository repo) {
+    /** @return Map sha1 -> tag names */
+    private static Map<String, SortedSet<String>> loadTagsMap(Repository repo) {
         Map<String, Ref> refMap = repo.getTags();
-        Map<String, String> res = new HashMap<String, String>(refMap.size());
+        Map<String, SortedSet<String>> res = new HashMap<>(refMap.size());
         for (Map.Entry<String, Ref> en : refMap.entrySet()) {
             String sha1 = extractPeeledSha1(repo, en.getValue());
-            String existed = res.get(sha1);
-            final String value = (existed == null) ? en.getKey() : existed + ";" + en.getKey();
-            res.put(sha1, value);
+            res.computeIfAbsent(sha1, k -> new TreeSet<>()).add(en.getKey());
         }
         return res;
     }

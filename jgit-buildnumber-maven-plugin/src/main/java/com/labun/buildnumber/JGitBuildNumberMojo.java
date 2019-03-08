@@ -2,12 +2,12 @@ package com.labun.buildnumber;
 
 import java.io.File;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Properties;
 import java.util.TimeZone;
+import java.util.TreeMap;
 
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
@@ -260,7 +260,7 @@ public class JGitBuildNumberMojo extends AbstractMojo {
     }
 
     private Map<String, String> toMap(Properties props) {
-        Map<String, String> map = new HashMap<>();
+        Map<String, String> map = new TreeMap<>();
 
         map.put(revisionProperty, props.getProperty(revisionProperty));
         map.put(shortRevisionProperty, props.getProperty(shortRevisionProperty));
