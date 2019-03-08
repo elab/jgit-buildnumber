@@ -32,10 +32,13 @@ public class JGitBuildNumberMojo extends AbstractMojo {
     @Component
     private BuildContext buildContext;
 
-    /** properties are published with this name prefix */
-    static final String PREFIX = "git.";
-
     // ---------- parameters (user configurable) ----------
+
+    /** Properties are published with this "namespace" prefix. You may want to redefine the default value:<ul>
+     * <li>to avoid name clashes with other plugins;
+     * <li>to extract properties for multiple Git repos (use multiple plugin &lt;execution&gt; sections with different prefixes for that). */
+    @Parameter(defaultValue = "git.")
+    private String prefix;
 
     /** Which string to use for `dirty` property. */
     @Parameter(defaultValue = "dirty")
@@ -140,12 +143,11 @@ public class JGitBuildNumberMojo extends AbstractMojo {
                 List<String> params = Arrays.asList(headSha1, dirty, gitDateFormat, buildDateFormat, dateFormatTimeZone, countCommitsSinceInclusive,
                     countCommitsSinceExclusive, buildNumberFormat);
                 getLog().info("params: " + params);
-                String paramsKey = "jgitParams";
-                String resultKey = "jgitResult";
+                String paramsKey = "jgitParams" + prefix;
+                String resultKey = "jgitResult" + prefix;
 
                 // note: saving/loading custom classes doesn't work (due to different classloaders?, "cannot be cast" error);
-                // when saving Properties object, or values don't survive; 
-                // therefore we use a Map here
+                // when saving Properties object, our values don't survive; therefore we use a Map here
                 Map<String, String> result = getCachedResultFromBuildConext(paramsKey, params, resultKey);
                 if (result != null) {
                     getLog().info("using cached result");
@@ -163,17 +165,17 @@ public class JGitBuildNumberMojo extends AbstractMojo {
                         getLog().info("overwriting default buildNumber: " + defaultBuildNumber);
                         getLog().info("formatting buildNumber with JS: " + (System.currentTimeMillis() - t) + " ms");
                     }
+                    saveResultToBuildContext(paramsKey, params, resultKey, result);
                 }
 
                 getLog().info("BUILDNUMBER: " + result.get("buildNumber"));
                 getLog().info("all extracted properties: " + result);
                 setProperties(result, project.getProperties());
-                saveResultToBuildContext(paramsKey, params, resultKey, result);
 
             } else if ("pom".equals(parentProject.getPackaging())) {
                 // build started from parent, we are in subproject, lets provide parent properties to our project
                 Properties parentProps = parentProject.getProperties();
-                String revision = parentProps.getProperty(PREFIX + "revision");
+                String revision = parentProps.getProperty(prefix + "revision");
                 if (revision == null) {
                     // we are in subproject, but parent project wasn't build this time,
                     // maybe build is running from parent with custom module list - 'pl' argument
@@ -223,19 +225,19 @@ public class JGitBuildNumberMojo extends AbstractMojo {
     private Map<String, String> toMap(Properties props) {
         Map<String, String> map = new TreeMap<>();
         for (String propertyName : propertyNames)
-            map.put(propertyName, props.getProperty(PREFIX + propertyName));
+            map.put(propertyName, props.getProperty(prefix + propertyName));
 
         return map;
     }
 
     private void setProperties(Map<String, String> source, Properties target) {
         for (Map.Entry<String, String> e : source.entrySet())
-            target.setProperty(PREFIX + e.getKey(), e.getValue());
+            target.setProperty(prefix + e.getKey(), e.getValue());
     }
 
     private void setProperties(Properties source, Properties target) {
         for (String propertyName : propertyNames) {
-            String prefixedName = PREFIX + propertyName;
+            String prefixedName = prefix + propertyName;
             target.setProperty(prefixedName, source.getProperty(prefixedName));
         }
     }
@@ -243,7 +245,7 @@ public class JGitBuildNumberMojo extends AbstractMojo {
     private void fillPropsUnknown() {
         Properties props = project.getProperties();
         for (String propertyName : propertyNames)
-            props.setProperty(PREFIX + propertyName, "UNKNOWN-" + propertyName);
+            props.setProperty(prefix + propertyName, "UNKNOWN-" + propertyName);
     }
 
     private String formatBuildNumberWithJS(Map<String, String> bn) throws ScriptException {
