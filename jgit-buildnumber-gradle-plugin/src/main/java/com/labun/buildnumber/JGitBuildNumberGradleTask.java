@@ -36,11 +36,11 @@ public class JGitBuildNumberGradleTask extends DefaultTask {
         String countCommitsSinceExclusive = null;
         String dirtyValue = "dirty";
 
-        Map<String, String> bn = new BuildNumberExtractor(repoDir).extract(gitDateFormat, buildDateFormat, dateFormatTimeZone, countCommitsSinceInclusive,
+        Map<String, String> properties = new BuildNumberExtractor(repoDir).extract(gitDateFormat, buildDateFormat, dateFormatTimeZone, countCommitsSinceInclusive,
                 countCommitsSinceExclusive, dirtyValue);
         ExtraPropertiesExtension props = getProject().getExtensions().getExtraProperties();
 
-        for (Map.Entry<String, String> e : bn.entrySet())
-            props.set("git" + StringUtils.capitalize(e.getKey()), e.getValue());
+        for (Map.Entry<String, String> property : properties.entrySet())
+            props.set("git" + StringUtils.capitalize(property.getKey()), property.getValue());
     }
 }

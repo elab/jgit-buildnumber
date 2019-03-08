@@ -1,5 +1,7 @@
 package com.labun.buildnumber;
 
+import static com.labun.buildnumber.BuildNumberExtractor.propertyNames;
+
 import java.io.File;
 import java.util.Arrays;
 import java.util.List;
@@ -30,51 +32,8 @@ public class JGitBuildNumberMojo extends AbstractMojo {
     @Component
     private BuildContext buildContext;
 
-    // ---------- extracted properties ----------
-
-    @Parameter(readonly = true)
-    private String revisionProperty = "git.revision";
-
-    @Parameter(readonly = true)
-    private String shortRevisionProperty = "git.shortRevision";
-
-    /** {@link #dirtyValue} if differences exist between working-tree, index, and HEAD; empty string otherwise. */
-    @Parameter(readonly = true)
-    private String dirtyProperty = "git.dirty";
-    
-    @Parameter(readonly = true)
-    private String branchProperty = "git.branch";
-
-    @Parameter(readonly = true)
-    private String tagProperty = "git.tag";
-
-    @Parameter(readonly = true)
-    private String parentProperty = "git.parent";
-
-    @Parameter(readonly = true)
-    private String commitsCountProperty = "git.commitsCount";
-
-    @Parameter(readonly = true)
-    private String authorDateProperty = "git.authorDate";
-
-    @Parameter(readonly = true)
-    private String commitDateProperty = "git.commitDate";
-
-    @Parameter(readonly = true)
-    private String describeProperty = "git.describe";
-
-    @Parameter(readonly = true)
-    private String buildDateProperty = "git.buildDate";
-
-    /** Default value is equivalent to the JavaScript:
-     * <pre>
-     * name = (tag.length > 0) ? tag : (branch.length > 0) ? branch : "UNNAMED";
-     * name + "." + commitsCount + "." + shortRevision + (dirty.length > 0 ? "-" + dirty : "");
-     * </pre>
-     * It can be overwritten using {@link #buildNumberFormat}.
-     *  */
-    @Parameter(readonly = true)
-    private String buildNumberProperty = "git.buildNumber";
+    /** properties are published with this name prefix */
+    static final String PREFIX = "git.";
 
     // ---------- parameters (user configurable) ----------
 
@@ -86,7 +45,7 @@ public class JGitBuildNumberMojo extends AbstractMojo {
     @Parameter(defaultValue = "yyyy-MM-dd")
     private String gitDateFormat;
 
-    /** Which format to use for buildDate.  The default locale will be used. TimeZone can be specified, see {@link #dateFormatTimeZone}. */
+    /** Which format to use for buildDate. The default locale will be used. TimeZone can be specified, see {@link #dateFormatTimeZone}. */
     @Parameter(defaultValue = "yyyy-MM-dd HH:mm:ss")
     private String buildDateFormat;
 
@@ -108,8 +67,7 @@ public class JGitBuildNumberMojo extends AbstractMojo {
     private String countCommitsSinceExclusive;
 
     /** JavaScript expression to format/compose the buildnumber. All properties can be used (without prefix), e.g. 
-     * <pre>branch + "." + commitsCount + "/" + commitDate + "/" + shortRevision + (dirty.length > 0 ? "-" + dirty : "");</pre>
-     * See also {@link #buildNumberProperty}. */
+     * <pre>branch + "." + commitsCount + "/" + commitDate + "/" + shortRevision + (dirty.length > 0 ? "-" + dirty : "");</pre> */
     @Parameter
     private String buildNumberFormat;
 
@@ -138,7 +96,7 @@ public class JGitBuildNumberMojo extends AbstractMojo {
     @Parameter(property = "project", readonly = true)
     private MavenProject project;
 
-     /** The maven parent project. */
+    /** The maven parent project. */
     @Parameter(property = "project.parent", readonly = true)
     private MavenProject parentProject;
 
@@ -163,7 +121,8 @@ public class JGitBuildNumberMojo extends AbstractMojo {
             return;
         }
 
-        getLog().info("executionRootDirectory: " + executionRootDirectory + ", runOnlyAtExecutionRoot: " + runOnlyAtExecutionRoot + ", baseDirectory: " + baseDirectory + ", repositoryDirectory: " + repositoryDirectory);
+        getLog().info("executionRootDirectory: " + executionRootDirectory + ", runOnlyAtExecutionRoot: " + runOnlyAtExecutionRoot + ", baseDirectory: "
+            + baseDirectory + ", repositoryDirectory: " + repositoryDirectory);
 
         try {
 
@@ -178,7 +137,8 @@ public class JGitBuildNumberMojo extends AbstractMojo {
                 String headSha1 = extractor.getHeadSha1Short();
                 String dirty = extractor.isGitStatusDirty() ? dirtyValue : null;
 
-                List<String> params = Arrays.asList(headSha1, dirty, gitDateFormat, buildDateFormat, dateFormatTimeZone, countCommitsSinceInclusive, countCommitsSinceExclusive,  buildNumberFormat);
+                List<String> params = Arrays.asList(headSha1, dirty, gitDateFormat, buildDateFormat, dateFormatTimeZone, countCommitsSinceInclusive,
+                    countCommitsSinceExclusive, buildNumberFormat);
                 getLog().info("params: " + params);
                 String paramsKey = "jgitParams";
                 String resultKey = "jgitResult";
@@ -191,7 +151,8 @@ public class JGitBuildNumberMojo extends AbstractMojo {
                     getLog().info("using cached result");
                 } else {
                     t = System.currentTimeMillis();
-                    result = extractor.extract(gitDateFormat, buildDateFormat, dateFormatTimeZone, countCommitsSinceInclusive, countCommitsSinceExclusive, dirtyValue);
+                    result = extractor.extract(gitDateFormat, buildDateFormat, dateFormatTimeZone, countCommitsSinceInclusive, countCommitsSinceExclusive,
+                        dirtyValue);
                     getLog().info("extracting properties for buildnumber: " + (System.currentTimeMillis() - t) + " ms");
 
                     if (buildNumberFormat != null) {
@@ -209,11 +170,11 @@ public class JGitBuildNumberMojo extends AbstractMojo {
                 setProperties(result, project.getProperties());
                 saveResultToBuildContext(paramsKey, params, resultKey, result);
 
-            } else if("pom".equals(parentProject.getPackaging())) {
+            } else if ("pom".equals(parentProject.getPackaging())) {
                 // build started from parent, we are in subproject, lets provide parent properties to our project
                 Properties parentProps = parentProject.getProperties();
-                String revision = parentProps.getProperty(revisionProperty);
-                if(null == revision) {
+                String revision = parentProps.getProperty(PREFIX + "revision");
+                if (revision == null) {
                     // we are in subproject, but parent project wasn't build this time,
                     // maybe build is running from parent with custom module list - 'pl' argument
                     getLog().warn("Cannot extract Git info, maybe custom build with 'pl' argument is running");
@@ -221,7 +182,7 @@ public class JGitBuildNumberMojo extends AbstractMojo {
                     return;
                 }
                 getLog().info("using already extracted properties from parent module: " + toMap(parentProps));
-                copyProperties(parentProps, project.getProperties());
+                setProperties(parentProps, project.getProperties());
 
             } else {
                 // should not happen
@@ -250,8 +211,8 @@ public class JGitBuildNumberMojo extends AbstractMojo {
             // getLog().info("buildContext.getClass(): " + buildContext.getClass()); // org.eclipse.m2e.core.internal.embedder.EclipseBuildContext
             List<String> cachedParams = (List<String>) buildContext.getValue(paramsKey);
             // getLog().info("cachedParams: " + cachedParams);
-            if (Objects.equals(cachedParams,  currentParams)) {
-                Map<String,String> cachedResult = (Map<String,String>) buildContext.getValue(resultKey);
+            if (Objects.equals(cachedParams, currentParams)) {
+                Map<String, String> cachedResult = (Map<String, String>) buildContext.getValue(resultKey);
                 // getLog().info("cachedResult: " + cachedResult);
                 return cachedResult;
             }
@@ -261,56 +222,28 @@ public class JGitBuildNumberMojo extends AbstractMojo {
 
     private Map<String, String> toMap(Properties props) {
         Map<String, String> map = new TreeMap<>();
+        for (String propertyName : propertyNames)
+            map.put(propertyName, props.getProperty(PREFIX + propertyName));
 
-        map.put(revisionProperty, props.getProperty(revisionProperty));
-        map.put(shortRevisionProperty, props.getProperty(shortRevisionProperty));
-        map.put(dirtyProperty, props.getProperty(dirtyProperty));
-        map.put(branchProperty, props.getProperty(branchProperty));
-        map.put(tagProperty, props.getProperty(tagProperty));
-        map.put(parentProperty, props.getProperty(parentProperty));
-        map.put(commitsCountProperty, props.getProperty(commitsCountProperty));
-        map.put(authorDateProperty, props.getProperty(authorDateProperty));
-        map.put(commitDateProperty, props.getProperty(commitDateProperty));
-        map.put(describeProperty, props.getProperty(describeProperty));
-        map.put(buildDateProperty, props.getProperty(buildDateProperty));
-        map.put(buildNumberProperty, props.getProperty(buildNumberProperty));
         return map;
     }
 
-    private void setProperties(Map<String,String> source, Properties target) {
-        for (Map.Entry<String,String> e : source.entrySet()) target.setProperty("git." + e.getKey(), e.getValue());
+    private void setProperties(Map<String, String> source, Properties target) {
+        for (Map.Entry<String, String> e : source.entrySet())
+            target.setProperty(PREFIX + e.getKey(), e.getValue());
     }
 
-    private void copyProperties(Properties source, Properties target) {
-        target.setProperty(revisionProperty, source.getProperty(revisionProperty));
-        target.setProperty(shortRevisionProperty, source.getProperty(shortRevisionProperty));
-        target.setProperty(dirtyProperty, source.getProperty(dirtyProperty));
-        target.setProperty(branchProperty, source.getProperty(branchProperty));
-        target.setProperty(tagProperty, source.getProperty(tagProperty));
-        target.setProperty(parentProperty, source.getProperty(parentProperty));
-        target.setProperty(commitsCountProperty, source.getProperty(commitsCountProperty));
-        target.setProperty(authorDateProperty, source.getProperty(authorDateProperty));
-        target.setProperty(commitDateProperty, source.getProperty(commitDateProperty));
-        target.setProperty(describeProperty, source.getProperty(describeProperty));
-        target.setProperty(buildDateProperty, source.getProperty(buildDateProperty));
-        target.setProperty(buildNumberProperty, source.getProperty(buildNumberProperty));
-
+    private void setProperties(Properties source, Properties target) {
+        for (String propertyName : propertyNames) {
+            String prefixedName = PREFIX + propertyName;
+            target.setProperty(prefixedName, source.getProperty(prefixedName));
+        }
     }
 
     private void fillPropsUnknown() {
         Properties props = project.getProperties();
-        props.setProperty(revisionProperty, "UNKNOWN_REVISION");
-        props.setProperty(shortRevisionProperty, "UNKNOWN_SHORT_REVISION");
-        props.setProperty(dirtyProperty, "UNKNOWN_DIRTY");
-        props.setProperty(branchProperty, "UNKNOWN_BRANCH");
-        props.setProperty(tagProperty, "UNKNOWN_TAG");
-        props.setProperty(parentProperty, "UNKNOWN_PARENT");
-        props.setProperty(commitsCountProperty, "UNKNOWN_COMMITS_COUNT");
-        props.setProperty(authorDateProperty, "UNKNOWN_AUTHOR_DATE");
-        props.setProperty(commitDateProperty, "UNKNOWN_COMMIT_DATE");
-        props.setProperty(describeProperty, "UNKNOWN_DESCRIBE");
-        props.setProperty(buildDateProperty, "UNKNOWN_BUILD_DATE");
-        props.setProperty(buildNumberProperty, "UNKNOWN_BUILDNUMBER");
+        for (String propertyName : propertyNames)
+            props.setProperty(PREFIX + propertyName, "UNKNOWN-" + propertyName);
     }
 
     private String formatBuildNumberWithJS(Map<String, String> bn) throws ScriptException {
@@ -327,7 +260,8 @@ public class JGitBuildNumberMojo extends AbstractMojo {
             return "UNKNOWN_JS_BUILDNUMBER";
         }
 
-        for (Map.Entry<String,String> e : bn.entrySet()) jsEngine.put(e.getKey(), e.getValue());
+        for (Map.Entry<String, String> e : bn.entrySet())
+            jsEngine.put(e.getKey(), e.getValue());
         Object res = jsEngine.eval(buildNumberFormat);
         if (res == null) throw new IllegalStateException("JS buildNumber is null");
         return res.toString();

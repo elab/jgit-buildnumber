@@ -36,7 +36,7 @@ public class JGitBuildNumberAntTask {
      */
     public void execute() throws Exception {
         String repoDirString = project.getProperty("git.repositoryDirectory");
-        File repoDir = null != repoDirString ? new File(repoDirString) :  new File(".");
+        File repoDir = null != repoDirString ? new File(repoDirString) : new File(".");
         String gitDateFormat = project.getProperty("git.gitDateFormat");
         String buildDateFormat = project.getProperty("git.buildDateFormat");
         String dateFormatTimeZone = null;
@@ -44,8 +44,10 @@ public class JGitBuildNumberAntTask {
         String countCommitsSinceExclusive = project.getProperty("git.countCommitsSinceExclusive");
         String dirtyValue = project.getProperty("git.dirtyValue");
 
-        Map<String, String> bn = new BuildNumberExtractor(repoDir).extract(gitDateFormat, buildDateFormat, dateFormatTimeZone, countCommitsSinceInclusive, countCommitsSinceExclusive, dirtyValue);
+        Map<String, String> properties = new BuildNumberExtractor(repoDir).extract(gitDateFormat, buildDateFormat, dateFormatTimeZone,
+            countCommitsSinceInclusive, countCommitsSinceExclusive, dirtyValue);
 
-        for (Map.Entry<String,String> e : bn.entrySet()) project.setProperty("git." + e.getKey(), e.getValue());
+        for (Map.Entry<String, String> property : properties.entrySet())
+            project.setProperty("git." + property.getKey(), property.getValue());
     }
 }

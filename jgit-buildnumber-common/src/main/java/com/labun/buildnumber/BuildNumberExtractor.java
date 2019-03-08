@@ -4,8 +4,10 @@ import java.io.File;
 import java.io.IOException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.SortedSet;
 import java.util.TimeZone;
@@ -22,8 +24,13 @@ import org.eclipse.jgit.lib.RepositoryBuilder;
 import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.revwalk.RevWalk;
 
-/** Extracts Git metadata and creates build number. */
+/** Extracts Git metadata and creates build number. See {@link #propertyNames}. */
 public class BuildNumberExtractor {
+
+    /** See documentation in README.md */
+    static final List<String> propertyNames = Arrays.asList("revision", "shortRevision", "dirty", "branch", "tag", "parent", "commitsCount", "authorDate",
+        "commitDate", "describe", "buildDate", "buildNumber");
+
     private static final String EMPTY_STRING = "";
 
     File gitDir;
@@ -42,8 +49,8 @@ public class BuildNumberExtractor {
      * @throws Exception if git repo not found or repo reading error happened
      */
     public BuildNumberExtractor(File repoDirectory) throws Exception {
-        if(!(repoDirectory.exists() && repoDirectory.isDirectory())) throw new IOException(
-                "Invalid repository directory provided: " + repoDirectory.getAbsolutePath());
+        if (!(repoDirectory.exists() && repoDirectory.isDirectory()))
+            throw new IOException("Invalid repository directory provided: " + repoDirectory.getAbsolutePath());
 
         // (previously, jgit had some problems with not canonical paths; is it still the case?)
         File canonicalRepo = repoDirectory.getCanonicalFile();
@@ -74,7 +81,9 @@ public class BuildNumberExtractor {
     public String getHeadSha1Short() { return headSha1Short; }
     public boolean isGitStatusDirty() { return gitStatusDirty; }
 
-    public Map<String, String> extract(String gitDateFormat, String buildDateFormat, String dateFormatTimeZone, String countCommitsSinceInclusive, String countCommitsSinceExclusive, String dirtyValue) throws Exception {
+    /** @return Map propertyName - propertyValue. See {@link #propertyNames}. */
+    public Map<String, String> extract(String gitDateFormat, String buildDateFormat, String dateFormatTimeZone, String countCommitsSinceInclusive,
+        String countCommitsSinceExclusive, String dirtyValue) throws Exception {
         try (RevWalk revWalk = new RevWalk(repo)) {
             String branch = readCurrentBranch(repo, headSha1);
             String tag = readTag(repo, headSha1);
@@ -115,6 +124,10 @@ public class BuildNumberExtractor {
             res.put("describe", describe);
             res.put("buildDate", buildDate);
             res.put("buildNumber", buildNumber);
+
+            // ensure all properties are set
+            for (String property : propertyNames)
+                if (res.get(property) == null) throw new RuntimeException("Property + '" + property + "' is not set");
 
             return res;
         }
@@ -161,7 +174,7 @@ public class BuildNumberExtractor {
         return result;
     }
 
-    /** @return Map sha1 -> tag names */
+    /** @return Map sha1 - tag names */
     private static Map<String, SortedSet<String>> loadTagsMap(Repository repo) {
         Map<String, Ref> refMap = repo.getTags();
         Map<String, SortedSet<String>> res = new HashMap<>(refMap.size());
@@ -205,7 +218,7 @@ public class BuildNumberExtractor {
      * @return SHA-1 (complete or abbreviated) */
     private String getSha1(String tagOrSha1) throws Exception {
         Ref ref = repo.exactRef(Constants.R_TAGS + tagOrSha1);
-        return (ref != null)? ref.getPeeledObjectId().name() : tagOrSha1;
+        return (ref != null) ? ref.getPeeledObjectId().name() : tagOrSha1;
     }
 
 }

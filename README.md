@@ -3,7 +3,7 @@ JGit Build Number for Maven, Ant, and Gradle
 
 Extracts Git metadata and a freely composable build number in pure Java without Git command-line tool. Eclipse m2e compatible.
 
-Based on the [work of Alex Kasko](https://github.com/alx3apps/jgit-buildnumber) with [merged changes from other forks](https://github.com/elab/jgit-buildnumber/network). Thank you, [guys](https://github.com/elab/jgit-buildnumber/graphs/contributors), for contribution! Additionally, contains bug fixes, new features, and performance improvements.
+Based on the [work of Alex Kasko](https://github.com/alx3apps/jgit-buildnumber) with [merged changes from other forks](https://github.com/elab/jgit-buildnumber/network). Thank you, [guys](https://github.com/elab/jgit-buildnumber/graphs/contributors), for contribution! Additionally, contains bug fixes, new features, and performance improvements. The code has been almost completely rewritten.
 
 Available from [Maven central](http://repo1.maven.org/maven2/com/labun/buildnumber/).
 
