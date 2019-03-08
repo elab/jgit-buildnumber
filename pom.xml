@@ -94,7 +94,6 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <jgit.version>5.2.1.201812262042-r</jgit.version>
-        <arguments /><!-- ? (from oss-parent-9.pom) -->
     </properties>
 
     <build>

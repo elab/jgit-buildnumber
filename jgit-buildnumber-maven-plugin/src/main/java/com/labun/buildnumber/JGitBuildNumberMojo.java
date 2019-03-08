@@ -220,7 +220,8 @@ public class JGitBuildNumberMojo extends AbstractMojo {
                     fillPropsUnknown();
                     return;
                 }
-                copyProperties(parentProject.getProperties(), project.getProperties());
+                getLog().info("using already extracted properties from parent module: " + toMap(parentProps));
+                copyProperties(parentProps, project.getProperties());
 
             } else {
                 // should not happen
