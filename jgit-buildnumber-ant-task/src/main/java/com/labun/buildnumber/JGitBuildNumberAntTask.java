@@ -25,6 +25,7 @@ public class JGitBuildNumberAntTask {
      *     <li>{@code git.branch}</li>
      *     <li>{@code git.tag}</li>
      *     <li>{@code git.parent}</li>
+     *     <li>{@code git.shortParent}</li>
      *     <li>{@code git.commitsCount}</li>
      *     <li>{@code git.authorDate}</li>
      *     <li>{@code git.commitDate}</li>

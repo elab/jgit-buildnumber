@@ -16,6 +16,7 @@ gitDirty
 gitBranch
 gitTag
 gitParent
+gitShortParent
 gitCommitsCount
 gitAuthorDate
 gitCommitDate

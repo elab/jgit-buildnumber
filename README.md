@@ -135,11 +135,12 @@ __Execution time__ depends first of all on the complexity of Git repo (especiall
 property          | desc
 ------------------|----------------
 git.revision      | HEAD SHA-1
-git.shortRevision | HEAD SHA-1 abbreviated (7 chars)
+git.shortRevision | HEAD SHA-1 (abbreviated to 7 chars)
 git.dirty         | [dirtyValue](#dirtyValue) if differences exist between working-tree, index, and HEAD; empty string otherwise
 git.branch        | branch name; empty string for detached HEAD
 git.tag           | tag name; empty string if no tags defined; multiple tags separated with `;`
 git.parent        | SHA-1 of the parent commit; multiple parents separated with `;`
+git.shortParent   | SHA-1 of the parent commit (abbreviated to 7 chars); multiple parents separated with `;`
 git.commitsCount  | commits count; computed by traversing the history from HEAD backwards; returns -1 for a Git shallow clone
 git.authorDate    | when HEAD commit has been authored
 git.commitDate    | when HEAD commit has been committed
@@ -242,6 +243,7 @@ Extracted properties are put into:
  - `project.gitBranch`
  - `project.gitTag`
  - `project.gitParent`
+ - `project.gitShortParent`
  - `project.gitCommitsCount`
  - `project.gitAuthorDate`
  - `project.gitCommitDate`

@@ -13,6 +13,8 @@ import java.util.SortedSet;
 import java.util.TimeZone;
 import java.util.TreeMap;
 import java.util.TreeSet;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.errors.RevWalkException;
@@ -28,8 +30,8 @@ import org.eclipse.jgit.revwalk.RevWalk;
 public class BuildNumberExtractor {
 
     /** See documentation in README.md */
-    static final List<String> propertyNames = Arrays.asList("revision", "shortRevision", "dirty", "branch", "tag", "parent", "commitsCount", "authorDate",
-        "commitDate", "describe", "buildDate", "buildNumber");
+    static final List<String> propertyNames = Arrays.asList("revision", "shortRevision", "dirty", "branch", "tag", "parent", "shortParent", "commitsCount",
+        "authorDate", "commitDate", "describe", "buildDate", "buildNumber");
 
     private static final String EMPTY_STRING = "";
 
@@ -91,6 +93,7 @@ public class BuildNumberExtractor {
             RevCommit headCommit = revWalk.parseCommit(headObjectId);
 
             String parent = readParent(headCommit);
+            String shortParent = readShortParent(headCommit);
             int commitsCount = countCommits(repo, headCommit, countCommitsSinceInclusive, countCommitsSinceExclusive);
 
             DateFormat dfGitDate = new SimpleDateFormat(gitDateFormat); // default locale
@@ -118,6 +121,7 @@ public class BuildNumberExtractor {
             res.put("branch", branch);
             res.put("tag", tag);
             res.put("parent", parent);
+            res.put("shortParent", shortParent);
             res.put("commitsCount", commitsCountAsString);
             res.put("authorDate", authorDate);
             res.put("commitDate", commitDate);
@@ -134,7 +138,7 @@ public class BuildNumberExtractor {
 
     }
 
-    private String abbreviateSha1(String sha1) {
+    private static String abbreviateSha1(String sha1) {
         return (sha1 != null && sha1.length() > 7) ? sha1.substring(0, 7) : sha1;
     }
 
@@ -161,17 +165,15 @@ public class BuildNumberExtractor {
     private static String readParent(RevCommit commit) throws IOException {
         if (commit == null) return EMPTY_STRING;
         RevCommit[] parents = commit.getParents();
-        if (null == parents || parents.length == 0) return EMPTY_STRING;
-        String result = null;
-        for (RevCommit p : parents) {
-            String sha1 = p.getId().name();
-            if (null == result) {
-                result = sha1;
-            } else {
-                result += ";" + sha1;
-            }
-        }
-        return result;
+        if (parents == null || parents.length == 0) return EMPTY_STRING;
+        return Stream.of(parents).map(p -> p.getId().name()/*SHA-1*/).collect(Collectors.joining(";"));
+    }
+
+    private static String readShortParent(RevCommit commit) throws IOException {
+        if (commit == null) return EMPTY_STRING;
+        RevCommit[] parents = commit.getParents();
+        if (parents == null || parents.length == 0) return EMPTY_STRING;
+        return Stream.of(parents).map(p -> abbreviateSha1(p.getId().name()/*SHA-1*/)).collect(Collectors.joining(";"));
     }
 
     /** @return Map sha1 - tag names */
