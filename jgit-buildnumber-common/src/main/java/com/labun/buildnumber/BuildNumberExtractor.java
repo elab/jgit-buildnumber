@@ -41,7 +41,6 @@ public class BuildNumberExtractor {
 
     ObjectId headObjectId;
     String headSha1;
-    String headSha1Short;
 
     boolean gitStatusDirty;
 
@@ -67,7 +66,6 @@ public class BuildNumberExtractor {
 
         headObjectId = headRef.getObjectId();
         headSha1 = headObjectId.name();
-        headSha1Short = abbreviateSha1(headSha1);
 
         // long t = System.currentTimeMillis();
         gitStatusDirty = !git.status().call().isClean();
@@ -80,12 +78,15 @@ public class BuildNumberExtractor {
     }
 
     public String getHeadSha1() { return headSha1; }
-    public String getHeadSha1Short() { return headSha1Short; }
     public boolean isGitStatusDirty() { return gitStatusDirty; }
 
     /** @return Map propertyName - propertyValue. See {@link #propertyNames}. */
-    public Map<String, String> extract(String gitDateFormat, String buildDateFormat, String dateFormatTimeZone, String countCommitsSinceInclusive,
-        String countCommitsSinceExclusive, String dirtyValue) throws Exception {
+    public Map<String, String> extract(String shortRevisionLength, String gitDateFormat, String buildDateFormat, String dateFormatTimeZone,
+        String countCommitsSinceInclusive, String countCommitsSinceExclusive, String dirtyValue) throws Exception {
+
+        int revLength = Integer.parseInt(shortRevisionLength);
+        if (revLength < 0 || revLength > 40) throw new IllegalArgumentException("shortRevisionLength (" + revLength + ") is out of bounds (0 .. 40)");
+
         try (RevWalk revWalk = new RevWalk(repo)) {
             String branch = readCurrentBranch(repo, headSha1);
             String tag = readTag(repo, headSha1);
@@ -93,7 +94,7 @@ public class BuildNumberExtractor {
             RevCommit headCommit = revWalk.parseCommit(headObjectId);
 
             String parent = readParent(headCommit);
-            String shortParent = readShortParent(headCommit);
+            String shortParent = readShortParent(headCommit, revLength);
             int commitsCount = countCommits(repo, headCommit, countCommitsSinceInclusive, countCommitsSinceExclusive);
 
             DateFormat dfGitDate = new SimpleDateFormat(gitDateFormat); // default locale
@@ -108,7 +109,7 @@ public class BuildNumberExtractor {
             String buildDate = dfBuildDate.format(new Date());
 
             String revision = headSha1;
-            String shortRevision = abbreviateSha1(headSha1);
+            String shortRevision = abbreviateSha1(headSha1, revLength);
             String dirty = gitStatusDirty ? dirtyValue : "";
             String commitsCountAsString = Integer.toString(commitsCount);
 
@@ -138,8 +139,8 @@ public class BuildNumberExtractor {
 
     }
 
-    private static String abbreviateSha1(String sha1) {
-        return (sha1 != null && sha1.length() > 7) ? sha1.substring(0, 7) : sha1;
+    private static String abbreviateSha1(String sha1, int length) {
+        return (sha1 != null && sha1.length() > length) ? sha1.substring(0, length) : sha1;
     }
 
     public String defaultBuildNumber(String tag, String branch, String commitsCount, String shortRevision, String dirty) {
@@ -169,11 +170,11 @@ public class BuildNumberExtractor {
         return Stream.of(parents).map(p -> p.getId().name()/*SHA-1*/).collect(Collectors.joining(";"));
     }
 
-    private static String readShortParent(RevCommit commit) throws IOException {
+    private static String readShortParent(RevCommit commit, int length) throws IOException {
         if (commit == null) return EMPTY_STRING;
         RevCommit[] parents = commit.getParents();
         if (parents == null || parents.length == 0) return EMPTY_STRING;
-        return Stream.of(parents).map(p -> abbreviateSha1(p.getId().name()/*SHA-1*/)).collect(Collectors.joining(";"));
+        return Stream.of(parents).map(p -> abbreviateSha1(p.getId().name()/*SHA-1*/, length)).collect(Collectors.joining(";"));
     }
 
     /** @return Map sha1 - tag names */

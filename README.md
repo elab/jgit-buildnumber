@@ -158,7 +158,8 @@ Configuration goes under `<configuration>` tag under `<execution>` section.
 param                                                        | desc
 -------------------------------------------------------------|----------------------------------------------
 prefix                                                       | Properties are published with this "namespace" prefix. You may want to redefine the default value:<ul><li>to avoid name clashes with other plugins;<li>to extract properties for multiple Git repos (use multiple plugin &lt;execution&gt; sections with different prefixes for that).</ul> Default: `git.`
-<a name="dirtyValue">dirtyValue</a>                          | Value for `git.dirty` flag; default: String `dirty`.
+<a name="dirtyValue">dirtyValue</a>                          | Value for `git.dirty` flag. Default: String `dirty`.
+shortRevisionLength                                          | Length of abbreviated SHA-1 for `shortRevision` and `shortParent` properties, min. 0, max. 40. Default: 7
 gitDateFormat                                                | Format for `git.authorDate` and `git.commitDate` (see Java `SimpleDateFormat`). The default locale will be used. TimeZone can be specified with `dateFormatTimeZone`.<br>Default: `yyyy-MM-dd`.
 buildDateFormat                                              | Format for `git.buildDate` (see Java `SimpleDateFormat`). The default locale will be used. TimeZone can be specified with `dateFormatTimeZone`.<br>Default: `yyyy-MM-dd HH:mm:ss`.
 dateFormatTimeZone                                           | TimeZone for `gitDateFormat` and `buildDateFormat`. For possible values see Java `TimeZone#getTimeZone(String)`.<br>Default: current default TimeZone, as returned by Java `TimeZone#getDefault()`.

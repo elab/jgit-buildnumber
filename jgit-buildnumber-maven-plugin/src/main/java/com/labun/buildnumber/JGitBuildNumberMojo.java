@@ -44,6 +44,10 @@ public class JGitBuildNumberMojo extends AbstractMojo {
     @Parameter(defaultValue = "dirty")
     private String dirtyValue;
 
+    /** Length of abbreviated SHA-1 for "shortRevision" and "shortParent" properties, min. 0, max. 40. */
+    @Parameter(defaultValue = "7")
+    private String shortRevisionLength;
+    
     /** Which format to use for Git authorDate and Git commitDate. The default locale will be used. TimeZone can be specified, see {@link #dateFormatTimeZone}. */
     @Parameter(defaultValue = "yyyy-MM-dd")
     private String gitDateFormat;
@@ -137,11 +141,11 @@ public class JGitBuildNumberMojo extends AbstractMojo {
                 BuildNumberExtractor extractor = new BuildNumberExtractor(repositoryDirectory);
                 getLog().info("initializing Git repo, get base data: " + (System.currentTimeMillis() - t) + " ms");
 
-                String headSha1 = extractor.getHeadSha1Short();
+                String headSha1 = extractor.getHeadSha1();
                 String dirty = extractor.isGitStatusDirty() ? dirtyValue : null;
 
-                List<String> params = Arrays.asList(headSha1, dirty, gitDateFormat, buildDateFormat, dateFormatTimeZone, countCommitsSinceInclusive,
-                    countCommitsSinceExclusive, buildNumberFormat);
+                List<String> params = Arrays.asList(headSha1, dirty, shortRevisionLength, gitDateFormat, buildDateFormat, dateFormatTimeZone,
+                    countCommitsSinceInclusive, countCommitsSinceExclusive, buildNumberFormat);
                 getLog().info("params: " + params);
                 String paramsKey = "jgitParams" + prefix;
                 String resultKey = "jgitResult" + prefix;
@@ -153,8 +157,8 @@ public class JGitBuildNumberMojo extends AbstractMojo {
                     getLog().info("using cached result");
                 } else {
                     t = System.currentTimeMillis();
-                    result = extractor.extract(gitDateFormat, buildDateFormat, dateFormatTimeZone, countCommitsSinceInclusive, countCommitsSinceExclusive,
-                        dirtyValue);
+                    result = extractor.extract(shortRevisionLength, gitDateFormat, buildDateFormat, dateFormatTimeZone, countCommitsSinceInclusive,
+                        countCommitsSinceExclusive, dirtyValue);
                     getLog().info("extracting properties for buildnumber: " + (System.currentTimeMillis() - t) + " ms");
 
                     if (buildNumberFormat != null) {

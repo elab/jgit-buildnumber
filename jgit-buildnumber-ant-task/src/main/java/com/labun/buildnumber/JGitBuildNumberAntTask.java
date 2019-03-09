@@ -45,8 +45,9 @@ public class JGitBuildNumberAntTask {
         String countCommitsSinceExclusive = project.getProperty("git.countCommitsSinceExclusive");
         String prefix = project.getProperty("git.prefix");
         String dirtyValue = project.getProperty("git.dirtyValue");
+        String shortRevisionLength = project.getProperty("git.shortRevisionLength");
 
-        Map<String, String> properties = new BuildNumberExtractor(repoDir).extract(gitDateFormat, buildDateFormat, dateFormatTimeZone,
+        Map<String, String> properties = new BuildNumberExtractor(repoDir).extract(shortRevisionLength, gitDateFormat, buildDateFormat, dateFormatTimeZone,
             countCommitsSinceInclusive, countCommitsSinceExclusive, dirtyValue);
 
         for (Map.Entry<String, String> property : properties.entrySet())
