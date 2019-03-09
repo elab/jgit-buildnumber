@@ -168,6 +168,7 @@ countCommitsSince*Inclusive*<br>countCommitsSince*Exclusive* | Specifies since w
 repositoryDirectory                                          | Directory to start searching Git root from, should contain `.git` directory or be a subdirectory of such directory. Default: `${project.basedir}`.
 <a name="runOnlyAtExecutionRoot">runOnlyAtExecutionRoot</a>  | Setting this parameter to `false` allows to re-read metadata from Git repo in every submodule of a multi-module project, not only in the root one. Default: `true`.
 skip                                                         | Setting this parameter to `true` will skip plugin execution. Default: `false`.
+verbose                                                      | Print more information during build (e.g. parameters, all extracted properties, execution times). Default: `false`.
 
 
 Configuration example:

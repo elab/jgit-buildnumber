@@ -91,6 +91,10 @@ public class JGitBuildNumberMojo extends AbstractMojo {
     @Parameter(defaultValue = "false")
     private boolean skip;
 
+    /** Print more information during build (e.g. parameters, all extracted properties, execution times). */
+    @Parameter(defaultValue = "false")
+    private boolean verbose;
+    
     // ---------- parameters (read only) ----------
 
     @Parameter(property = "project.basedir", readonly = true, required = true)
@@ -113,23 +117,23 @@ public class JGitBuildNumberMojo extends AbstractMojo {
      *  Executes only once per build. Return default (unknown) buildnumber fields on error. */
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
-        getLog().info("JGit BuildNumber Maven Plugin - start");
+        if (verbose) getLog().info("JGit BuildNumber Maven Plugin - start");
         long start = System.currentTimeMillis();
 
         executeImpl();
 
         long duration = System.currentTimeMillis() - start;
-        getLog().info(String.format("JGit BuildNumber Maven Plugin - end (execution time: %d ms)", duration));
+        if (verbose) getLog().info(String.format("JGit BuildNumber Maven Plugin - end (execution time: %d ms)", duration));
     }
 
     public void executeImpl() throws MojoExecutionException, MojoFailureException {
         if (skip) {
-            getLog().info("Execution of plugin is skipped by configuration.");
+            if (verbose) getLog().info("Execution of plugin is skipped by configuration.");
             return;
         }
 
-        getLog().info("executionRootDirectory: " + executionRootDirectory + ", runOnlyAtExecutionRoot: " + runOnlyAtExecutionRoot + ", baseDirectory: "
-            + baseDirectory + ", repositoryDirectory: " + repositoryDirectory);
+        if (verbose) getLog().info("executionRootDirectory: " + executionRootDirectory + ", runOnlyAtExecutionRoot: " + runOnlyAtExecutionRoot
+            + ", baseDirectory: " + baseDirectory + ", repositoryDirectory: " + repositoryDirectory);
 
         try {
 
@@ -139,14 +143,14 @@ public class JGitBuildNumberMojo extends AbstractMojo {
 
                 long t = System.currentTimeMillis();
                 BuildNumberExtractor extractor = new BuildNumberExtractor(repositoryDirectory);
-                getLog().info("initializing Git repo, get base data: " + (System.currentTimeMillis() - t) + " ms");
+                if (verbose) getLog().info("initializing Git repo, get base data: " + (System.currentTimeMillis() - t) + " ms");
 
                 String headSha1 = extractor.getHeadSha1();
                 String dirty = extractor.isGitStatusDirty() ? dirtyValue : null;
 
                 List<String> params = Arrays.asList(headSha1, dirty, shortRevisionLength, gitDateFormat, buildDateFormat, dateFormatTimeZone,
                     countCommitsSinceInclusive, countCommitsSinceExclusive, buildNumberFormat);
-                getLog().info("params: " + params);
+                if (verbose) getLog().info("params: " + params);
                 String paramsKey = "jgitParams" + prefix;
                 String resultKey = "jgitResult" + prefix;
 
@@ -154,26 +158,26 @@ public class JGitBuildNumberMojo extends AbstractMojo {
                 // when saving Properties object, our values don't survive; therefore we use a Map here
                 Map<String, String> result = getCachedResultFromBuildConext(paramsKey, params, resultKey);
                 if (result != null) {
-                    getLog().info("using cached result");
+                    if (verbose) getLog().info("using cached result");
                 } else {
                     t = System.currentTimeMillis();
                     result = extractor.extract(shortRevisionLength, gitDateFormat, buildDateFormat, dateFormatTimeZone, countCommitsSinceInclusive,
                         countCommitsSinceExclusive, dirtyValue);
-                    getLog().info("extracting properties for buildnumber: " + (System.currentTimeMillis() - t) + " ms");
+                    if (verbose) getLog().info("extracting properties for buildnumber: " + (System.currentTimeMillis() - t) + " ms");
 
                     if (buildNumberFormat != null) {
                         t = System.currentTimeMillis();
                         String jsBuildNumber = formatBuildNumberWithJS(result);
                         // overwrite the default buildNumber
                         String defaultBuildNumber = result.put("buildNumber", jsBuildNumber);
-                        getLog().info("overwriting default buildNumber: " + defaultBuildNumber);
-                        getLog().info("formatting buildNumber with JS: " + (System.currentTimeMillis() - t) + " ms");
+                        if (verbose) getLog().info("overwriting default buildNumber: " + defaultBuildNumber);
+                        if (verbose) getLog().info("formatting buildNumber with JS: " + (System.currentTimeMillis() - t) + " ms");
                     }
                     saveResultToBuildContext(paramsKey, params, resultKey, result);
                 }
 
                 getLog().info("BUILDNUMBER: " + result.get("buildNumber"));
-                getLog().info("all extracted properties: " + result);
+                if (verbose) getLog().info("all extracted properties: " + result);
                 setProperties(result, project.getProperties());
 
             } else if ("pom".equals(parentProject.getPackaging())) {
@@ -187,7 +191,7 @@ public class JGitBuildNumberMojo extends AbstractMojo {
                     fillPropsUnknown();
                     return;
                 }
-                getLog().info("using already extracted properties from parent module: " + toMap(parentProps));
+                if (verbose) getLog().info("using already extracted properties from parent module: " + toMap(parentProps));
                 setProperties(parentProps, project.getProperties());
 
             } else {
@@ -213,7 +217,7 @@ public class JGitBuildNumberMojo extends AbstractMojo {
     // note: buildContext != null only in m2e builds in Eclipse
     private Map<String, String> getCachedResultFromBuildConext(String paramsKey, List<String> currentParams, String resultKey) {
         if (buildContext != null && buildContext.isIncremental()) {
-            getLog().info("m2e incremental build detected");
+            if (verbose) getLog().info("m2e incremental build detected");
             // getLog().info("buildContext.getClass(): " + buildContext.getClass()); // org.eclipse.m2e.core.internal.embedder.EclipseBuildContext
             List<String> cachedParams = (List<String>) buildContext.getValue(paramsKey);
             // getLog().info("cachedParams: " + cachedParams);
