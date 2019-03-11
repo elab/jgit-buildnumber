@@ -62,7 +62,7 @@ Typical usage with writing extracted properties to the MANIFEST.MF file:
         <plugin>
             <groupId>com.labun.buildnumber</groupId>
             <artifactId>jgit-buildnumber-maven-plugin</artifactId>
-            <version>2.1.0</version>
+            <version>2.1.1</version>
             <executions>
                 <execution>
                     <id>git-buildnumber</id>
@@ -176,7 +176,7 @@ Configuration example:
     <plugin>
         <groupId>com.labun.buildnumber</groupId>
         <artifactId>jgit-buildnumber-maven-plugin</artifactId>
-        <version>2.1.0</version>
+        <version>2.1.1</version>
         <executions>
             <execution>
                 <id>git-buildnumber</id>
@@ -200,7 +200,7 @@ Usage in Ant
 
 To use JGit BuildNumber Ant task, you need these jars on your classpath:
 
- - `jgit-buildnumber-ant-task-2.1.0.jar`
+ - `jgit-buildnumber-ant-task-2.1.1.jar`
  - `org.eclipse.jgit-5.2.1.201812262042-r.jar`
 
 Project directory that contains `.git` directory may be provided with `git.repositoryDirectory` property.
@@ -233,7 +233,7 @@ If you want to customize the default `git.buildNumber`, you can use Ant [Script 
 Usage in Gradle
 ----------------
 
- - Add the plugin dependency in your build.gradle: `classpath 'com.labun.buildnumber:jgit-buildnumber-gradle-plugin:2.1.0'`
+ - Add the plugin dependency in your build.gradle: `classpath 'com.labun.buildnumber:jgit-buildnumber-gradle-plugin:2.1.1'`
  - Apply the plugin in one of the following ways: `apply plugin: 'jgit-buildnumber-gradle-plugin'` or `apply plugin: com.labun.buildnumber.JGitBuildNumberGradlePlugin`
  - Execute the jGitBuildNumber_ExtractBuildNumber task: `tasks.jGitBuildNumber_ExtractBuildNumber.execute()`
 
@@ -261,7 +261,7 @@ Example setup in build.gradle:
          mavenLocal()  
       }  
       dependencies {  
-         classpath 'com.labun.buildnumber:jgit-buildnumber-gradle-plugin:2.1.0'  
+         classpath 'com.labun.buildnumber:jgit-buildnumber-gradle-plugin:2.1.1'  
       }  
     }  
     apply plugin: 'jgit-buildnumber-gradle-plugin'  
