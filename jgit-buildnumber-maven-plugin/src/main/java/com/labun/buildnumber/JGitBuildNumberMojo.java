@@ -163,15 +163,13 @@ public class JGitBuildNumberMojo extends AbstractMojo {
                     t = System.currentTimeMillis();
                     result = extractor.extract(shortRevisionLength, gitDateFormat, buildDateFormat, dateFormatTimeZone, countCommitsSinceInclusive,
                         countCommitsSinceExclusive, dirtyValue);
-                    if (verbose) getLog().info("extracting properties for buildnumber: " + (System.currentTimeMillis() - t) + " ms");
+                    if (verbose) getLog().info("extracting properties for buildNumber: " + (System.currentTimeMillis() - t) + " ms");
 
                     if (buildNumberFormat != null) {
                         t = System.currentTimeMillis();
                         String jsBuildNumber = formatBuildNumberWithJS(result);
-                        // overwrite the default buildNumber
-                        String defaultBuildNumber = result.put("buildNumber", jsBuildNumber);
-                        if (verbose) getLog().info("overwriting default buildNumber: " + defaultBuildNumber);
                         if (verbose) getLog().info("formatting buildNumber with JS: " + (System.currentTimeMillis() - t) + " ms");
+                        result.put("buildNumber", jsBuildNumber); // overwrites default buildNumber
                     }
                     saveResultToBuildContext(paramsKey, params, resultKey, result);
                 }
