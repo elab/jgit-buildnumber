@@ -3,20 +3,20 @@ JGit Build Number for Maven, Ant, and Gradle
 
 Extracts Git metadata and a freely composable build number in pure Java without Git command-line tool. Eclipse m2e compatible.
 
-Based on the [work of Alex Kasko](https://github.com/alx3apps/jgit-buildnumber) with [merged changes from other forks](https://github.com/elab/jgit-buildnumber/network). Thank you, [guys](https://github.com/elab/jgit-buildnumber/graphs/contributors), for contribution! Additionally, contains bug fixes, new features, and performance improvements. The code has been almost completely rewritten.
+Based on the [work of Alex Kasko](https://github.com/alx3apps/jgit-buildnumber) with [merged changes from other forks](https://github.com/elab/jgit-buildnumber/network). Thank you [guys](https://github.com/elab/jgit-buildnumber/graphs/contributors)! Additionally contains bug fixes, new features, and performance improvements. The code has been almost completely rewritten.
 
-Available from [Maven central](http://repo1.maven.org/maven2/com/labun/buildnumber/).
+Available on Maven Central: [repo1.maven.org](http://repo1.maven.org/maven2/com/labun/buildnumber/) / [central.maven.org](http://central.maven.org/maven2/com/labun/buildnumber/) / [search.maven.org](https://search.maven.org/search?q=g:com.labun.buildnumber).
 
 
 Build Number
 ------------
 
-Build number should identify the code state of the project, from which it has been created. 
+Build number should identify the code state of the project from which it has been created. 
 Particularly, it should *not* depend on: 
 - where the build takes place (locally, build server);
 - how many times the same project state has been build (i.e. no simple increment).
 
-In our case the __default BuildNumber__ looks like `v19.3351.ddda02b` and consists of:
+In our case, the __default BuildNumber__ looks like `v19.3351.ddda02b` and consists of:
 
 - _human readable id_: tag name or branch name `v19`
   ```
@@ -35,8 +35,8 @@ In our case the __default BuildNumber__ looks like `v19.3351.ddda02b` and consis
   git rev-parse --short HEAD # short revision
   ```
 
-- _dirty flag_: if differences exist between working-tree, index, and HEAD; you cannot trust the build in this case :)<br>
-  the whole BuildNumber would look like `v19.3351.ddda02b-dirty`;
+- _dirty flag_ (optional): inserted if there are differences between working-tree, index, and HEAD; the BuildNumber would look like `v19.3351.ddda02b-dirty`; 
+you cannot trust the build in this case :)<br>
   ```
   git status
   ```
@@ -93,16 +93,16 @@ Typical usage with writing extracted properties to the MANIFEST.MF file:
 
 You can also write the extracted properties into arbitrary files (.properties, .java, ...) using [Maven resource filtering](https://maven.apache.org/plugins/maven-resources-plugin/examples/filter.html).
 
-The plugin binds per default to the `validate` phase, the first Maven life cycle phase, so that the extracted properties are available in all other phases. 
+The plugin binds to the `validate` phase (the first Maven life cycle phase) per default, so that the extracted properties are available in all other phases. 
 
-In the build log (or in Eclipse Maven console) you can see all the extracted properties and execution time.
+You can see the extracted properties, the execution time, and other info in the build log (or in Eclipse Maven console). Set the [verbose](#verbose) parameter to `true` to achieve that.
 
-If the plugin is defined in parent module of a __multi-module project__, it will access the Git repo only once. (If you will change that, see [runOnlyAtExecutionRoot](#runOnlyAtExecutionRoot).) The properties extracted in parent module get propagated to all child modules. It works this way only for normal Maven builds though, not for Eclipse m2e incremental builds, since Eclipse / OSGI has flat workspace and doesn't support nested Maven modules.
+If the plugin is defined in parent module of a __multi-module project__, it will access the Git repo only once. (If you want to change that, see [runOnlyAtExecutionRoot](#runOnlyAtExecutionRoot).) The properties extracted in parent module are propagated to all child modules. This only applies to normal Maven builds though, not for Eclipse m2e incremental builds, since Eclipse / OSGI has a flat workspace and doesn't support nested Maven modules.
 
 The plugin contains lifecycle-mapping-metadata for __Eclipse m2e__, and will be executed in m2e incremental builds (yet not on configuration). 
 This is particularly important for local deployments to a JEE server from within Eclipse, if you want to see the proper build number in your web application. (Local deployment somehow depends on m2e incremental build).
 
-> Only if you issuing performance problems due to continuous plugin execution by Eclipse m2e incremental build, "Run on incremental" can be disabled by adding the following to Eclipse m2e workspace `lifecycle-mapping-metadata.xml` (Eclipse > Window > Preferences > Maven > Lifecycle Mappings):
+> If you observe performance problems, "Run on incremental" can be disabled by adding the following to Eclipse m2e workspace `lifecycle-mapping-metadata.xml` (Eclipse > Window > Preferences > Maven > Lifecycle Mappings):
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
@@ -127,7 +127,7 @@ This is particularly important for local deployments to a JEE server from within
 ```
 > Restart Eclipse thereafter ("apply" in Preferences is not enough).
 
-__Execution time__ depends first of all on the complexity of Git repo (especially on the number of tags, followed by the number of commits) and whether you use a custom JS `buildNumberFormat` or not. Without custom `buildNumberFormat`, you should expect regular Maven execution time of 0.5 - 1.5 s. Add 0.5 s. if custom `buildNumberFormat` is used. Eclipse m2e incremental execution is much faster (often factor of 2) than the regular Maven execution. 64 bit JRE is significantly faster than 32 bit JRE, warm is faster than cold, and so on.
+__Execution time__ primarily depends on the complexity of Git repo (especially on the number of tags, followed by the number of commits) and whether you use a custom JS `buildNumberFormat` or not. Without custom `buildNumberFormat`, you should expect a (regular Maven) execution time of 0.5 - 1.5 s. Add 0.5 s. if custom `buildNumberFormat` is used. Eclipse m2e incremental execution is much faster (often factor of 2) than the regular Maven execution. 64 bit JRE is significantly faster than 32 bit JRE, warm is faster than cold, and so on.
 
 
 ### Extracted properties
@@ -162,13 +162,13 @@ prefix                                                       | Properties are pu
 shortRevisionLength                                          | Length of abbreviated SHA-1 for `shortRevision` and `shortParent` properties, min. 0, max. 40. Default: 7
 gitDateFormat                                                | Format for `git.authorDate` and `git.commitDate` (see Java `SimpleDateFormat`). The default locale will be used. TimeZone can be specified with `dateFormatTimeZone`.<br>Default: `yyyy-MM-dd`.
 buildDateFormat                                              | Format for `git.buildDate` (see Java `SimpleDateFormat`). The default locale will be used. TimeZone can be specified with `dateFormatTimeZone`.<br>Default: `yyyy-MM-dd HH:mm:ss`.
-dateFormatTimeZone                                           | TimeZone for `gitDateFormat` and `buildDateFormat`. For possible values see Java `TimeZone#getTimeZone(String)`.<br>Default: current default TimeZone, as returned by Java `TimeZone#getDefault()`.
-countCommitsSince*Inclusive*<br>countCommitsSince*Exclusive* | Specifies since which ancestor commit (inclusive or exclusive) to count commits. Can be specified as tag (annotated or lightweight) or SHA-1 (complete or abbreviated).<br>If such commit is not found, all commits get counted. If both, inclusive and exclusive parameters are specified, the "inclusive" version wins.<br><br>Useful if you only want to count commits since start of the current development iteration.<br>Default: not set (all commits get counted). 
+dateFormatTimeZone                                           | TimeZone for `gitDateFormat` and `buildDateFormat`. For possible values see Java `TimeZone#getTimeZone(String)`.<br>Default: current default TimeZone, as returned by Java `TimeZone#getDefault()`. (Note that the Maven's built-in `maven.build.timestamp` property always return time in UTC.)
+countCommitsSince*Inclusive*<br>countCommitsSince*Exclusive* | Specifies since which ancestor commit (inclusive or exclusive) to count commits. Can be specified as tag (annotated or lightweight) or SHA-1 (complete or abbreviated).<br>If such commit is not found, all commits get counted. If both, inclusive and exclusive parameters are specified, the "inclusive" version wins.<br><br>The parameter is useful if you only want to count commits since start of the current development iteration.<br>Default: not set (all commits get counted). 
 <a name="buildNumberFormat">buildNumberFormat</a>            | JavaScript expression to format/compose the `git.buildNumber`. Uses JS engine from JDK. All properties are exposed to JavaScript as global String variables (names without `git.` prefix). JavaScript engine is initialized only if `buildNumberFormat` is provided.<br><br>Example: `branch + "." + commitsCount + "/" + commitDate + "/" + shortRevision + (dirty.length > 0 ? "-" + dirty : "");`<br><br>Default: `<tag or branch>.<commitsCount>.<shortRevision>-<dirty>`<br> or, more precisely, equivalent of JavaScript (evaluation result of the last line gets returned; real implementation is in Java for performance):<br>`name = (tag.length > 0) ? tag : (branch.length > 0) ? branch : "UNNAMED";`<br>`name + "." + commitsCount + "." + shortRevision + (dirty.length > 0 ? "-" + dirty : "");`
 repositoryDirectory                                          | Directory to start searching Git root from, should contain `.git` directory or be a subdirectory of such directory. Default: `${project.basedir}`.
 <a name="runOnlyAtExecutionRoot">runOnlyAtExecutionRoot</a>  | Setting this parameter to `false` allows to re-read metadata from Git repo in every submodule of a multi-module project, not only in the root one. Default: `true`.
 skip                                                         | Setting this parameter to `true` will skip plugin execution. Default: `false`.
-verbose                                                      | Print more information during build (e.g. parameters, all extracted properties, execution times). Default: `false`.
+<a name="verbose">verbose</a>                                | Print more information during build (e.g. parameters, all extracted properties, execution times). Default: `false`.
 
 
 Configuration example:
@@ -198,7 +198,7 @@ Configuration example:
 Usage in Ant
 ------------
 
-To use JGit BuildNumber Ant task you need these jars on your classpath:
+To use JGit BuildNumber Ant task, you need these jars on your classpath:
 
  - `jgit-buildnumber-ant-task-2.1.0.jar`
  - `org.eclipse.jgit-5.2.1.201812262042-r.jar`
@@ -206,7 +206,7 @@ To use JGit BuildNumber Ant task you need these jars on your classpath:
 Project directory that contains `.git` directory may be provided with `git.repositoryDirectory` property.
 Current work directory is used by default.
 
-Extracted properties are the same as with Maven.
+The extracted properties are the same as with Maven.
 
 build.xml usage snippet:
 
@@ -266,8 +266,8 @@ Example setup in build.gradle:
     }  
     apply plugin: 'jgit-buildnumber-gradle-plugin'  
 
-The default working directory in the plugin is ".", i.e current directory. 
-If you wish to set a custom directory then the following should be added to your build.gradle (`projectDir` is just an example):
+The default working directory in the plugin is ".", i.e. current directory. 
+If you wish to set a custom directory, the following should be added to your build.gradle (`projectDir` is just an example):
 
     task jGitBuildNumber_ExtractBuildNumber() {
        dir = projectDir;
@@ -307,5 +307,5 @@ Result example (from MANIFEST.MF):
 License information
 -------------------
 
-This project is released under the [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0)
+This project is released under the [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0).
 
