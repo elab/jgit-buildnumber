@@ -88,8 +88,8 @@ public class BuildNumberExtractor {
         if (revLength < 0 || revLength > 40) throw new IllegalArgumentException("shortRevisionLength (" + revLength + ") is out of bounds (0 .. 40)");
 
         try (RevWalk revWalk = new RevWalk(repo)) {
-            String branch = readCurrentBranch(repo, headSha1);
-            String tag = readTag(repo, headSha1);
+            String branch = readCurrentBranch(headSha1);
+            String tag = readTag(headSha1);
 
             RevCommit headCommit = revWalk.parseCommit(headObjectId);
 
@@ -148,7 +148,7 @@ public class BuildNumberExtractor {
         return name + "." + commitsCount + "." + shortRevision + (dirty.length() > 0 ? "-" + dirty : "");
     }
 
-    private static String readCurrentBranch(Repository repo, String headSha1) throws IOException {
+    private String readCurrentBranch(String headSha1) throws IOException {
         String branch = repo.getBranch();
         // should not happen
         if (null == branch) return EMPTY_STRING;
@@ -156,8 +156,8 @@ public class BuildNumberExtractor {
         return branch;
     }
 
-    private static String readTag(Repository repo, String sha1) {
-        Map<String, SortedSet<String>> tagMap = loadTagsMap(repo);
+    private String readTag(String sha1) {
+        Map<String, SortedSet<String>> tagMap = loadTagsMap();
         SortedSet<String> tags = tagMap.get(sha1);
         if (tags == null) return EMPTY_STRING;
         return String.join(";", tags);
@@ -178,21 +178,22 @@ public class BuildNumberExtractor {
     }
 
     /** @return Map sha1 - tag names */
-    private static Map<String, SortedSet<String>> loadTagsMap(Repository repo) {
-        Map<String, Ref> refMap = repo.getTags();
+    private Map<String, SortedSet<String>> loadTagsMap() {
+        Map<String, Ref> refMap = repo.getTags(); // key: short tag name ("v1.0"), value: ref with full tag name ("refs/tags/v1.0")
         Map<String, SortedSet<String>> res = new HashMap<>(refMap.size());
-        for (Map.Entry<String, Ref> en : refMap.entrySet()) {
-            String sha1 = extractPeeledSha1(repo, en.getValue());
-            res.computeIfAbsent(sha1, k -> new TreeSet<>()).add(en.getKey());
+        for (Map.Entry<String, Ref> entry : refMap.entrySet()) {
+            String sha1 = extractPeeledSha1(entry.getValue());
+            res.computeIfAbsent(sha1, k -> new TreeSet<>()).add(entry.getKey());
         }
         return res;
     }
 
-    // search for sha1 corresponding to annotated tag
-    private static String extractPeeledSha1(Repository repo, Ref ref) {
-        Ref peeled = repo.peel(ref);
-        ObjectId oid = peeled.getPeeledObjectId();
-        return null != oid ? oid.name() : peeled.getObjectId().name();
+    /** @param tagRef tag (annotated or lightweight)
+     *  @return SHA-1 corresponding to the tag */
+    private String extractPeeledSha1(Ref tagRef) {
+        Ref peeled = repo.peel(tagRef);
+        if (peeled.getPeeledObjectId() != null) return peeled.getPeeledObjectId().name(); // annotated tag
+        else return peeled.getObjectId().name(); // lightweight tag
     }
 
     private int countCommits(Repository repo, RevCommit headCommit, String countCommitsSinceInclusive, String countCommitsSinceExclusive) throws Exception {
@@ -202,10 +203,12 @@ public class BuildNumberExtractor {
             int res = 0;
             if (countCommitsSinceInclusive != null) {
                 String ancestorSha1 = getSha1(countCommitsSinceInclusive);
-                for (RevCommit commit : walk) { res += 1; if (commit.getId().getName().startsWith(ancestorSha1)) break; }
+                for (RevCommit commit : walk) { res += 1; if (commit.getId().getName().startsWith(ancestorSha1)) return res; }
+                throw new IllegalArgumentException("commit '" + countCommitsSinceInclusive + "' not found (parameter 'countCommitsSinceInclusive')");
             } else if (countCommitsSinceExclusive != null) {
                 String ancestorSha1 = getSha1(countCommitsSinceExclusive);
-                for (RevCommit commit : walk) { if (commit.getId().getName().startsWith(ancestorSha1)) break; res += 1; }
+                for (RevCommit commit : walk) { if (commit.getId().getName().startsWith(ancestorSha1)) return res; res += 1; }
+                throw new IllegalArgumentException("commit '" + countCommitsSinceExclusive + "' not found (parameter 'countCommitsSinceExclusive')");
             } else {
                 for (RevCommit commit : walk) { res += 1; }
             }
@@ -221,7 +224,8 @@ public class BuildNumberExtractor {
      * @return SHA-1 (complete or abbreviated) */
     private String getSha1(String tagOrSha1) throws Exception {
         Ref ref = repo.exactRef(Constants.R_TAGS + tagOrSha1);
-        return (ref != null) ? ref.getPeeledObjectId().name() : tagOrSha1;
+        if (ref == null) return tagOrSha1; // SHA-1
+        return extractPeeledSha1(ref); // tag
     }
 
 }

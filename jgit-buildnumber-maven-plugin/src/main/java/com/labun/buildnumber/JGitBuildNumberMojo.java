@@ -200,7 +200,9 @@ public class JGitBuildNumberMojo extends AbstractMojo {
                 fillPropsUnknown();
             }
         } catch (Exception e) {
-            getLog().error(e);
+            String message = e.getMessage() != null ? e.getMessage() : /* e.g. NPE */ e.getClass().getSimpleName();
+            getLog().error(message);
+            if (verbose) getLog().error(e); // stacktrace
             fillPropsUnknown();
         }
     }
