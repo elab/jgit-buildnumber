@@ -23,6 +23,7 @@ import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.Ref;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.lib.RepositoryBuilder;
+import org.eclipse.jgit.revplot.PlotWalk;
 import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.revwalk.RevWalk;
 
@@ -87,7 +88,7 @@ public class BuildNumberExtractor {
         int revLength = Integer.parseInt(shortRevisionLength);
         if (revLength < 0 || revLength > 40) throw new IllegalArgumentException("shortRevisionLength (" + revLength + ") is out of bounds (0 .. 40)");
 
-        try (RevWalk revWalk = new RevWalk(repo)) {
+        try (RevWalk revWalk = new PlotWalk(repo)) {
             String branch = readCurrentBranch(headSha1);
             String tag = readTag(headSha1);
 
@@ -95,7 +96,7 @@ public class BuildNumberExtractor {
 
             String parent = readParent(headCommit);
             String shortParent = readShortParent(headCommit, revLength);
-            int commitsCount = countCommits(repo, headCommit, countCommitsSinceInclusive, countCommitsSinceExclusive);
+            int commitsCount = countCommits(revWalk, headCommit, countCommitsSinceInclusive, countCommitsSinceExclusive);
 
             DateFormat dfGitDate = new SimpleDateFormat(gitDateFormat); // default locale
             if (dateFormatTimeZone != null) dfGitDate.setTimeZone(TimeZone.getTimeZone(dateFormatTimeZone));
@@ -196,8 +197,9 @@ public class BuildNumberExtractor {
         else return peeled.getObjectId().name(); // lightweight tag
     }
 
-    private int countCommits(Repository repo, RevCommit headCommit, String countCommitsSinceInclusive, String countCommitsSinceExclusive) throws Exception {
-        try (RevWalk walk = new RevWalk(repo)) {
+    private int countCommits(RevWalk walk, RevCommit headCommit, String countCommitsSinceInclusive, String countCommitsSinceExclusive) throws Exception {
+        try {
+            // walk.reset(); // only needed if iterator has been accessed before
             walk.setRetainBody(false);
             walk.markStart(headCommit);
             int res = 0;
