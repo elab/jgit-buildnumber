@@ -47,7 +47,7 @@ public class JGitBuildNumberMojo extends AbstractMojo {
     /** Length of abbreviated SHA-1 for "shortRevision" and "shortParent" properties, min. 0, max. 40. */
     @Parameter(defaultValue = "7")
     private String shortRevisionLength;
-    
+
     /** Which format to use for Git authorDate and Git commitDate. The default locale will be used. TimeZone can be specified, see {@link #dateFormatTimeZone}. */
     @Parameter(defaultValue = "yyyy-MM-dd")
     private String gitDateFormat;
@@ -94,7 +94,7 @@ public class JGitBuildNumberMojo extends AbstractMojo {
     /** Print more information during build (e.g. parameters, all extracted properties, execution times). */
     @Parameter(defaultValue = "false")
     private boolean verbose;
-    
+
     // ---------- parameters (read only) ----------
 
     @Parameter(property = "project.basedir", readonly = true, required = true)
@@ -150,7 +150,10 @@ public class JGitBuildNumberMojo extends AbstractMojo {
 
                 List<String> params = Arrays.asList(headSha1, dirty, shortRevisionLength, gitDateFormat, buildDateFormat, dateFormatTimeZone,
                     countCommitsSinceInclusive, countCommitsSinceExclusive, buildNumberFormat);
-                if (verbose) getLog().info("params: " + params);
+                if (verbose) getLog().info("params: " + "headSha1=" + headSha1 + ", dirty=" + dirty + ", shortRevisionLength=" + shortRevisionLength
+                    + ", gitDateFormat=" + gitDateFormat + ", buildDateFormat=" + buildDateFormat + ", dateFormatTimeZone=" + dateFormatTimeZone
+                    + ", countCommitsSinceInclusive=" + countCommitsSinceInclusive + ", countCommitsSinceExclusive=" + countCommitsSinceExclusive + ", "
+                    + "buildNumberFormat=" + buildNumberFormat);
                 String paramsKey = "jgitParams" + prefix;
                 String resultKey = "jgitResult" + prefix;
 
