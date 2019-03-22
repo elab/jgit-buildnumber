@@ -132,43 +132,43 @@ __Execution time__ primarily depends on the complexity of Git repo (especially o
 
 ### Extracted properties
 
-property          | desc
+property          | description
 ------------------|----------------
 git.revision      | HEAD SHA-1
-git.shortRevision | HEAD SHA-1 (abbreviated to 7 chars)
+git.shortRevision | HEAD SHA-1 (abbreviated, see [shortRevisionLength](#shortRevisionLength))
 git.dirty         | [dirtyValue](#dirtyValue) if differences exist between working-tree, index, and HEAD; empty string otherwise
 git.branch        | branch name; empty string for detached HEAD
-git.tag           | tag name; empty string if no tags defined; multiple tags separated with `;`
-git.parent        | SHA-1 of the parent commit; multiple parents separated with `;`
-git.shortParent   | SHA-1 of the parent commit (abbreviated to 7 chars); multiple parents separated with `;`
-git.commitsCount  | commits count; computed by traversing the history from HEAD backwards; returns -1 for a Git shallow clone
-git.authorDate    | when HEAD commit has been authored
-git.commitDate    | when HEAD commit has been committed
-git.describe      | result of Git `describe` command
-git.buildDate     | when build has started
+git.tag           | HEAD tag name; empty string if no tags defined; multiple tags separated with `;`
+git.parent        | SHA-1 of the parent commit (`HEAD^`); multiple parents separated with `;`
+git.shortParent   | SHA-1 of the parent commit (`HEAD^`) (abbreviated, see [shortRevisionLength](#shortRevisionLength)); multiple parents separated with `;`
+git.commitsCount  | commits count; -1 for a Git shallow clone; see [countCommitsSince...](#countCommitsSince)
+git.authorDate    | authored date of HEAD commit; see [gitDateFormat](#gitDateFormat), [dateFormatTimeZone](#dateFormatTimeZone)
+git.commitDate    | committed date of HEAD commit; see [gitDateFormat](#gitDateFormat), [dateFormatTimeZone](#dateFormatTimeZone)
+git.describe      | result of JGit `describe` command
+git.buildDate     | start time of plugin execution; see [buildDateFormat](#buildDateFormat), [dateFormatTimeZone](#dateFormatTimeZone)
 git.buildNumber   | composed from other properties according to [buildNumberFormat](#buildNumberFormat) parameter 
 
-Note that you can redefine the default "namespace" prefix `.git.` using `prefix` parameter.
+Note that you can redefine the default "namespace" prefix `.git.` using [prefix](#prefix) parameter.
 
 ### Configuration
 
 All parameters are optional. 
 Configuration goes under `<configuration>` tag under `<execution>` section.
 
-param                                                        | desc
+parameter                                                    | description
 -------------------------------------------------------------|----------------------------------------------
-prefix                                                       | Properties are published with this "namespace" prefix. You may want to redefine the default value:<ul><li>to avoid name clashes with other plugins;<li>to extract properties for multiple Git repos (use multiple plugin &lt;execution&gt; sections with different prefixes for that).</ul> Default: `git.`
-<a name="dirtyValue">dirtyValue</a>                          | Value for `git.dirty` flag. Default: String `dirty`.
-shortRevisionLength                                          | Length of abbreviated SHA-1 for `shortRevision` and `shortParent` properties, min. 0, max. 40. Default: 7
-gitDateFormat                                                | Format for `git.authorDate` and `git.commitDate` (see Java `SimpleDateFormat`). The default locale will be used. TimeZone can be specified with `dateFormatTimeZone`.<br>Default: `yyyy-MM-dd`.
-buildDateFormat                                              | Format for `git.buildDate` (see Java `SimpleDateFormat`). The default locale will be used. TimeZone can be specified with `dateFormatTimeZone`.<br>Default: `yyyy-MM-dd HH:mm:ss`.
-dateFormatTimeZone                                           | TimeZone for `gitDateFormat` and `buildDateFormat`. For possible values see Java `TimeZone#getTimeZone(String)`.<br>Default: current default TimeZone, as returned by Java `TimeZone#getDefault()`. (Note that the Maven's built-in `maven.build.timestamp` property always return time in UTC.)
-countCommitsSince*Inclusive*<br>countCommitsSince*Exclusive* | Specifies since which ancestor commit (inclusive or exclusive) to count commits. Can be specified as tag (annotated or lightweight) or SHA-1 (complete or abbreviated).<br>If such commit is not found, all commits get counted. If both, inclusive and exclusive parameters are specified, the "inclusive" version wins.<br><br>The parameter is useful if you only want to count commits since start of the current development iteration.<br>Default: not set (all commits get counted). 
-<a name="buildNumberFormat">buildNumberFormat</a>            | JavaScript expression to format/compose the `git.buildNumber`. Uses JS engine from JDK. All properties are exposed to JavaScript as global String variables (names without `git.` prefix). JavaScript engine is initialized only if `buildNumberFormat` is provided.<br><br>Example: `branch + "." + commitsCount + "/" + commitDate + "/" + shortRevision + (dirty.length > 0 ? "-" + dirty : "");`<br><br>Default: `<tag or branch>.<commitsCount>.<shortRevision>-<dirty>`<br> or, more precisely, equivalent of JavaScript (evaluation result of the last line gets returned; real implementation is in Java for performance):<br>`name = (tag.length > 0) ? tag : (branch.length > 0) ? branch : "UNNAMED";`<br>`name + "." + commitsCount + "." + shortRevision + (dirty.length > 0 ? "-" + dirty : "");`
-repositoryDirectory                                          | Directory to start searching Git root from, should contain `.git` directory or be a subdirectory of such directory. Default: `${project.basedir}`.
-<a name="runOnlyAtExecutionRoot">runOnlyAtExecutionRoot</a>  | Setting this parameter to `false` allows to re-read metadata from Git repo in every submodule of a multi-module project, not only in the root one. Default: `true`.
-skip                                                         | Setting this parameter to `true` will skip plugin execution. Default: `false`.
-<a name="verbose">verbose</a>                                | Print more information during build (e.g. parameters, all extracted properties, execution times). Default: `false`.
+prefix                                                       | <a name="prefix"/>Properties are published with this "namespace" prefix. You may want to redefine the default value:<ul><li>to avoid name clashes with other plugins;<li>to extract properties for multiple Git repos (use multiple plugin &lt;execution&gt; sections with different prefixes for that).</ul> Default: `git.`
+dirtyValue                                                   | <a name="dirtyValue"/>Value for `git.dirty` flag. Default: String `dirty`.
+shortRevisionLength                                          | <a name="shortRevisionLength"/>Length of abbreviated SHA-1 for `shortRevision` and `shortParent` properties, min. 0, max. 40. Default: 7
+gitDateFormat                                                | <a name="gitDateFormat"/>Format for `git.authorDate` and `git.commitDate` (see Java `SimpleDateFormat`). The default locale will be used. TimeZone can be specified with `dateFormatTimeZone`.<br>Default: `yyyy-MM-dd`.
+buildDateFormat                                              | <a name="buildDateFormat"/>Format for `git.buildDate` (see Java `SimpleDateFormat`). The default locale will be used. TimeZone can be specified with `dateFormatTimeZone`.<br>Default: `yyyy-MM-dd HH:mm:ss`.
+dateFormatTimeZone                                           | <a name="dateFormatTimeZone"/>TimeZone for `gitDateFormat` and `buildDateFormat`. For possible values see Java `TimeZone#getTimeZone(String)`.<br>Default: current default TimeZone, as returned by Java `TimeZone#getDefault()`. (Note that the Maven's built-in `maven.build.timestamp` property always return time in UTC.)
+countCommitsSince*Inclusive*<br>countCommitsSince*Exclusive* | <a name="countCommitsSince"/>Specifies since which ancestor commit (inclusive or exclusive) to count commits. Can be specified as tag (annotated or lightweight) or SHA-1 (complete or abbreviated).<br>If such commit is not found, all commits get counted. If both, inclusive and exclusive parameters are specified, the "inclusive" version wins.<br><br>The parameter is useful if you only want to count commits since start of the current development iteration.<br>Default: not set (all commits get counted).<br><br>_Note: Technically, commits are counted backwards from HEAD to parents, through all branches which participated in HEAD state, from child to parent commit, in reverse chronological order of commits in parallel branches according to "committed date" of commits, until the specified ancestor commit is reached (or till root of Git repo). The traverse order should be exactly the same as displayed in "History" view of Eclipse._
+buildNumberFormat                                            | <a name="buildNumberFormat"/>JavaScript expression to format/compose the `git.buildNumber`. Uses JS engine from JDK. All properties are exposed to JavaScript as global String variables (names without `git.` prefix). JavaScript engine is initialized only if `buildNumberFormat` is provided.<br><br>Example: `branch + "." + commitsCount + "/" + commitDate + "/" + shortRevision + (dirty.length > 0 ? "-" + dirty : "");`<br><br>Default: `<tag or branch>.<commitsCount>.<shortRevision>-<dirty>`<br> or, more precisely, equivalent of JavaScript (evaluation result of the last line gets returned; real implementation is in Java for performance):<br>`name = (tag.length > 0) ? tag : (branch.length > 0) ? branch : "UNNAMED";`<br>`name + "." + commitsCount + "." + shortRevision + (dirty.length > 0 ? "-" + dirty : "");`
+repositoryDirectory                                          | <a name="repositoryDirectory"/>Directory to start searching Git root from, should contain `.git` directory or be a subdirectory of such directory. Default: `${project.basedir}`.
+runOnlyAtExecutionRoot                                       | <a name="runOnlyAtExecutionRoot"/>Setting this parameter to `false` allows to re-read metadata from Git repo in every submodule of a multi-module project, not only in the root one. Default: `true`.
+skip                                                         | <a name="skip"/>Setting this parameter to `true` will skip plugin execution. Default: `false`.
+verbose                                                      | <a name="verbose"/>Print more information during build (e.g. parameters, all extracted properties, execution times). Default: `false`.
 
 
 Configuration example:
