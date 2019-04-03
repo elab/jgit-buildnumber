@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="JGitBuildNumberAntTask Example" default="main" basedir=".">
+
+	<property name="MavenRepo" value="/dev/maven_repo" />
+
+	<path id="dependencies">
+		<pathelement location="${MavenRepo}/com/labun/buildnumber/jgit-buildnumber-ant-task/2.2.0/jgit-buildnumber-ant-task-2.2.0.jar" />
+		<pathelement location="${MavenRepo}/com/labun/buildnumber/jgit-buildnumber-common/2.2.0/jgit-buildnumber-common-2.2.0.jar" />
+		<pathelement location="${MavenRepo}/org/eclipse/jgit/org.eclipse.jgit/5.2.1.201812262042-r/org.eclipse.jgit-5.2.1.201812262042-r.jar" />
+		
+		<!-- to avoid slf4j related errors and warnings -->
+		<pathelement location="${MavenRepo}/org/slf4j/slf4j-api/1.7.2/slf4j-api-1.7.2.jar" /> <!-- this version is used by jgit-5.2.1 -->
+		<pathelement location="${MavenRepo}/ch/qos/logback/logback-classic/1.2.3/logback-classic-1.2.3.jar" />
+		<pathelement location="${MavenRepo}/ch/qos/logback/logback-core/1.2.3/logback-core-1.2.3.jar" />
+	</path>
+	
+	<target name="jgit-buildnumber">
+		<taskdef name="extract-buildnumber" classname="com.labun.buildnumber.JGitBuildNumberAntTask" classpathref="dependencies" />
+		<extract-buildnumber verbose = "true" buildNumberFormat = "branch + '.' + commitsCount + '/' + commitDate + '/' + shortRevision + (dirty.length > 0 ? '-' + dirty : '')" />
+		<echo message="buildNumber: ${git.buildNumber}, buildDate: ${git.buildDate}" />
+	</target>
+	
+	<target name="main" depends="jgit-buildnumber">
+		<echo message="buildNumber: ${git.buildNumber}, buildDate: ${git.buildDate}" /><!-- extracted properties are available in subsequent tasks -->
+	</target>
+</project>

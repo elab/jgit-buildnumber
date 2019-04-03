@@ -16,6 +16,10 @@ import java.util.TreeSet;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import javax.script.ScriptEngine;
+import javax.script.ScriptEngineManager;
+import javax.script.ScriptException;
+
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.errors.RevWalkException;
 import org.eclipse.jgit.lib.Constants;
@@ -27,6 +31,8 @@ import org.eclipse.jgit.revplot.PlotWalk;
 import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.revwalk.RevWalk;
 
+import lombok.Getter;
+
 /** Extracts Git metadata and creates build number. See {@link #propertyNames}. */
 public class BuildNumberExtractor {
 
@@ -36,21 +42,41 @@ public class BuildNumberExtractor {
 
     private static final String EMPTY_STRING = "";
 
+    Parameters params;
+    Logger logger;
+
     File gitDir;
     Git git;
     Repository repo;
 
     ObjectId headObjectId;
-    String headSha1;
+    private @Getter String headSha1;
+    private @Getter boolean gitStatusDirty;
 
-    boolean gitStatusDirty;
+    void log(String msg) {
+        logger.log(msg);
+    }
+
+    void logVerbose(String msg) {
+        if (params.getVerbose()) logger.log(msg);
+    }
 
     /** Initializes values from Git repo, which are always required, regardless of full or incremental build.
      * 
-     * @param repoDirectory directory to start searching git root from, should contain '.git' directory or be a subdirectory of such directory.
-     * @throws Exception if git repo not found or repo reading error happened
+     * @param params input parameters
+     * @param logger logger to log info messages
+     * @throws Exception if git repo not found or cannot be read
      */
-    public BuildNumberExtractor(File repoDirectory) throws Exception {
+    public BuildNumberExtractor(Parameters params, Logger logger) throws Exception {
+        this.params = params;
+        this.logger = logger;
+
+        long t = System.currentTimeMillis();
+
+        params.validateAndSetParameterValues(); // defensive (parameters should have already been set and validated)
+        logVerbose("params: " + params.asString());
+
+        File repoDirectory = params.getRepositoryDirectory();
         if (!(repoDirectory.exists() && repoDirectory.isDirectory()))
             throw new IOException("Invalid repository directory provided: " + repoDirectory.getAbsolutePath());
 
@@ -59,6 +85,7 @@ public class BuildNumberExtractor {
         RepositoryBuilder builder = new RepositoryBuilder().findGitDir(canonicalRepo);
 
         gitDir = builder.getGitDir();
+        logVerbose("gitDir=" + gitDir);
         git = Git.open(gitDir);
         repo = git.getRepository();
 
@@ -71,6 +98,9 @@ public class BuildNumberExtractor {
         // long t = System.currentTimeMillis();
         gitStatusDirty = !git.status().call().isClean();
         // System.out.println("dirty: " + gitStatusDirty + " (" + (System.currentTimeMillis() - t) + " ms)");
+
+        logVerbose("repo state: " + "headSha1=" + headSha1 + ", gitStatusDirty=" + gitStatusDirty);
+        logVerbose("initializing Git repo, get base data: " + (System.currentTimeMillis() - t) + " ms");
     }
 
     @Override
@@ -78,15 +108,9 @@ public class BuildNumberExtractor {
         git.close(); // also closes the `repo`
     }
 
-    public String getHeadSha1() { return headSha1; }
-    public boolean isGitStatusDirty() { return gitStatusDirty; }
-
     /** @return Map propertyName - propertyValue. See {@link #propertyNames}. */
-    public Map<String, String> extract(String shortRevisionLength, String gitDateFormat, String buildDateFormat, String dateFormatTimeZone,
-        String countCommitsSinceInclusive, String countCommitsSinceExclusive, String dirtyValue) throws Exception {
-
-        int revLength = Integer.parseInt(shortRevisionLength);
-        if (revLength < 0 || revLength > 40) throw new IllegalArgumentException("shortRevisionLength (" + revLength + ") is out of bounds (0 .. 40)");
+    public Map<String, String> extract() throws Exception {
+        long t = System.currentTimeMillis();
 
         try (RevWalk revWalk = new PlotWalk(repo)) {
             String branch = readCurrentBranch(headSha1);
@@ -95,26 +119,28 @@ public class BuildNumberExtractor {
             RevCommit headCommit = revWalk.parseCommit(headObjectId);
 
             String parent = readParent(headCommit);
-            String shortParent = readShortParent(headCommit, revLength);
-            int commitsCount = countCommits(revWalk, headCommit, countCommitsSinceInclusive, countCommitsSinceExclusive);
+            String shortParent = readShortParent(headCommit, params.getShortRevisionLength());
+            int commitsCount = countCommits(revWalk, headCommit, params.getCountCommitsSinceInclusive(), params.getCountCommitsSinceExclusive());
 
-            DateFormat dfGitDate = new SimpleDateFormat(gitDateFormat); // default locale
-            if (dateFormatTimeZone != null) dfGitDate.setTimeZone(TimeZone.getTimeZone(dateFormatTimeZone));
+            DateFormat dfGitDate = new SimpleDateFormat(params.getGitDateFormat()); // default timezone, default locale
+            if (params.getDateFormatTimeZone() != null) dfGitDate.setTimeZone(TimeZone.getTimeZone(params.getDateFormatTimeZone()));
             String authorDate = dfGitDate.format(headCommit.getAuthorIdent().getWhen());
             String commitDate = dfGitDate.format(headCommit.getCommitterIdent().getWhen());
 
             String describe = git.describe().setLong(true).call();
 
-            SimpleDateFormat dfBuildDate = new SimpleDateFormat(buildDateFormat);
-            if (dateFormatTimeZone != null) dfBuildDate.setTimeZone(TimeZone.getTimeZone(dateFormatTimeZone));
+            SimpleDateFormat dfBuildDate = new SimpleDateFormat(params.getBuildDateFormat());
+            if (params.getDateFormatTimeZone() != null) dfBuildDate.setTimeZone(TimeZone.getTimeZone(params.getDateFormatTimeZone()));
             String buildDate = dfBuildDate.format(new Date());
 
             String revision = headSha1;
-            String shortRevision = abbreviateSha1(headSha1, revLength);
-            String dirty = gitStatusDirty ? dirtyValue : "";
+            String shortRevision = abbreviateSha1(headSha1, params.getShortRevisionLength());
+            String dirty = gitStatusDirty ? params.getDirtyValue() : "";
             String commitsCountAsString = Integer.toString(commitsCount);
 
             String buildNumber = defaultBuildNumber(tag, branch, commitsCountAsString, shortRevision, dirty);
+
+            logVerbose("extracting properties for buildNumber: " + (System.currentTimeMillis() - t) + " ms");
 
             Map<String, String> res = new TreeMap<>();
             res.put("revision", revision);
@@ -131,9 +157,19 @@ public class BuildNumberExtractor {
             res.put("buildDate", buildDate);
             res.put("buildNumber", buildNumber);
 
+            if (params.getBuildNumberFormat() != null) {
+                t = System.currentTimeMillis();
+                String jsBuildNumber = formatBuildNumberWithJS(res);
+                logVerbose("formatting buildNumber with JS: " + (System.currentTimeMillis() - t) + " ms");
+                res.put("buildNumber", jsBuildNumber); // overwrites default buildNumber
+            }
+
+            logVerbose("all extracted properties: " + res);
+            log("BUILDNUMBER: " + res.get("buildNumber"));
+
             // ensure all properties are set
             for (String property : propertyNames)
-                if (res.get(property) == null) throw new RuntimeException("Property + '" + property + "' is not set");
+                if (res.get(property) == null) throw new RuntimeException("Property '" + property + "' is not set");
 
             return res;
         }
@@ -164,14 +200,14 @@ public class BuildNumberExtractor {
         return String.join(";", tags);
     }
 
-    private static String readParent(RevCommit commit) throws IOException {
+    private static String readParent(RevCommit commit) {
         if (commit == null) return EMPTY_STRING;
         RevCommit[] parents = commit.getParents();
         if (parents == null || parents.length == 0) return EMPTY_STRING;
         return Stream.of(parents).map(p -> p.getId().name()/*SHA-1*/).collect(Collectors.joining(";"));
     }
 
-    private static String readShortParent(RevCommit commit, int length) throws IOException {
+    private static String readShortParent(RevCommit commit, int length) {
         if (commit == null) return EMPTY_STRING;
         RevCommit[] parents = commit.getParents();
         if (parents == null || parents.length == 0) return EMPTY_STRING;
@@ -230,4 +266,24 @@ public class BuildNumberExtractor {
         return extractPeeledSha1(ref); // tag
     }
 
+    private String formatBuildNumberWithJS(Map<String, String> bnProperties) throws ScriptException {
+        String engineName = "JavaScript";
+        // find JavaScript engine using context class loader
+        ScriptEngine jsEngine = new ScriptEngineManager().getEngineByName(engineName);
+        if (jsEngine == null) {
+            // may be null when running within Eclipse using m2e, maybe due to OSGi class loader;
+            // this does work in Eclipse, see ScriptEngineManager constructor Javadoc for what passing a null means here
+            jsEngine = new ScriptEngineManager(null).getEngineByName(engineName);
+        }
+        if (jsEngine == null) {
+            log(engineName + " not found!");
+            return "UNKNOWN_JS_BUILDNUMBER";
+        }
+
+        for (Map.Entry<String, String> e : bnProperties.entrySet())
+            jsEngine.put(e.getKey(), e.getValue());
+        Object res = jsEngine.eval(params.getBuildNumberFormat());
+        if (res == null) throw new IllegalStateException("JS buildNumber is null");
+        return res.toString();
+    }
 }

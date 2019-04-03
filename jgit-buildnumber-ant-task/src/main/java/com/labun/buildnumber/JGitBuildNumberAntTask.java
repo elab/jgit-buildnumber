@@ -5,50 +5,41 @@ import java.util.Map;
 
 import org.apache.tools.ant.Project;
 
-/** Extracts Git metadata and creates build number. Publishes them as Ant properties. See {@link JGitBuildNumberAntTask#execute()}. */
-public class JGitBuildNumberAntTask {
+import lombok.Getter;
+import lombok.Setter;
+
+/** Extracts Git metadata and creates build number. Publishes them as Ant properties. */
+@Getter
+@Setter // required by Ant task properties setter (note: Ant task "properties" are our "parameters") 
+public class JGitBuildNumberAntTask implements Parameters {
     private Project project;
 
-    /** @param project Ant project setter */
-    public void setProject(Project project) {
-        this.project = project;
-    }
+    private String prefix;
+    private String dirtyValue;
+    private Integer shortRevisionLength;
+    private String gitDateFormat;
+    private String buildDateFormat;
+    private String dateFormatTimeZone;
+    private String countCommitsSinceInclusive;
+    private String countCommitsSinceExclusive;
+    private String buildNumberFormat;
+    private File repositoryDirectory;
+    private Boolean runOnlyAtExecutionRoot;
+    private Boolean skip;
+    private Boolean verbose;
 
-    /**
-     * Reads {@code git.repositoryDirectory} property that should contain '.git' directory
-     * or be a subdirectory of such directory. If property wasn't set current work directory is used instead.
-     * Extracted properties names:
-     * <ul>
-     *     <li>{@code git.revision}</li>
-     *     <li>{@code git.shortRevision}</li>
-     *     <li>{@code git.dirty}</li>
-     *     <li>{@code git.branch}</li>
-     *     <li>{@code git.tag}</li>
-     *     <li>{@code git.parent}</li>
-     *     <li>{@code git.shortParent}</li>
-     *     <li>{@code git.commitsCount}</li>
-     *     <li>{@code git.authorDate}</li>
-     *     <li>{@code git.commitDate}</li>
-     *     <li>{@code git.describe}</li>
-     *     <li>{@code git.buildDate}</li>
-     *     <li>{@code git.buildNumber}</li>
-     * </ul>
-     * @throws Exception if git repo not found or cannot be read
-     */
     public void execute() throws Exception {
-        String repoDirString = project.getProperty("git.repositoryDirectory");
-        File repoDir = null != repoDirString ? new File(repoDirString) : new File(".");
-        String gitDateFormat = project.getProperty("git.gitDateFormat");
-        String buildDateFormat = project.getProperty("git.buildDateFormat");
-        String dateFormatTimeZone = null;
-        String countCommitsSinceInclusive = project.getProperty("git.countCommitsSinceInclusive");
-        String countCommitsSinceExclusive = project.getProperty("git.countCommitsSinceExclusive");
-        String prefix = project.getProperty("git.prefix");
-        String dirtyValue = project.getProperty("git.dirtyValue");
-        String shortRevisionLength = project.getProperty("git.shortRevisionLength");
+        // set some parameters to Ant specific values
+        if (getRepositoryDirectory() == null) setRepositoryDirectory(project.getBaseDir());
+        
+        validateAndSetParameterValues();
 
-        Map<String, String> properties = new BuildNumberExtractor(repoDir).extract(shortRevisionLength, gitDateFormat, buildDateFormat, dateFormatTimeZone,
-            countCommitsSinceInclusive, countCommitsSinceExclusive, dirtyValue);
+        if (skip) {
+            project.log("Execution of plugin is skipped by configuration.");
+            return;
+        }
+
+        Map<String, String> properties = new BuildNumberExtractor(this, msg -> project.log(msg)).extract();
 
         for (Map.Entry<String, String> property : properties.entrySet())
             project.setProperty(prefix + property.getKey(), property.getValue());

@@ -4,7 +4,7 @@
 
     <groupId>com.labun.buildnumber</groupId>
     <artifactId>jgit-buildnumber-parent</artifactId>
-    <version>2.1.3-SNAPSHOT</version>
+    <version>2.2.0-SNAPSHOT</version>
 
     <packaging>pom</packaging>
     <name>JGit Build Number for Maven, Ant, and Gradle</name>
@@ -93,8 +93,24 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <!--
+        To support Lombok in Eclipse, add this to eclipse.ini:
+            -vmargs
+            -javaagent:<path-to-lombok-jar>
+        For other IDEs and tools, see projectlombok.org/setup
+        -->
+        <lombok.version>1.18.6</lombok.version>
         <jgit.version>5.2.1.201812262042-r</jgit.version>
     </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <version>${lombok.version}</version>
+            <scope>provided</scope>
+        </dependency>
+    </dependencies>
 
     <profiles>
         <profile>
