@@ -139,6 +139,7 @@
                                     <goal>jar</goal>
                                 </goals>
                                 <configuration>
+                                    <doclint>none</doclint>
                                     <linksource>true</linksource>
                                     <quiet>true</quiet>
                                 </configuration>
