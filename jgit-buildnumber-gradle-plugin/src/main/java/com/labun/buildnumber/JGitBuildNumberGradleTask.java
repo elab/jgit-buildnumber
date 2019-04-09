@@ -3,47 +3,45 @@ package com.labun.buildnumber;
 import java.io.File;
 import java.util.Map;
 
-import org.eclipse.jgit.util.StringUtils;
 import org.gradle.api.DefaultTask;
-import org.gradle.api.plugins.ExtraPropertiesExtension;
 import org.gradle.api.tasks.TaskAction;
 
-/** Extracts Git metadata and creates build number. Publishes them as following project properties:
-<pre>
-gitRevision
-gitShortRevision
-gitDirty
-gitBranch
-gitTag
-gitParent
-gitShortParent
-gitCommitsCount
-gitAuthorDate
-gitCommitDate
-gitDescribe
-gitBuildDate
-gitBuildNumber
-</pre>
- */
-public class JGitBuildNumberGradleTask extends DefaultTask {
+import lombok.Getter;
+import lombok.Setter;
+
+/** Extracts Git metadata and creates build number. Publishes them as project properties. */
+@Getter
+@Setter
+public class JGitBuildNumberGradleTask extends DefaultTask implements Parameters {
+
+    private String prefix;
+    private String dirtyValue;
+    private Integer shortRevisionLength;
+    private String gitDateFormat;
+    private String buildDateFormat;
+    private String dateFormatTimeZone;
+    private String countCommitsSinceInclusive;
+    private String countCommitsSinceExclusive;
+    private String buildNumberFormat;
+    private File repositoryDirectory;
+    private Boolean runOnlyAtExecutionRoot;
+    private Boolean skip;
+    private Boolean verbose;
 
     @TaskAction
-    public void jGitBuildNumber_ExtractBuildNumber() throws Exception {
-        File repoDir = new File(".");
-        String gitDateFormat = "yyyy-MM-dd";
-        String buildDateFormat = "yyyy-MM-dd HH:mm:ss";
-        String dateFormatTimeZone = null;
-        String countCommitsSinceInclusive = null;
-        String countCommitsSinceExclusive = null;
-        String prefix = "git";
-        String dirtyValue = "dirty";
-        String shortRevisionLength = "7";
+    public void extractBuildnumber() throws Exception {
+        // set some parameters to Gradle specific values
+        if (getRepositoryDirectory() == null) setRepositoryDirectory(getProject().getProjectDir());
 
-        Map<String, String> properties = new BuildNumberExtractor(repoDir).extract(shortRevisionLength, gitDateFormat, buildDateFormat, dateFormatTimeZone,
-            countCommitsSinceInclusive, countCommitsSinceExclusive, dirtyValue);
-        ExtraPropertiesExtension props = getProject().getExtensions().getExtraProperties();
+        validateAndSetParameterValues();
 
-        for (Map.Entry<String, String> property : properties.entrySet())
-            props.set(prefix + StringUtils.capitalize(property.getKey()), property.getValue());
+        if (skip) {
+            getLogger().lifecycle("Execution is skipped by configuration.");
+            return;
+        }
+
+        Map<String, String> properties = new BuildNumberExtractor(this, msg -> getLogger().lifecycle(msg)).extract(); // "info" level will not be printed by default
+        
+        getProject().getExtensions().add(Map.class, prefix, properties);
     }
 }

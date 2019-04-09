@@ -8,7 +8,7 @@ import org.apache.tools.ant.Project;
 import lombok.Getter;
 import lombok.Setter;
 
-/** Extracts Git metadata and creates build number. Publishes them as Ant properties. */
+/** Extracts Git metadata and creates build number. Publishes them as project properties. */
 @Getter
 @Setter // required by Ant task properties setter (note: Ant task "properties" are our "parameters") 
 public class JGitBuildNumberAntTask implements Parameters {
@@ -35,7 +35,7 @@ public class JGitBuildNumberAntTask implements Parameters {
         validateAndSetParameterValues();
 
         if (skip) {
-            project.log("Execution of plugin is skipped by configuration.");
+            project.log("Execution is skipped by configuration.");
             return;
         }
 

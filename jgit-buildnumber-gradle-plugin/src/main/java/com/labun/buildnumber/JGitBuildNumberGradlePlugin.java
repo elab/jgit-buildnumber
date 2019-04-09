@@ -5,7 +5,8 @@ import org.gradle.api.Project;
 
 public class JGitBuildNumberGradlePlugin implements Plugin<Project> {
 
-    public void apply(Project target) {
-        target.getTasks().replace("jGitBuildNumber_ExtractBuildNumber", JGitBuildNumberGradleTask.class);
+    @Override
+    public void apply(Project project) {
+        JGitBuildNumberGradleTask task = project.getTasks().replace("extract-buildnumber", JGitBuildNumberGradleTask.class);
     }
 }

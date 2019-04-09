@@ -23,7 +23,7 @@ import org.sonatype.plexus.build.incremental.BuildContext;
 import lombok.Getter;
 import lombok.Setter;
 
-/** Goal which extracts Git metadata and creates build number. */
+/** Extracts Git metadata and creates build number. Publishes them as project properties. */
 @Getter
 @Setter
 @Mojo(name = "extract-buildnumber", defaultPhase = LifecyclePhase.VALIDATE)
@@ -78,7 +78,7 @@ public class JGitBuildNumberMojo extends AbstractMojo implements Parameters {
         validateAndSetParameterValues();
 
         if (skip) {
-            getLog().info("Execution of plugin is skipped by configuration.");
+            getLog().info("Execution is skipped by configuration.");
             return;
         }
 

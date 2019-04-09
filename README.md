@@ -89,7 +89,8 @@ Note that you can redefine the default "namespace" prefix `git.` using [prefix](
 
 You can see the extracted properties, the execution time, and other info in the build log. Set the [verbose](#verbose) parameter to `true` to achieve that.
 
-Working with extracted properties depends on build tool. See examples in sections for [Maven](#usage-in-maven), [Ant](#usage-in-ant), [Gradle](#usage-in-gradle).
+Extracted properties can be accessed in the same way in all build tools: as `git.buildNumber` or `${git.buildNumber}`. 
+See examples in sections for [Maven](#usage-in-maven), [Ant](#usage-in-ant), [Gradle](#usage-in-gradle).
 
 
 ### Configuration
@@ -112,7 +113,7 @@ runOnlyAtExecutionRoot                                       | <a name="runOnlyA
 skip                                                         | <a name="skip"/>Setting this parameter to `true` will skip extraction of Git metadata and creation of buildNumber. Default: `false`.
 verbose                                                      | <a name="verbose"/>Print more information during build (e.g. parameters, all extracted properties, execution times). Default: `false`.
 
-Working with parameters depends on build tool. See examples in sections for [Maven](#usage-in-maven), [Ant](#usage-in-ant), [Gradle](#usage-in-gradle).
+Working with parameters is very similar in all build tools. See examples in sections for [Maven](#usage-in-maven), [Ant](#usage-in-ant), [Gradle](#usage-in-gradle).
 
 
 Usage in Maven
@@ -219,81 +220,44 @@ This is particularly important for local deployments to a JEE server from within
 Usage in Ant
 ------------
 
-Usage is very similar to Maven. See complete working [build.xml](examples/ant/build.xml) example.
+Usage is very similar to Maven. As all parameters are optional you don't have to specify any. Excerpt from `build.xml`:
+
+    <target name="jgit-buildnumber">
+        <taskdef name="extract-buildnumber" classname="com.labun.buildnumber.JGitBuildNumberAntTask" classpathref="dependencies" />
+        <extract-buildnumber />
+    </target>
+
+See [complete working `build.xml` example](examples/ant/build.xml).
 
 
 Usage in Gradle
 ----------------
 
- - Add the plugin dependency in your build.gradle: `classpath 'com.labun.buildnumber:jgit-buildnumber-gradle-plugin:2.1.2'`
- - Apply the plugin in one of the following ways: `apply plugin: 'jgit-buildnumber-gradle-plugin'` or `apply plugin: com.labun.buildnumber.JGitBuildNumberGradlePlugin`
- - Execute the jGitBuildNumber_ExtractBuildNumber task: `tasks.jGitBuildNumber_ExtractBuildNumber.execute()`
+Usage is very similar to Maven and Ant. Essentially, you only need to specify the dependency on `jgit-buildnumber-gradle-plugin`.
 
-Extracted properties are put into: 
-
- - `project.gitRevision`
- - `project.gitShortRevision`
- - `project.gitDirty`
- - `project.gitBranch`
- - `project.gitTag`
- - `project.gitParent`
- - `project.gitShortParent`
- - `project.gitCommitsCount`
- - `project.gitAuthorDate`
- - `project.gitCommitDate`
- - `project.gitDescribe`
- - `project.gitBuildDate`
- - `project.gitBuildNumber`
-
-
-Example setup in build.gradle:
+Complete working example of `build.gradle`:
 
     buildscript {
-      repositories{  
-         mavenLocal()  
-      }  
-      dependencies {  
-         classpath 'com.labun.buildnumber:jgit-buildnumber-gradle-plugin:2.1.2'  
-      }  
-    }  
-    apply plugin: 'jgit-buildnumber-gradle-plugin'  
-
-The default working directory in the plugin is ".", i.e. current directory. 
-If you wish to set a custom directory, the following should be added to your build.gradle (`projectDir` is just an example):
-
-    task jGitBuildNumber_ExtractBuildNumber() {
-       dir = projectDir;
+        repositories { mavenLocal(); mavenCentral() }
+        dependencies { classpath 'com.labun.buildnumber:jgit-buildnumber-gradle-plugin:2.2.0' }
     }
+    
+    import com.labun.buildnumber.JGitBuildNumberGradleTask
+    
+    task 'extract-buildnumber' (type: JGitBuildNumberGradleTask)
 
-Usage example (write extracted properties into MANIFEST.MF file):
+See [extended working `build.gradle` example with task parameters](examples/gradle/build.gradle).
 
-    jar() {
-        manifest {
-            attributes(
-                    'Main-Class': mainClassName,
-                    'Implementation-Title': project.name,
-                    'Implementation-Version': project.gitRevision,
-                    'Specification-Version': project.gitCommitsCount,
-                    'X-Git-Branch': project.gitBranch,
-                    'X-Git-Tag': project.gitTag,
-                    'Version' : project.gitCommitsCount,
-                    'Branch' : project.gitBranch
-            )
-        }
-    }  
+The only difference in setting task parameters with Gradle 
+(as compared to [Maven](https://maven.apache.org/guides/plugin/guide-java-plugin-development.html#Parameters) 
+and [Ant](https://ant.apache.org/manual/develop.html#set-magic)) is that Gradle doesn't implicitly convert strings to other types.
+Therefore you have to do it explicitly. "JGit Build Number" has only one such parameter: `repositoryDirectory` of type `java.io.File`.
+If you need to specify this parameter, simply call an appropriate constructor:
 
-Result example (from MANIFEST.MF):
-
-    Manifest-Version: 1.0
-    Main-Class: SearchService.application.SearchServiceMain
-    Implementation-Title: SearchService
-    Implementation-Vendor: 
-    Implementation-Version: 3b03c4d3531c66648c4fe7fcd7f53b3e9f64e519
-    Specification-Version: 82
-    X-Git-Branch: master
-    X-Git-Tag: 
-    Version: 82
-    Branch: master
+    task 'extract-buildnumber' (type: JGitBuildNumberGradleTask) {
+        repositoryDirectory = new File('<path>')
+        ...
+    }
 
 
 Development notes
