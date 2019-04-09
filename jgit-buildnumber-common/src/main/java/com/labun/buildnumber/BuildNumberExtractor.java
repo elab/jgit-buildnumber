@@ -91,9 +91,10 @@ public class BuildNumberExtractor {
         repo = git.getRepository();
 
         Ref headRef = repo.exactRef(Constants.HEAD);
-        if (headRef == null) throw new IOException("Cannot read current revision from repository: " + repo);
+        if (headRef == null) throw new IllegalArgumentException("Cannot read current revision (HEAD) from repository: " + repo);
 
         headObjectId = headRef.getObjectId();
+        if (headObjectId == null) throw new IllegalArgumentException("Git repository is empty (perhaps just initialized with `git init`): " + repo);
         headSha1 = headObjectId.name();
 
         // long t = System.currentTimeMillis();
