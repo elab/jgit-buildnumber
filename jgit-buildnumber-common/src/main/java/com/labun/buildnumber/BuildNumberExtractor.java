@@ -86,6 +86,7 @@ public class BuildNumberExtractor {
 
         gitDir = builder.getGitDir();
         logVerbose("gitDir=" + gitDir);
+        if (gitDir == null) throw new IllegalArgumentException("Git directory '.git' not found (check parameter 'repositoryDirectory')");
         git = Git.open(gitDir);
         repo = git.getRepository();
 
