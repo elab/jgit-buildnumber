@@ -34,7 +34,7 @@ public class JGitBuildNumberMojo extends AbstractMojo implements Parameters {
 
     // ---------- parameters (user configurable) ----------
 
-    private @Parameter String prefix;
+    private @Parameter String namespace;
     private @Parameter String dirtyValue;
     private @Parameter Integer shortRevisionLength;
     private @Parameter String gitDateFormat;
@@ -97,8 +97,8 @@ public class JGitBuildNumberMojo extends AbstractMojo implements Parameters {
 
                 List<Object> params = Arrays.asList(headSha1, dirty, shortRevisionLength, gitDateFormat, buildDateFormat, dateFormatTimeZone,
                     countCommitsSinceInclusive, countCommitsSinceExclusive, buildNumberFormat);
-                String paramsKey = "jgitParams" + prefix;
-                String resultKey = "jgitResult" + prefix;
+                String paramsKey = "jgitParams" + namespace;
+                String resultKey = "jgitResult" + namespace;
 
                 // note: saving/loading custom classes doesn't work (due to different classloaders?, "cannot be cast" error);
                 // when saving Properties object, our values don't survive; therefore we use a Map here
@@ -114,7 +114,7 @@ public class JGitBuildNumberMojo extends AbstractMojo implements Parameters {
             } else if ("pom".equals(parentProject.getPackaging())) {
                 // build started from parent, we are in subproject, lets provide parent properties to our project
                 Properties parentProps = parentProject.getProperties();
-                String revision = parentProps.getProperty(prefix + "revision");
+                String revision = parentProps.getProperty(namespace + "." + "revision");
                 if (revision == null) {
                     // we are in subproject, but parent project wasn't build this time,
                     // maybe build is running from parent with custom module list - 'pl' argument
@@ -170,19 +170,19 @@ public class JGitBuildNumberMojo extends AbstractMojo implements Parameters {
     private Map<String, String> toMap(Properties props) {
         Map<String, String> map = new TreeMap<>();
         for (String propertyName : propertyNames)
-            map.put(propertyName, props.getProperty(prefix + propertyName));
+            map.put(propertyName, props.getProperty(namespace + "." + propertyName));
 
         return map;
     }
 
     private void setProperties(Map<String, String> source, Properties target) {
         for (Map.Entry<String, String> e : source.entrySet())
-            target.setProperty(prefix + e.getKey(), e.getValue());
+            target.setProperty(namespace + "." + e.getKey(), e.getValue());
     }
 
     private void setProperties(Properties source, Properties target) {
         for (String propertyName : propertyNames) {
-            String prefixedName = prefix + propertyName;
+            String prefixedName = namespace + "." + propertyName;
             target.setProperty(prefixedName, source.getProperty(prefixedName));
         }
     }
@@ -190,6 +190,6 @@ public class JGitBuildNumberMojo extends AbstractMojo implements Parameters {
     private void fillPropsUnknown() {
         Properties props = project.getProperties();
         for (String propertyName : propertyNames)
-            props.setProperty(prefix + propertyName, "UNKNOWN-" + propertyName);
+            props.setProperty(namespace + "." + propertyName, "UNKNOWN-" + propertyName);
     }
 }

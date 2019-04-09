@@ -4,15 +4,17 @@ import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.TimeZone;
 
+import javax.lang.model.SourceVersion;
+
 public interface Parameters {
 
     //@formatter:off
-    /** Properties are published with this "namespace" prefix. You may want to redefine the default value:<ul>
+    /** Properties are published with this namespace prefix. You may want to redefine the default value:<ul>
      * <li>to avoid name clashes with other plugins/tasks;
-     * <li>to extract properties for multiple Git repos (use multiple Maven plugin &lt;execution&gt; sections or multiple Ant tasks with different prefixes for that). 
+     * <li>to extract properties for multiple Git repos (use multiple plugin/task executions with different namespaces for that). 
      * </ul>
-     * Default: "git.". */
-    String getPrefix();
+     * Default: "git". */
+    String getNamespace();
 
     /** Value for `dirty` property. Default: "dirty". */
     String getDirtyValue();
@@ -47,7 +49,7 @@ public interface Parameters {
     String getCountCommitsSinceExclusive();
 
     /** JavaScript expression to format/compose the `buildNumber` property. Uses JS engine from JDK. 
-     * All extracted properties are exposed to JavaScript as global String variables (names without "git." prefix). 
+     * All extracted properties are exposed to JavaScript as global String variables (names without "git" namespace). 
      * JavaScript engine is only initialized if `buildNumberFormat` is provided.
      * <p>
      * Example:
@@ -77,7 +79,7 @@ public interface Parameters {
     /** Print more information during build (e.g. parameters, all extracted properties, execution times). Default: `false`. */
     Boolean getVerbose();
 
-    void setPrefix(String param);
+    void setNamespace(String param);
     void setDirtyValue(String param);
     void setShortRevisionLength(Integer param);
     void setGitDateFormat(String param);
@@ -96,7 +98,7 @@ public interface Parameters {
      *  <p> 
      *  Parameters should be accessed with care until this method is called. */
     default void validateAndSetParameterValues() {
-        if (getPrefix() == null) setPrefix("git.");
+        if (getNamespace() == null || !SourceVersion.isName(getNamespace())) setNamespace("git");
         if (getDirtyValue() == null) setDirtyValue("dirty");
         if (getShortRevisionLength() == null || getShortRevisionLength() < 0 || getShortRevisionLength() > 40) setShortRevisionLength(7);
         if (getGitDateFormat() == null) setGitDateFormat("yyyy-MM-dd");
@@ -108,7 +110,7 @@ public interface Parameters {
     }
 
     default String asString() {
-        return "prefix=" + getPrefix() + ", dirtyValue=" + getDirtyValue() + ", shortRevisionLength=" + getShortRevisionLength() + ", gitDateFormat="
+        return "namespace=" + getNamespace() + ", dirtyValue=" + getDirtyValue() + ", shortRevisionLength=" + getShortRevisionLength() + ", gitDateFormat="
             + getGitDateFormat() + ", buildDateFormat=" + getBuildDateFormat() + ", dateFormatTimeZone=" + getDateFormatTimeZone()
             + ", countCommitsSinceInclusive=" + getCountCommitsSinceInclusive() + ", countCommitsSinceExclusive=" + getCountCommitsSinceExclusive() + ", "
             + "buildNumberFormat=" + getBuildNumberFormat() + ", repositoryDirectory=" + getRepositoryDirectory() + ", runOnlyAtExecutionRoot="

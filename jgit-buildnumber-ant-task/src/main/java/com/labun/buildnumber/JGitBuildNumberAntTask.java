@@ -14,7 +14,7 @@ import lombok.Setter;
 public class JGitBuildNumberAntTask implements Parameters {
     private Project project;
 
-    private String prefix;
+    private String namespace;
     private String dirtyValue;
     private Integer shortRevisionLength;
     private String gitDateFormat;
@@ -42,6 +42,6 @@ public class JGitBuildNumberAntTask implements Parameters {
         Map<String, String> properties = new BuildNumberExtractor(this, msg -> project.log(msg)).extract();
 
         for (Map.Entry<String, String> property : properties.entrySet())
-            project.setProperty(prefix + property.getKey(), property.getValue());
+            project.setProperty(namespace + "." + property.getKey(), property.getValue());
     }
 }

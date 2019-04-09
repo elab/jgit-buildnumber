@@ -14,7 +14,7 @@ import lombok.Setter;
 @Setter
 public class JGitBuildNumberGradleTask extends DefaultTask implements Parameters {
 
-    private String prefix;
+    private String namespace;
     private String dirtyValue;
     private Integer shortRevisionLength;
     private String gitDateFormat;
@@ -42,6 +42,6 @@ public class JGitBuildNumberGradleTask extends DefaultTask implements Parameters
 
         Map<String, String> properties = new BuildNumberExtractor(this, msg -> getLogger().lifecycle(msg)).extract(); // "info" level will not be printed by default
         
-        getProject().getExtensions().add(Map.class, prefix, properties);
+        getProject().getExtensions().add(Map.class, namespace, properties);
     }
 }
