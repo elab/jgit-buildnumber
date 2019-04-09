@@ -100,7 +100,7 @@ But just in the case you would like to tweak something, there is a lot of possib
 
 parameter                                                    | description
 -------------------------------------------------------------|----------------------------------------------
-namespace                                                    | <a name="namespace"/>Properties are published with this namespace prefix. You may want to redefine the default value:<ul><li>to avoid name clashes with other plugins;<li>to extract properties for multiple Git repos (use multiple plugin/task executions with different namespaces for that).</ul><br><br>The value must be a valid [Java name](https://docs.oracle.com/javase/8/docs/api/javax/lang/model/SourceVersion.html#isName-java.lang.CharSequence-) (i.e. without a dot at the end). Default: "git".
+namespace                                                    | <a name="namespace"/>Properties are published with this namespace prefix. You may want to redefine the default value:<ul><li>to avoid name clashes with other plugins;<li>to extract properties for multiple Git repos (use multiple plugin/task executions with different namespaces for that).</ul>The value must be a valid [Java name](https://docs.oracle.com/javase/8/docs/api/javax/lang/model/SourceVersion.html#isName-java.lang.CharSequence-) (i.e. without a dot at the end). Default: `"git"`.
 dirtyValue                                                   | <a name="dirtyValue"/>Value for [`dirty`](#dirty) property. Default: `"dirty"`.
 shortRevisionLength                                          | <a name="shortRevisionLength"/>Length of abbreviated SHA-1 for [`shortRevision`](#shortRevision) and [`shortParent`](#shortParent) properties, min. 0, max. 40. Default: 7.
 gitDateFormat                                                | <a name="gitDateFormat"/>Format for Git [`authorDate`](#authorDate) and Git [`commitDate`](#commitDate) properties (see [SimpleDateFormat](https://docs.oracle.com/javase/8/docs/api/java/text/SimpleDateFormat.html)). The default locale will be used. TimeZone can be specified with [dateFormatTimeZone](#dateFormatTimeZone).<br>Default: `"yyyy-MM-dd"`.
@@ -163,28 +163,29 @@ The plugin binds to the `validate` phase (the first Maven life cycle phase) per 
 
 Configuration example:
 
-    <plugin>
-        <groupId>com.labun.buildnumber</groupId>
-        <artifactId>jgit-buildnumber-maven-plugin</artifactId>
-        <version>2.2.0</version>
-        <executions>
-            <execution>
-                <id>git-buildnumber</id>
-                <goals>
-                    <goal>extract-buildnumber</goal>
-                </goals>
-                <configuration>
-                    <countCommitsSinceInclusive>v18-start</countCommitsSinceInclusive>
-                    <dirtyValue>DEV</dirtyValue>
-                    <buildNumberFormat>
-                        branch + "." + commitsCount + "/" + commitDate + "/" + shortRevision + (dirty.length > 0 ? "-" + dirty : "");
-                    </buildNumberFormat>
-                    <verbose>true</verbose>
-                </configuration>
-            </execution>
-        </executions>
-    </plugin>
-
+```xml
+<plugin>
+    <groupId>com.labun.buildnumber</groupId>
+    <artifactId>jgit-buildnumber-maven-plugin</artifactId>
+    <version>2.2.0</version>
+    <executions>
+        <execution>
+            <id>git-buildnumber</id>
+            <goals>
+                <goal>extract-buildnumber</goal>
+            </goals>
+            <configuration>
+                <countCommitsSinceInclusive>v18-start</countCommitsSinceInclusive>
+                <dirtyValue>DEV</dirtyValue>
+                <buildNumberFormat>
+                    branch + "." + commitsCount + "/" + commitDate + "/" + shortRevision + (dirty.length > 0 ? "-" + dirty : "");
+                </buildNumberFormat>
+                <verbose>true</verbose>
+            </configuration>
+        </execution>
+    </executions>
+</plugin>
+```
 
 If the plugin is defined in parent module of a __multi-module project__, it will access the Git repo only once. (If you want to change that, see [runOnlyAtExecutionRoot](#runOnlyAtExecutionRoot).) The properties extracted in parent module are propagated to all child modules. This only applies to normal Maven builds though, not for Eclipse m2e incremental builds, since Eclipse / OSGI has a flat workspace and doesn't support nested Maven modules.
 
@@ -222,10 +223,12 @@ Usage in Ant
 
 Usage is very similar to Maven. As all parameters are optional you don't have to specify any. Excerpt from `build.xml`:
 
-    <target name="jgit-buildnumber">
-        <taskdef name="extract-buildnumber" classname="com.labun.buildnumber.JGitBuildNumberAntTask" classpathref="dependencies" />
-        <extract-buildnumber />
-    </target>
+```xml
+<target name="jgit-buildnumber">
+    <taskdef name="extract-buildnumber" classname="com.labun.buildnumber.JGitBuildNumberAntTask" classpathref="dependencies" />
+    <extract-buildnumber />
+</target>
+```
 
 See [complete working `build.xml` example](examples/ant/build.xml).
 
@@ -237,14 +240,16 @@ Usage is very similar to Maven and Ant. Essentially, you only need to specify th
 
 Complete working example of `build.gradle`:
 
-    buildscript {
-        repositories { mavenLocal(); mavenCentral() }
-        dependencies { classpath 'com.labun.buildnumber:jgit-buildnumber-gradle-plugin:2.2.0' }
-    }
-    
-    import com.labun.buildnumber.JGitBuildNumberGradleTask
-    
-    task 'extract-buildnumber' (type: JGitBuildNumberGradleTask)
+```gradle
+buildscript {
+    repositories { mavenLocal(); mavenCentral() }
+    dependencies { classpath 'com.labun.buildnumber:jgit-buildnumber-gradle-plugin:2.2.0-SNAPSHOT' }
+}
+
+import com.labun.buildnumber.JGitBuildNumberGradleTask
+
+task 'extract-buildnumber' (type: JGitBuildNumberGradleTask)
+```
 
 See [extended working `build.gradle` example with task parameters](examples/gradle/build.gradle).
 
@@ -254,11 +259,12 @@ and [Ant](https://ant.apache.org/manual/develop.html#set-magic)) is that Gradle 
 Therefore you have to do it explicitly. "JGit Build Number" has only one such parameter: `repositoryDirectory` of type `java.io.File`.
 If you need to specify this parameter, simply call an appropriate constructor:
 
-    task 'extract-buildnumber' (type: JGitBuildNumberGradleTask) {
-        repositoryDirectory = new File('<path>')
-        ...
-    }
-
+```gradle
+task 'extract-buildnumber' (type: JGitBuildNumberGradleTask) {
+    repositoryDirectory = new File('<path>')
+    ...
+}
+```
 
 Development notes
 -----------------

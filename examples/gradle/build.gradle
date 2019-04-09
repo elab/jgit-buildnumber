@@ -7,17 +7,17 @@ buildscript {
 import com.labun.buildnumber.JGitBuildNumberGradleTask
 
 task 'extract-buildnumber' (type: JGitBuildNumberGradleTask) {
-	shortRevisionLength = 4
-	buildNumberFormat = "branch + '.' + commitsCount + '/' + commitDate + '/' + shortRevision + (dirty.length > 0 ? '-' + dirty : '')"
-	verbose = true
-	// skip = true
+    shortRevisionLength = 4
+    buildNumberFormat = "branch + '.' + commitsCount + '/' + commitDate + '/' + shortRevision + (dirty.length > 0 ? '-' + dirty : '')"
+    verbose = true
+    // skip = true
 }
 
 // extracted properties are available in subsequent tasks
 task main {
     dependsOn 'extract-buildnumber'
     doLast {
-	    println 'buildNumber: ' + git.buildNumber + ', buildDate: ' + git.buildDate
-		println "buildNumber: ${git.buildNumber}, buildDate: ${git.buildDate}"
+        println 'buildNumber: ' + git.buildNumber + ', buildDate: ' + git.buildDate
+        println "buildNumber: ${git.buildNumber}, buildDate: ${git.buildDate}"
     }
 }
