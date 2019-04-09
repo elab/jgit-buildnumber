@@ -3,7 +3,7 @@ JGit Build Number for Maven, Ant, and Gradle
 
 Extracts Git metadata and a freely composable build number in pure Java without Git command-line tool. Eclipse m2e compatible.
 
-Current version: 2.1.2. Published: 2019-03-19.
+Current version: 2.2.0. Published: 2019-04-09.
 
 Available on Maven Central: [repo1.maven.org](http://repo1.maven.org/maven2/com/labun/buildnumber/) / [central.maven.org](http://central.maven.org/maven2/com/labun/buildnumber/) / [search.maven.org](https://search.maven.org/search?q=g:com.labun.buildnumber).
 
@@ -128,7 +128,7 @@ Typical usage with writing extracted properties to the MANIFEST.MF file:
         <plugin>
             <groupId>com.labun.buildnumber</groupId>
             <artifactId>jgit-buildnumber-maven-plugin</artifactId>
-            <version>2.1.2</version>
+            <version>2.2.0</version>
             <executions>
                 <execution>
                     <id>jgit-buildnumber</id>
@@ -166,7 +166,7 @@ Configuration example:
     <plugin>
         <groupId>com.labun.buildnumber</groupId>
         <artifactId>jgit-buildnumber-maven-plugin</artifactId>
-        <version>2.1.2</version>
+        <version>2.2.0</version>
         <executions>
             <execution>
                 <id>git-buildnumber</id>
