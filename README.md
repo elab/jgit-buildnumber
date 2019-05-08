@@ -243,7 +243,7 @@ Complete working example of `build.gradle`:
 ```gradle
 buildscript {
     repositories { mavenLocal(); mavenCentral() }
-    dependencies { classpath 'com.labun.buildnumber:jgit-buildnumber-gradle-plugin:2.2.0-SNAPSHOT' }
+    dependencies { classpath 'com.labun.buildnumber:jgit-buildnumber-gradle-plugin:2.2.0' }
 }
 
 import com.labun.buildnumber.JGitBuildNumberGradleTask
