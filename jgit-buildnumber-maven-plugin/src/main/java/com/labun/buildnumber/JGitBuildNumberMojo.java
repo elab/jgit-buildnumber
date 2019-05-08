@@ -26,7 +26,7 @@ import lombok.Setter;
 /** Extracts Git metadata and creates build number. Publishes them as project properties. */
 @Getter
 @Setter
-@Mojo(name = "extract-buildnumber", defaultPhase = LifecyclePhase.VALIDATE)
+@Mojo(name = "extract-buildnumber", defaultPhase = LifecyclePhase.VALIDATE, threadSafe = true)
 public class JGitBuildNumberMojo extends AbstractMojo implements Parameters {
 
     @Component
