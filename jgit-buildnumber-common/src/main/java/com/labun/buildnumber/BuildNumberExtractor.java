@@ -30,6 +30,9 @@ import org.eclipse.jgit.lib.RepositoryBuilder;
 import org.eclipse.jgit.revplot.PlotWalk;
 import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.revwalk.RevWalk;
+import org.eclipse.jgit.treewalk.filter.AndTreeFilter;
+import org.eclipse.jgit.treewalk.filter.PathFilter;
+import org.eclipse.jgit.treewalk.filter.TreeFilter;
 
 import lombok.Getter;
 
@@ -122,12 +125,15 @@ public class BuildNumberExtractor {
 
             String parent = readParent(headCommit);
             String shortParent = readShortParent(headCommit, params.getShortRevisionLength());
-            int commitsCount = countCommits(revWalk, headCommit, params.getCountCommitsSinceInclusive(), params.getCountCommitsSinceExclusive());
 
             DateFormat dfGitDate = new SimpleDateFormat(params.getGitDateFormat()); // default timezone, default locale
             if (params.getDateFormatTimeZone() != null) dfGitDate.setTimeZone(TimeZone.getTimeZone(params.getDateFormatTimeZone()));
             String authorDate = dfGitDate.format(headCommit.getAuthorIdent().getWhen());
             String commitDate = dfGitDate.format(headCommit.getCommitterIdent().getWhen());
+
+            int commitsCount = countCommits(revWalk, headCommit, params.getCountCommitsSinceInclusive(), params.getCountCommitsSinceExclusive(),
+                params.getCountCommitsInPath());
+            // don't use `headCommit`, `revWalk` from here on!
 
             String describe = git.describe().setLong(true).call();
 
@@ -235,9 +241,14 @@ public class BuildNumberExtractor {
         else return peeled.getObjectId().name(); // lightweight tag
     }
 
-    private int countCommits(RevWalk walk, RevCommit headCommit, String countCommitsSinceInclusive, String countCommitsSinceExclusive) throws Exception {
+    /** @param walk a RevWalk whose iterator hasn't been accessed before. */
+    private int countCommits(RevWalk walk, RevCommit headCommit, String countCommitsSinceInclusive, String countCommitsSinceExclusive,
+        String countCommitsInPath) throws Exception {
         try {
             // walk.reset(); // only needed if iterator has been accessed before
+            if (countCommitsInPath != null) {
+                walk.setTreeFilter(AndTreeFilter.create(PathFilter.create(countCommitsInPath), TreeFilter.ANY_DIFF));
+            }
             walk.setRetainBody(false);
             walk.markStart(headCommit);
             int res = 0;

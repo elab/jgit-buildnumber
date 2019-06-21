@@ -22,6 +22,7 @@ public class JGitBuildNumberGradleTask extends DefaultTask implements Parameters
     private String dateFormatTimeZone;
     private String countCommitsSinceInclusive;
     private String countCommitsSinceExclusive;
+    private String countCommitsInPath;
     private String buildNumberFormat;
     private File repositoryDirectory;
     private Boolean runOnlyAtExecutionRoot;

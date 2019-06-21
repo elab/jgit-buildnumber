@@ -42,6 +42,7 @@ public class JGitBuildNumberMojo extends AbstractMojo implements Parameters {
     private @Parameter String dateFormatTimeZone;
     private @Parameter String countCommitsSinceInclusive;
     private @Parameter String countCommitsSinceExclusive;
+    private @Parameter String countCommitsInPath;
     private @Parameter String buildNumberFormat;
     private @Parameter File repositoryDirectory;
     private @Parameter Boolean runOnlyAtExecutionRoot;
@@ -96,7 +97,7 @@ public class JGitBuildNumberMojo extends AbstractMojo implements Parameters {
                 String dirty = extractor.isGitStatusDirty() ? dirtyValue : null;
 
                 List<Object> params = Arrays.asList(headSha1, dirty, shortRevisionLength, gitDateFormat, buildDateFormat, dateFormatTimeZone,
-                    countCommitsSinceInclusive, countCommitsSinceExclusive, buildNumberFormat);
+                    countCommitsSinceInclusive, countCommitsSinceExclusive, countCommitsInPath, buildNumberFormat);
                 String paramsKey = "jgitParams" + namespace;
                 String resultKey = "jgitResult" + namespace;
 

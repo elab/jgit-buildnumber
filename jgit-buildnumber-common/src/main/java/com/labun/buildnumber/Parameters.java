@@ -48,6 +48,13 @@ public interface Parameters {
     /** See {@link #getCountCommitsSinceInclusive()} */
     String getCountCommitsSinceExclusive();
 
+    /** Relative path to a folder or a file in Git Repo. Only commits which affect the specified path will be counted. 
+     *  The path starts without the leading `/`; path to a folder may contain an optional trailing `/`.<br>
+     *  Default: not set (all commits get counted).
+     *  <p><i>Note: The commit specified with {@link #getCountCommitsSinceInclusive()}, {@link #getCountCommitsSinceExclusive()} 
+     *  has to be among the commits remaining after applying `countCommitsInPath` parameter. */
+    String getCountCommitsInPath();
+    
     /** JavaScript expression to format/compose the `buildNumber` property. Uses JS engine from JDK. 
      * All extracted properties are exposed to JavaScript as global String variables (names without "git" namespace). 
      * JavaScript engine is only initialized if `buildNumberFormat` is provided.
@@ -87,6 +94,7 @@ public interface Parameters {
     void setDateFormatTimeZone(String param);
     void setCountCommitsSinceInclusive(String param);
     void setCountCommitsSinceExclusive(String param);
+    void setCountCommitsInPath(String param);
     void setBuildNumberFormat(String param);
     void setRepositoryDirectory(File param);
     void setRunOnlyAtExecutionRoot(Boolean param);
@@ -112,8 +120,8 @@ public interface Parameters {
     default String asString() {
         return "namespace=" + getNamespace() + ", dirtyValue=" + getDirtyValue() + ", shortRevisionLength=" + getShortRevisionLength() + ", gitDateFormat="
             + getGitDateFormat() + ", buildDateFormat=" + getBuildDateFormat() + ", dateFormatTimeZone=" + getDateFormatTimeZone()
-            + ", countCommitsSinceInclusive=" + getCountCommitsSinceInclusive() + ", countCommitsSinceExclusive=" + getCountCommitsSinceExclusive() + ", "
-            + "buildNumberFormat=" + getBuildNumberFormat() + ", repositoryDirectory=" + getRepositoryDirectory() + ", runOnlyAtExecutionRoot="
-            + getRunOnlyAtExecutionRoot() + ", skip=" + getSkip() + ", verbose=" + getVerbose();
+            + ", countCommitsSinceInclusive=" + getCountCommitsSinceInclusive() + ", countCommitsSinceExclusive=" + getCountCommitsSinceExclusive()
+            + ", countCommitsInPath=" + getCountCommitsInPath() + ", buildNumberFormat=" + getBuildNumberFormat() + ", repositoryDirectory="
+            + getRepositoryDirectory() + ", runOnlyAtExecutionRoot=" + getRunOnlyAtExecutionRoot() + ", skip=" + getSkip() + ", verbose=" + getVerbose();
     }
 }
