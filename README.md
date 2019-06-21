@@ -1,13 +1,28 @@
 JGit Build Number for Maven, Ant, and Gradle
 ============================================
 
-Extracts Git metadata and a freely composable build number in pure Java without Git command-line tool. Eclipse m2e compatible.
+Extracts Git metadata and a freely composable build number in pure Java without Git command-line tool. [https://github.com/elab/jgit-buildnumber](https://github.com/elab/jgit-buildnumber)
 
-Current version: 2.2.0. Published: 2019-04-09.
+Current version | Published on [Maven Central](https://search.maven.org/search?q=g:com.labun.buildnumber)
+----------------|---------------------------
+2.2.0           | 2019-04-09
 
+<!--
 Available on Maven Central: [repo1.maven.org](http://repo1.maven.org/maven2/com/labun/buildnumber/) / [central.maven.org](http://central.maven.org/maven2/com/labun/buildnumber/) / [search.maven.org](https://search.maven.org/search?q=g:com.labun.buildnumber).
+-->
 
-Based on the [work of Alex Kasko](https://github.com/alx3apps/jgit-buildnumber) with [merged changes from other forks](https://github.com/elab/jgit-buildnumber/network). Thank you [guys](https://github.com/elab/jgit-buildnumber/graphs/contributors)! Additionally contains many new features, bug fixes, and performance improvements. The code has been almost completely rewritten.
+Based on the [work of Alex Kasko](https://github.com/alx3apps/jgit-buildnumber) with [merged changes from other forks](https://github.com/elab/jgit-buildnumber/network). Thank you [guys](https://github.com/elab/jgit-buildnumber/graphs/contributors)! Additionally contains many new features, bug fixes, and performance improvements. <!-- The code has been almost completely rewritten. -->
+
+We believe that *JGit Build Number* is the best plugin for its purpose, but you can also look at alternatives:
+- [maven-git-commit-id-plugin](https://github.com/git-commit-id/maven-git-commit-id-plugin)
+- original [Git buildnumber plugin for Maven and Ant based on JGit](https://github.com/alx3apps/jgit-buildnumber) 
+- [Build Number Maven Plugin](https://www.mojohaus.org/buildnumber-maven-plugin/)
+
+Say what you think, feedback is always welcome :) 
+
+Contact: Eugen Labun <labun@gmx.net>
+
+--------------------------------------------------
 
 Contents:
 - [About "Build Number"](#about-build-number)
@@ -18,6 +33,9 @@ Contents:
 - [Usage in Gradle](#usage-in-gradle)
 - [Development notes](#development-notes)
 - [License information](#license-information)
+
+--------------------------------------------------
+
 
 About "Build Number"
 --------------------
@@ -106,7 +124,7 @@ shortRevisionLength                                          | <a name="shortRev
 gitDateFormat                                                | <a name="gitDateFormat"/>Format for Git [`authorDate`](#authorDate) and Git [`commitDate`](#commitDate) properties (see [SimpleDateFormat](https://docs.oracle.com/javase/8/docs/api/java/text/SimpleDateFormat.html)). The default locale will be used. TimeZone can be specified with [dateFormatTimeZone](#dateFormatTimeZone).<br>Default: `"yyyy-MM-dd"`.
 buildDateFormat                                              | <a name="buildDateFormat"/>Format for [`buildDate`](#buildDate) property (see [SimpleDateFormat](https://docs.oracle.com/javase/8/docs/api/java/text/SimpleDateFormat.html)). The default locale will be used. TimeZone can be specified with [dateFormatTimeZone](#dateFormatTimeZone).<br>Default: `"yyyy-MM-dd HH:mm:ss"`.
 dateFormatTimeZone                                           | <a name="dateFormatTimeZone"/>TimeZone for [gitDateFormat](#gitDateFormat) and [buildDateFormat](#buildDateFormat) parameters (see [TimeZone#getTimeZone(String)](https://docs.oracle.com/javase/8/docs/api/java/util/TimeZone.html#getTimeZone-java.lang.String-)).<br>Default: current default TimeZone, as returned by [TimeZone#getDefault()](https://docs.oracle.com/javase/8/docs/api/java/util/TimeZone.html#getDefault--). (Note that Maven's built-in `maven.build.timestamp` property cannot use the default time zone and always return time in UTC.)
-countCommitsSince*Inclusive*<br>countCommitsSince*Exclusive* | <a name="countCommitsSince"/>Specifies since which ancestor commit (inclusive or exclusive) to count commits. Can be specified as a tag (annotated or lightweight) or SHA-1 (complete or abbreviated).<br>If such commit is not found, error message is printed and build will fail (since otherwise you would get an unexpected wrong build number). If both, inclusive and exclusive parameters are specified, the "inclusive" version wins.<br><br>The parameter is useful if you only want to count commits since start of the current development iteration.<br>Default: not set (all commits get counted).<br><br>_Note: Technically, commits are counted backwards from HEAD to parents, through all branches which participated in HEAD state, from child to parent commit, in reverse chronological order of commits in parallel branches according to "committed date" of commits, until the specified ancestor commit is reached (or till root of Git repo). The traverse order should be exactly the same as displayed in "History" view of Eclipse._
+countCommitsSinceInclusive<br>countCommitsSinceExclusive     | <a name="countCommitsSince"/>Specifies since which ancestor commit (inclusive or exclusive) to count commits. Can be specified as a tag (annotated or lightweight) or SHA-1 (complete or abbreviated).<br>If such commit is not found, error message is printed and build will fail (since otherwise you would get an unexpected wrong build number). If both, inclusive and exclusive parameters are specified, the "inclusive" version wins.<br><br>The parameter is useful if you only want to count commits since start of the current development iteration.<br>Default: not set (all commits get counted).<br><br>_Note: Technically, commits are counted backwards from HEAD to parents, through all branches which participated in HEAD state, from child to parent commit, in reverse chronological order of commits in parallel branches according to "committed date" of commits, until the specified ancestor commit is reached (or till root of Git repo). The traverse order should be exactly the same as displayed in "History" view of Eclipse._
 buildNumberFormat                                            | <a name="buildNumberFormat"/>JavaScript expression to format/compose the [`buildNumber`](#buildNumber) property. Uses JS engine from JDK. All [extracted properties](#extracted-properties) are exposed to JavaScript as global String variables (names without "git" namespace). JavaScript engine is only initialized if `buildNumberFormat` is provided.<br><br>Example: `branch + "." + commitsCount + "/" + commitDate + "/" + shortRevision + (dirty.length > 0 ? "-" + dirty : "");`<br><br>Default: `<tag or branch>.<commitsCount>.<shortRevision>-<dirty>`<br> or, more precisely, equivalent of the following JavaScript (evaluation result of the last line gets returned; real implementation is in Java for performance):<br>`name = (tag.length > 0) ? tag : (branch.length > 0) ? branch : "UNNAMED";`<br>`name + "." + commitsCount + "." + shortRevision + (dirty.length > 0 ? "-" + dirty : "");`
 repositoryDirectory                                          | <a name="repositoryDirectory"/>Directory to start searching Git root from, should contain `.git` directory or be a subdirectory of such directory. Default: project directory (Maven: `${project.basedir}`, Ant: `${basedir}`, Gradle: `projectDir`).
 runOnlyAtExecutionRoot                                       | <a name="runOnlyAtExecutionRoot"/>Setting this parameter to `false` allows to re-read metadata from Git repo in every submodule of a Maven multi-module project, not only in the root one. Has no effect for Ant or Gradle. Default: `true`.
@@ -230,7 +248,9 @@ Usage is very similar to Maven. As all parameters are optional you don't have to
 </target>
 ```
 
-See [complete working `build.xml` example](examples/ant/build.xml).
+See [complete `build.xml` example with task parameters](examples/ant/build.xml).
+
+Another example shows how to [extract two different buildNumbers for two repositories](examples/ant/build-with-2-targets.xml) (e.g. "application" and "documentation") in one build file. 
 
 
 Usage in Gradle
@@ -251,7 +271,7 @@ import com.labun.buildnumber.JGitBuildNumberGradleTask
 task 'extract-buildnumber' (type: JGitBuildNumberGradleTask)
 ```
 
-See [extended working `build.gradle` example with task parameters](examples/gradle/build.gradle).
+See [extended `build.gradle` example with task parameters](examples/gradle/build.gradle).
 
 The only difference in setting task parameters with Gradle 
 (as compared to [Maven](https://maven.apache.org/guides/plugin/guide-java-plugin-development.html#Parameters) 
@@ -261,7 +281,7 @@ If you need to specify this parameter, simply call an appropriate constructor:
 
 ```gradle
 task 'extract-buildnumber' (type: JGitBuildNumberGradleTask) {
-    repositoryDirectory = new File('<path>')
+    repositoryDirectory = new File('<absolute path>') // or: repositoryDirectory = file('<relative path>')
     ...
 }
 ```

@@ -7,6 +7,7 @@ buildscript {
 import com.labun.buildnumber.JGitBuildNumberGradleTask
 
 task 'extract-buildnumber' (type: JGitBuildNumberGradleTask) {
+    // repositoryDirectory = new File('<absolute path>') // or: repositoryDirectory = file('<relative path>')
     shortRevisionLength = 4
     buildNumberFormat = "branch + '.' + commitsCount + '/' + commitDate + '/' + shortRevision + (dirty.length > 0 ? '-' + dirty : '')"
     verbose = true
