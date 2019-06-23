@@ -4,8 +4,8 @@
 	<property name="MavenRepo" value="/dev/maven_repo" />
 
 	<path id="dependencies">
-		<pathelement location="${MavenRepo}/com/labun/buildnumber/jgit-buildnumber-ant-task/2.2.0/jgit-buildnumber-ant-task-2.2.0.jar" />
-		<pathelement location="${MavenRepo}/com/labun/buildnumber/jgit-buildnumber-common/2.2.0/jgit-buildnumber-common-2.2.0.jar" />
+		<pathelement location="${MavenRepo}/com/labun/buildnumber/jgit-buildnumber-ant-task/2.3.0/jgit-buildnumber-ant-task-2.3.0.jar" />
+		<pathelement location="${MavenRepo}/com/labun/buildnumber/jgit-buildnumber-common/2.3.0/jgit-buildnumber-common-2.3.0.jar" />
 		<pathelement location="${MavenRepo}/org/eclipse/jgit/org.eclipse.jgit/5.4.0.201906121030-r/org.eclipse.jgit-5.4.0.201906121030-r.jar" />
 		
 		<!-- to avoid slf4j related errors and warnings -->

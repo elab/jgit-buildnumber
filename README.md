@@ -5,7 +5,7 @@ Extracts Git metadata and a freely composable build number in pure Java without 
 
 Current version | Published on [Maven Central](https://search.maven.org/search?q=g:com.labun.buildnumber)
 ----------------|---------------------------
-2.2.0           | 2019-04-09
+2.3.0           | 2019-06-24
 
 <!--
 Available on Maven Central: [repo1.maven.org](http://repo1.maven.org/maven2/com/labun/buildnumber/) / [central.maven.org](http://central.maven.org/maven2/com/labun/buildnumber/) / [search.maven.org](https://search.maven.org/search?q=g:com.labun.buildnumber).
@@ -147,7 +147,7 @@ Typical usage with writing extracted properties to the MANIFEST.MF file:
         <plugin>
             <groupId>com.labun.buildnumber</groupId>
             <artifactId>jgit-buildnumber-maven-plugin</artifactId>
-            <version>2.2.0</version>
+            <version>2.3.0</version>
             <executions>
                 <execution>
                     <id>jgit-buildnumber</id>
@@ -186,7 +186,7 @@ Configuration example:
 <plugin>
     <groupId>com.labun.buildnumber</groupId>
     <artifactId>jgit-buildnumber-maven-plugin</artifactId>
-    <version>2.2.0</version>
+    <version>2.3.0</version>
     <executions>
         <execution>
             <id>git-buildnumber</id>
@@ -264,7 +264,7 @@ Complete working example of `build.gradle`:
 ```gradle
 buildscript {
     repositories { mavenLocal(); mavenCentral() }
-    dependencies { classpath 'com.labun.buildnumber:jgit-buildnumber-gradle-plugin:2.2.0' }
+    dependencies { classpath 'com.labun.buildnumber:jgit-buildnumber-gradle-plugin:2.3.0' }
 }
 
 import com.labun.buildnumber.JGitBuildNumberGradleTask
