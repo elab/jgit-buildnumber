@@ -135,7 +135,7 @@ public class BuildNumberExtractor {
                 params.getCountCommitsInPath());
             // don't use `headCommit`, `revWalk` from here on!
 
-            String describe = git.describe().setLong(true).call();
+            String describe = readDescribe(git);
 
             SimpleDateFormat dfBuildDate = new SimpleDateFormat(params.getBuildDateFormat());
             if (params.getDateFormatTimeZone() != null) dfBuildDate.setTimeZone(TimeZone.getTimeZone(params.getDateFormatTimeZone()));
@@ -220,6 +220,12 @@ public class BuildNumberExtractor {
         RevCommit[] parents = commit.getParents();
         if (parents == null || parents.length == 0) return EMPTY_STRING;
         return Stream.of(parents).map(p -> abbreviateSha1(p.getId().name()/*SHA-1*/, length)).collect(Collectors.joining(";"));
+    }
+
+    private static String readDescribe(Git git) throws Exception {
+       String describe = git.describe().setLong(true).call();
+        if (describe == null || describe.isEmpty()) return EMPTY_STRING;
+        return describe;
     }
 
     /** @return Map sha1 - tag names */
