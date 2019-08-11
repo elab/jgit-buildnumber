@@ -223,7 +223,7 @@ public class BuildNumberExtractor {
     }
 
     private static String readDescribe(Git git) throws Exception {
-        String describe = git.describe().setLong(true).setAlways(true).call();
+        String describe = git.describe().setLong(true).setTags(true).setAlways(true).call();
         return (describe != null) ? describe : EMPTY_STRING; // defensive (describe.setAlways(true) should return not null value)
     }
 
