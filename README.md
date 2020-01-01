@@ -5,7 +5,7 @@ Extracts Git metadata and a freely composable build number in pure Java without 
 
 Current version | Published on [Maven Central](https://search.maven.org/search?q=g:com.labun.buildnumber)
 ----------------|---------------------------
-2.3.1           | 2019-10-01
+2.4.0           | 2020-01-01
 
 <!--
 Available on Maven Central: [repo1.maven.org](http://repo1.maven.org/maven2/com/labun/buildnumber/) / [central.maven.org](http://central.maven.org/maven2/com/labun/buildnumber/) / [search.maven.org](https://search.maven.org/search?q=g:com.labun.buildnumber).
@@ -149,7 +149,7 @@ Typical usage with writing extracted properties to the MANIFEST.MF file:
         <plugin>
             <groupId>com.labun.buildnumber</groupId>
             <artifactId>jgit-buildnumber-maven-plugin</artifactId>
-            <version>2.3.1</version>
+            <version>2.4.0</version>
             <executions>
                 <execution>
                     <id>jgit-buildnumber</id>
@@ -188,7 +188,7 @@ Configuration example:
 <plugin>
     <groupId>com.labun.buildnumber</groupId>
     <artifactId>jgit-buildnumber-maven-plugin</artifactId>
-    <version>2.3.1</version>
+    <version>2.4.0</version>
     <executions>
         <execution>
             <id>git-buildnumber</id>
@@ -266,7 +266,7 @@ Complete working example of `build.gradle`:
 ```gradle
 buildscript {
     repositories { mavenLocal(); mavenCentral() }
-    dependencies { classpath 'com.labun.buildnumber:jgit-buildnumber-gradle-plugin:2.3.1' }
+    dependencies { classpath 'com.labun.buildnumber:jgit-buildnumber-gradle-plugin:2.4.0' }
 }
 
 import com.labun.buildnumber.JGitBuildNumberGradleTask
@@ -312,9 +312,9 @@ This project is released under the [Apache License 2.0](https://www.apache.org/l
 Changelog
 ---------
 
-#### 2.3.1
+#### 2.3.1 (2019-10-01)
 - `git.describe`: assuring not null result to prevent plugin fail (thanks to [RobertPaasche](https://github.com/RobertPaasche))
 - `git.describe`: also consider lightweight (not annotated) tags
 
-#### 2.4.0
+#### 2.4.0 (2020-01-01)
 - new property: `git.nearestTag`
