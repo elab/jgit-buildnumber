@@ -40,8 +40,8 @@ import lombok.Getter;
 public class BuildNumberExtractor {
 
     /** See documentation in README.md */
-    static final List<String> propertyNames = Arrays.asList("revision", "shortRevision", "dirty", "branch", "tag", "parent", "shortParent", "commitsCount",
-        "authorDate", "commitDate", "describe", "buildDate", "buildNumber");
+    static final List<String> propertyNames = Arrays.asList("revision", "shortRevision", "dirty", "branch", "tag", "nearestTag", "parent", "shortParent",
+        "commitsCount", "authorDate", "commitDate", "describe", "buildDate", "buildNumber");
 
     private static final String EMPTY_STRING = "";
 
@@ -55,6 +55,9 @@ public class BuildNumberExtractor {
     ObjectId headObjectId;
     private @Getter String headSha1;
     private @Getter boolean gitStatusDirty;
+
+    /** Temp. mutable holder for the nearest tag. Since a commit can have multiple tags, the type is a collection of strings. */
+    private SortedSet<String> nearestTagTemp;
 
     void log(String msg) {
         logger.log(msg);
@@ -119,7 +122,9 @@ public class BuildNumberExtractor {
 
         try (RevWalk revWalk = new PlotWalk(repo)) {
             String branch = readCurrentBranch(headSha1);
-            String tag = readTag(headSha1);
+
+            Map<String, SortedSet<String>> tagMap = loadTagsMap();
+            String tag = readTag(tagMap, headSha1);
 
             RevCommit headCommit = revWalk.parseCommit(headObjectId);
 
@@ -131,8 +136,10 @@ public class BuildNumberExtractor {
             String authorDate = dfGitDate.format(headCommit.getAuthorIdent().getWhen());
             String commitDate = dfGitDate.format(headCommit.getCommitterIdent().getWhen());
 
-            int commitsCount = countCommits(revWalk, headCommit, params.getCountCommitsSinceInclusive(), params.getCountCommitsSinceExclusive(),
+            int commitsCount = countCommits(revWalk, tagMap, headCommit, params.getCountCommitsSinceInclusive(), params.getCountCommitsSinceExclusive(),
                 params.getCountCommitsInPath());
+            String nearestTag = nearestTagTemp == null ? EMPTY_STRING : String.join(";", nearestTagTemp);
+
             // don't use `headCommit`, `revWalk` from here on!
 
             String describe = readDescribe(git);
@@ -156,6 +163,7 @@ public class BuildNumberExtractor {
             res.put("dirty", dirty);
             res.put("branch", branch);
             res.put("tag", tag);
+            res.put("nearestTag", nearestTag);
             res.put("parent", parent);
             res.put("shortParent", shortParent);
             res.put("commitsCount", commitsCountAsString);
@@ -201,8 +209,7 @@ public class BuildNumberExtractor {
         return branch;
     }
 
-    private String readTag(String sha1) {
-        Map<String, SortedSet<String>> tagMap = loadTagsMap();
+    private String readTag(Map<String, SortedSet<String>> tagMap, String sha1) {
         SortedSet<String> tags = tagMap.get(sha1);
         if (tags == null) return EMPTY_STRING;
         return String.join(";", tags);
@@ -247,8 +254,10 @@ public class BuildNumberExtractor {
     }
 
     /** @param walk a RevWalk whose iterator hasn't been accessed before. */
-    private int countCommits(RevWalk walk, RevCommit headCommit, String countCommitsSinceInclusive, String countCommitsSinceExclusive,
-        String countCommitsInPath) throws Exception {
+    private int countCommits(RevWalk walk, Map<String, SortedSet<String>> tagMap, RevCommit headCommit, String countCommitsSinceInclusive,
+        String countCommitsSinceExclusive, String countCommitsInPath) throws Exception {
+
+        nearestTagTemp = null;
         try {
             // walk.reset(); // only needed if iterator has been accessed before
             if (countCommitsInPath != null) {
@@ -259,14 +268,28 @@ public class BuildNumberExtractor {
             int res = 0;
             if (countCommitsSinceInclusive != null) {
                 String ancestorSha1 = getSha1(countCommitsSinceInclusive);
-                for (RevCommit commit : walk) { res += 1; if (commit.getId().getName().startsWith(ancestorSha1)) return res; }
+                for (RevCommit commit : walk) {
+                    String sha1 = commit.getId().getName();
+                    if (nearestTagTemp == null) nearestTagTemp = tagMap.get(sha1);
+                    res += 1;
+                    if (sha1.startsWith(ancestorSha1)) return res;
+                }
                 throw new IllegalArgumentException("commit '" + countCommitsSinceInclusive + "' not found (parameter 'countCommitsSinceInclusive')");
             } else if (countCommitsSinceExclusive != null) {
                 String ancestorSha1 = getSha1(countCommitsSinceExclusive);
-                for (RevCommit commit : walk) { if (commit.getId().getName().startsWith(ancestorSha1)) return res; res += 1; }
+                for (RevCommit commit : walk) {
+                    String sha1 = commit.getId().getName();
+                    if (nearestTagTemp == null) nearestTagTemp = tagMap.get(sha1);
+                    if (sha1.startsWith(ancestorSha1)) return res;
+                    res += 1;
+                }
                 throw new IllegalArgumentException("commit '" + countCommitsSinceExclusive + "' not found (parameter 'countCommitsSinceExclusive')");
             } else {
-                for (RevCommit commit : walk) { res += 1; }
+                for (RevCommit commit : walk) {
+                    String sha1 = commit.getId().getName();
+                    if (nearestTagTemp == null) nearestTagTemp = tagMap.get(sha1);
+                    res += 1;
+                }
             }
             return res;
         } catch (RevWalkException ex) {

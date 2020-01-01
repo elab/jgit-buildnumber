@@ -95,6 +95,7 @@ git.shortRevision | <a name="shortRevision"/>HEAD SHA-1 (abbreviated, see [short
 git.dirty         | <a name="dirty"/> contains [dirtyValue](#dirtyValue) if differences exist between working-tree, index, and HEAD; empty string otherwise
 git.branch        | branch name; empty string for detached HEAD
 git.tag           | HEAD tag name; empty string if no tags defined; multiple tags separated with `;`
+git.nearestTag    | nearest tag name; empty string if no tags found; multiple tags (belonging to the same commit) are separated with `;`<br>Only the "counted" commits are looked for tags; see [countCommitsSince...](#countCommitsSince)
 git.parent        | SHA-1 of the parent commit (`HEAD^`); multiple parents separated with `;`
 git.shortParent   | <a name="shortParent"/>SHA-1 of the parent commit (`HEAD^`) (abbreviated, see [shortRevisionLength](#shortRevisionLength)); multiple parents separated with `;`
 git.commitsCount  | commits count; -1 for a Git shallow clone; see [countCommitsSince...](#countCommitsSince)
@@ -314,3 +315,6 @@ Changelog
 #### 2.3.1
 - `git.describe`: assuring not null result to prevent plugin fail (thanks to [RobertPaasche](https://github.com/RobertPaasche))
 - `git.describe`: also consider lightweight (not annotated) tags
+
+#### 2.4.0
+- new property: `git.nearestTag`
