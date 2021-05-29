@@ -21,6 +21,7 @@ import javax.script.ScriptEngineManager;
 import javax.script.ScriptException;
 
 import org.eclipse.jgit.api.Git;
+import org.eclipse.jgit.api.Status;
 import org.eclipse.jgit.errors.RevWalkException;
 import org.eclipse.jgit.lib.Constants;
 import org.eclipse.jgit.lib.ObjectId;
@@ -103,11 +104,27 @@ public class BuildNumberExtractor {
         headSha1 = headObjectId.name();
 
         // long t = System.currentTimeMillis();
-        gitStatusDirty = !git.status().call().isClean();
+        Status gitStatus = git.status().call();
+        gitStatusDirty = !gitStatus.isClean();
         // System.out.println("dirty: " + gitStatusDirty + " (" + (System.currentTimeMillis() - t) + " ms)");
 
+        //@formatter:off
         logVerbose("repo state: " + "headSha1=" + headSha1 + ", gitStatusDirty=" + gitStatusDirty);
+        if (gitStatusDirty) {
+            logVerbose("gitStatusDirty caused by:\n" 
+                + "    added:             " + gitStatus.getAdded() + ",\n"
+                + "    changed:           " + gitStatus.getChanged() + ",\n"
+                + "    removed:           " + gitStatus.getRemoved() + ",\n"
+                + "    missing:           " + gitStatus.getMissing() + ",\n"
+                + "    modified:          " + gitStatus.getModified() + ",\n"
+                + "    conflicting:       " + gitStatus.getConflicting() + ",\n"
+                + "    untracked (files): " + gitStatus.getUntracked() + "\n"
+                + "additional info (not impacting dirty status):\n"
+                + "    untracked folders: " + gitStatus.getUntrackedFolders() + ",\n"
+                + "    ignoredNotInIndex: " + gitStatus.getIgnoredNotInIndex());
+        }
         logVerbose("initializing Git repo, get base data: " + (System.currentTimeMillis() - t) + " ms");
+        //@formatter:on
     }
 
     @Override

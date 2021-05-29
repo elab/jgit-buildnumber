@@ -92,7 +92,7 @@ property          | description
 ------------------|----------------
 git.revision      | HEAD SHA-1
 git.shortRevision | <a name="shortRevision"/>HEAD SHA-1 (abbreviated, see [shortRevisionLength](#shortRevisionLength))
-git.dirty         | <a name="dirty"/> contains [dirtyValue](#dirtyValue) if differences exist between working-tree, index, and HEAD; empty string otherwise
+git.dirty         | <a name="dirty"/> contains [dirtyValue](#dirtyValue) if differences exist between working-tree, index, and HEAD; empty string otherwise;<br>in [verbose](#verbose) mode, detailed info will be printed to log about the changes which caused the dirty status (very helpful if the problem occurs on a remote build server)
 git.branch        | branch name; empty string for detached HEAD
 git.tag           | HEAD tag name; empty string if no tags defined; multiple tags separated with `;`
 git.nearestTag    | nearest tag name; empty string if no tags found; multiple tags (belonging to the same commit) are separated with `;`<br>Only the "counted" commits are looked for tags; see [countCommitsSince...](#countCommitsSince)
@@ -132,7 +132,7 @@ buildNumberFormat                                            | <a name="buildNum
 repositoryDirectory                                          | <a name="repositoryDirectory"/>Directory to start searching Git root from, should contain `.git` directory or be a subdirectory of such directory. Default: project directory (Maven: `${project.basedir}`, Ant: `${basedir}`, Gradle: `projectDir`).
 runOnlyAtExecutionRoot                                       | <a name="runOnlyAtExecutionRoot"/>Setting this parameter to `false` allows to re-read metadata from Git repo in every submodule of a Maven multi-module project, not only in the root one. Has no effect for Ant or Gradle. Default: `true`.
 skip                                                         | <a name="skip"/>Setting this parameter to `true` will skip extraction of Git metadata and creation of buildNumber. Default: `false`.
-verbose                                                      | <a name="verbose"/>Print more information during build (e.g. parameters, all extracted properties, execution times). Default: `false`.
+verbose                                                      | <a name="verbose"/>Print more information during build (parameters, all extracted properties, changes that caused dirty status, execution times, etc). Default: `false`.
 
 Working with parameters is very similar in all build tools. See examples in sections for [Maven](#usage-in-maven), [Ant](#usage-in-ant), [Gradle](#usage-in-gradle).
 
@@ -314,6 +314,7 @@ Changelog
 
 #### 2.5.0 (not released yet)
 - dependency updates: jgit 5.12.0.202106070339-r, lombok 1.18.20, maven-plugin-api 3.8.1, maven-core 3.8.1, maven-plugin-annotations 3.6.1, ant 1.10.10, groovy 2.5.14
+- if git status is dirty, log which changes caused that (verbose mode only)
 
 #### 2.4.0 (2020-01-01)
 - new property: `git.nearestTag`
