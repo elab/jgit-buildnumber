@@ -69,10 +69,9 @@ public class BuildNumberExtractor {
 
     /** Initializes values from Git repo, which are always required, regardless of full or incremental build.
      * 
-     * @param params input parameters
-     * @param logger logger to log info messages
-     * @throws Exception if git repo not found or cannot be read
-     */
+     * @param  params    input parameters
+     * @param  logger    logger to log info messages
+     * @throws Exception if git repo not found or cannot be read */
     public BuildNumberExtractor(Parameters params, Logger logger) throws Exception {
         this.params = params;
         this.logger = logger;
@@ -246,11 +245,13 @@ public class BuildNumberExtractor {
     }
 
     /** @param tagRef tag (annotated or lightweight)
-     *  @return SHA-1 corresponding to the tag */
+     * @return        SHA-1 corresponding to the tag */
     private String extractPeeledSha1(Ref tagRef) {
         Ref peeled = repo.peel(tagRef);
-        if (peeled.getPeeledObjectId() != null) return peeled.getPeeledObjectId().name(); // annotated tag
-        else return peeled.getObjectId().name(); // lightweight tag
+        if (peeled.getPeeledObjectId() != null)
+            return peeled.getPeeledObjectId().name(); // annotated tag
+        else
+            return peeled.getObjectId().name(); // lightweight tag
     }
 
     /** @param walk a RevWalk whose iterator hasn't been accessed before. */
@@ -298,9 +299,10 @@ public class BuildNumberExtractor {
         }
     }
 
-    /** If the parameter is a tag, returns SHA-1 of the commit it points to; otherwise returns the parameter unchanged. 
-     * @param tagOrSha1 tag (annotated or lightweight) or SHA-1 (complete or abbreviated) 
-     * @return SHA-1 (complete or abbreviated) */
+    /** If the parameter is a tag, returns SHA-1 of the commit it points to; otherwise returns the parameter unchanged.
+     * 
+     * @param  tagOrSha1 tag (annotated or lightweight) or SHA-1 (complete or abbreviated)
+     * @return           SHA-1 (complete or abbreviated) */
     private String getSha1(String tagOrSha1) throws Exception {
         Ref ref = repo.exactRef(Constants.R_TAGS + tagOrSha1);
         if (ref == null) return tagOrSha1; // SHA-1
