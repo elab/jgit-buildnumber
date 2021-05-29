@@ -32,6 +32,14 @@
         </developer>
     </developers>
 
+    <repositories>
+        <repository>
+            <!-- for org.gradle artifacts -->
+            <id>Gradle Releases Repository</id>
+            <url>https://repo.gradle.org/gradle/libs-releases-local</url>
+        </repository>
+    </repositories>
+
     <dependencies>
         <dependency>
             <groupId>${project.groupId}</groupId>
