@@ -312,9 +312,9 @@ This project is released under the [Apache License 2.0](https://www.apache.org/l
 Changelog
 ---------
 
+#### 2.4.0 (2020-01-01)
+- new property: `git.nearestTag`
+
 #### 2.3.1 (2019-10-01)
 - `git.describe`: assuring not null result to prevent plugin fail (thanks to [RobertPaasche](https://github.com/RobertPaasche))
 - `git.describe`: also consider lightweight (not annotated) tags
-
-#### 2.4.0 (2020-01-01)
-- new property: `git.nearestTag`
