@@ -1,7 +1,7 @@
 // usage: from directory with this script run `gradle main`
 buildscript {
     repositories { mavenLocal(); mavenCentral() }
-    dependencies { classpath 'com.labun.buildnumber:jgit-buildnumber-gradle-plugin:2.4.0' }
+    dependencies { classpath 'com.labun.buildnumber:jgit-buildnumber-gradle-plugin:2.5.0' }
 }
 
 import com.labun.buildnumber.JGitBuildNumberGradleTask
