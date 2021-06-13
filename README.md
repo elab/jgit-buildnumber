@@ -101,7 +101,7 @@ git.shortParent   | <a name="shortParent"/>SHA-1 of the parent commit (`HEAD^`) 
 git.commitsCount  | commits count; -1 for a Git shallow clone; see [countCommitsSince...](#countCommitsSince)
 git.authorDate    | <a name="authorDate"/>authored date of HEAD commit; see [gitDateFormat](#gitDateFormat), [dateFormatTimeZone](#dateFormatTimeZone)
 git.commitDate    | <a name="commitDate"/>committed date of HEAD commit; see [gitDateFormat](#gitDateFormat), [dateFormatTimeZone](#dateFormatTimeZone)
-git.describe      | result of JGit `describe` command ([long format](https://download.eclipse.org/jgit/site/5.4.0.201906121030-r/apidocs/org/eclipse/jgit/api/DescribeCommand.html#setLong-boolean-), all tags will be considered: annotated and lightweight (not annotated)); abbreviated commit hash if no tags found (see [setAlways(true)](https://download.eclipse.org/jgit/site/5.4.0.201906121030-r/apidocs/org/eclipse/jgit/api/DescribeCommand.html#setAlways-boolean-))
+git.describe      | result of JGit `describe` command ([long format](https://download.eclipse.org/jgit/site/5.12.0.202106070339-r/apidocs/org/eclipse/jgit/api/DescribeCommand.html#setLong-boolean-), all tags will be considered: annotated and lightweight (not annotated)); abbreviated commit hash if no tags found (see [setAlways(true)](https://download.eclipse.org/jgit/site/5.12.0.202106070339-r/apidocs/org/eclipse/jgit/api/DescribeCommand.html#setAlways-boolean-))
 git.buildDate     | <a name="buildDate"/>start time of plugin execution; see [buildDateFormat](#buildDateFormat), [dateFormatTimeZone](#dateFormatTimeZone)
 git.buildNumber   | <a name="buildNumber"/>composed from other properties according to [buildNumberFormat](#buildNumberFormat) parameter 
 
@@ -311,6 +311,9 @@ This project is released under the [Apache License 2.0](https://www.apache.org/l
 
 Changelog
 ---------
+
+#### 2.5.0 (not released yet)
+- dependency updates: jgit 5.12.0.202106070339-r, lombok 1.18.20, maven-plugin-api 3.8.1, maven-core 3.8.1, maven-plugin-annotations 3.6.1, ant 1.10.10, groovy 2.5.14
 
 #### 2.4.0 (2020-01-01)
 - new property: `git.nearestTag`

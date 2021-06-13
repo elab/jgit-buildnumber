@@ -6,7 +6,7 @@
 	<path id="dependencies">
 		<pathelement location="${MavenRepo}/com/labun/buildnumber/jgit-buildnumber-ant-task/2.5.0/jgit-buildnumber-ant-task-2.5.0.jar" />
 		<pathelement location="${MavenRepo}/com/labun/buildnumber/jgit-buildnumber-common/2.5.0/jgit-buildnumber-common-2.5.0.jar" />
-		<pathelement location="${MavenRepo}/org/eclipse/jgit/org.eclipse.jgit/5.4.0.201906121030-r/org.eclipse.jgit-5.4.0.201906121030-r.jar" />
+		<pathelement location="${MavenRepo}/org/eclipse/jgit/org.eclipse.jgit/5.12.0.202106070339-r/org.eclipse.jgit-5.12.0.202106070339-r.jar" />
 		
 		<!-- to avoid slf4j related errors and warnings -->
 		<pathelement location="${MavenRepo}/org/slf4j/slf4j-api/1.7.2/slf4j-api-1.7.2.jar" /> <!-- this version is used by jgit-5.4 -->
