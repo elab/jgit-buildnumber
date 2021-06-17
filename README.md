@@ -3,9 +3,9 @@ JGit Build Number for Maven, Ant, and Gradle
 
 Extracts Git metadata and a freely composable build number in pure Java without Git command-line tool. [https://github.com/elab/jgit-buildnumber](https://github.com/elab/jgit-buildnumber)
 
-Current version | Published on [Maven Central](https://search.maven.org/search?q=g:com.labun.buildnumber)
-----------------|---------------------------
-2.5.0           | (not released yet)
+Current version | Compatibility                                | Published on [Maven Central](https://search.maven.org/search?q=g:com.labun.buildnumber)
+----------------|----------------------------------------------|------------
+2.5.0           | Java 8+ (tested up to Java 16)<br>Maven 3.3+ | (not released yet)
 
 <!--
 Available on Maven Central: [repo1.maven.org](http://repo1.maven.org/maven2/com/labun/buildnumber/) / [central.maven.org](http://central.maven.org/maven2/com/labun/buildnumber/) / [search.maven.org](https://search.maven.org/search?q=g:com.labun.buildnumber).
@@ -315,6 +315,8 @@ Changelog
 #### 2.5.0 (not released yet)
 - dependency updates: jgit 5.12.0.202106070339-r, lombok 1.18.20, maven-plugin-api 3.8.1, maven-core 3.8.1, maven-plugin-annotations 3.6.1, ant 1.10.10, groovy 2.5.14
 - if git status is dirty, log which changes caused that (verbose mode only)
+- use [standalone version of Nashorn JavaScript engine](https://github.com/openjdk/nashorn) if running on Java 11+<br>
+  (prevents deprecation warning on Java 11-14; enables working with Java 15+ where Nashorn is not a part of JDK anymore)
 
 #### 2.4.0 (2020-01-01)
 - new property: `git.nearestTag`

@@ -52,6 +52,14 @@
             <artifactId>org.eclipse.jgit</artifactId>
             <version>${jgit.version}</version>
         </dependency>
+
+        <!--  is only used if running on Java 11+ -->
+        <!--  see BuildNumberExtractor.formatBuildNumberWithJS() -->
+        <dependency>
+            <groupId>org.openjdk.nashorn</groupId>
+            <artifactId>nashorn-core</artifactId>
+            <version>15.2</version>
+        </dependency>
     </dependencies>
 
 </project>

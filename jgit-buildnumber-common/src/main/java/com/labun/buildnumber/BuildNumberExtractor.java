@@ -17,8 +17,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import javax.script.ScriptEngine;
-import javax.script.ScriptEngineManager;
-import javax.script.ScriptException;
+import javax.script.ScriptEngineFactory;
 
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.Status;
@@ -81,6 +80,8 @@ public class BuildNumberExtractor {
 
         params.validateAndSetParameterValues(); // defensive (parameters should have already been set and validated)
         logVerbose("params: " + params.asString());
+
+        logVerbose("java: " + System.getProperty("java.version"));
 
         File repoDirectory = params.getRepositoryDirectory();
         if (!(repoDirectory.exists() && repoDirectory.isDirectory()))
@@ -171,8 +172,6 @@ public class BuildNumberExtractor {
 
             String buildNumber = defaultBuildNumber(tag, branch, commitsCountAsString, shortRevision, dirty);
 
-            logVerbose("extracting properties for buildNumber: " + (System.currentTimeMillis() - t) + " ms");
-
             Map<String, String> res = new TreeMap<>();
             res.put("revision", revision);
             res.put("shortRevision", shortRevision);
@@ -189,11 +188,15 @@ public class BuildNumberExtractor {
             res.put("buildDate", buildDate);
             res.put("buildNumber", buildNumber);
 
+            logVerbose("extracting properties for buildNumber: " + (System.currentTimeMillis() - t) + " ms");
+            t = System.currentTimeMillis();
+
             if (params.getBuildNumberFormat() != null) {
-                t = System.currentTimeMillis();
-                String jsBuildNumber = formatBuildNumberWithJS(res);
-                logVerbose("formatting buildNumber with JS: " + (System.currentTimeMillis() - t) + " ms");
+                ScriptEngine jsEngine = getJsEngine();
+
+                String jsBuildNumber = formatBuildNumberWithJS(jsEngine, res);
                 res.put("buildNumber", jsBuildNumber); // overwrites default buildNumber
+                logVerbose("formatting buildNumber with JS: " + (System.currentTimeMillis() - t) + " ms");
             }
 
             logVerbose("all extracted properties: " + res);
@@ -326,24 +329,56 @@ public class BuildNumberExtractor {
         return extractPeeledSha1(ref); // tag
     }
 
-    private String formatBuildNumberWithJS(Map<String, String> bnProperties) throws ScriptException {
-        String engineName = "JavaScript";
-        // find JavaScript engine using context class loader
-        ScriptEngine jsEngine = new ScriptEngineManager().getEngineByName(engineName);
+    private String formatBuildNumberWithJS(ScriptEngine jsEngine, Map<String, String> bnProperties) throws Exception {
         if (jsEngine == null) {
-            // may be null when running within Eclipse using m2e, maybe due to OSGi class loader;
-            // this does work in Eclipse, see ScriptEngineManager constructor Javadoc for what passing a null means here
-            jsEngine = new ScriptEngineManager(null).getEngineByName(engineName);
-        }
-        if (jsEngine == null) {
-            log(engineName + " not found!");
             return "UNKNOWN_JS_BUILDNUMBER";
         }
 
         for (Map.Entry<String, String> e : bnProperties.entrySet())
             jsEngine.put(e.getKey(), e.getValue());
+
         Object res = jsEngine.eval(params.getBuildNumberFormat());
         if (res == null) throw new IllegalStateException("JS buildNumber is null");
         return res.toString();
+    }
+
+    private ScriptEngine getJsEngine() {
+        long time;
+        time = System.currentTimeMillis();
+
+        // logVerbose("initializing JS Engine - start");
+
+        // always contains the running java's version, even if multiple java versions installed
+        String javaVersion = System.getProperty("java.version");
+
+        ScriptEngineFactory factory;
+        try {
+            if (javaVersion.startsWith("1.8") || javaVersion.startsWith("9") || javaVersion.startsWith("10")) {
+                logVerbose("using built-in Nashorn JavaScript engine from JDK (running on Java 8 - 10)");
+                // the class is removed from Java 15+
+                factory = (ScriptEngineFactory) Class.forName("jdk.nashorn.api.scripting.NashornScriptEngineFactory").newInstance();
+                // jsEngine = factory.getScriptEngine();
+            } else {
+                logVerbose("using standalone Nashorn JavaScript engine (running on Java 11+)");
+                factory = (ScriptEngineFactory) Class.forName("org.openjdk.nashorn.api.scripting.NashornScriptEngineFactory").newInstance();
+                // factory = new org.openjdk.nashorn.api.scripting.NashornScriptEngineFactory(); // the class is compiled with JDK11, therefore build with JDK8
+                // will fail with the error: "class file has wrong version 55.0, should be 52.0"
+            }
+        } catch (Exception e) {
+            log("cannot load NashornScriptEngineFactory: " + e);
+            return null;
+        }
+
+        logVerbose("loading JS factory: " + (System.currentTimeMillis() - time) + " ms");
+        time = System.currentTimeMillis();
+
+        ScriptEngine jsEngine = factory.getScriptEngine();
+        if (jsEngine == null) {
+            log("Nashorn JavaScript engine not found!");
+        }
+
+        logVerbose("loading JS Engine: " + (System.currentTimeMillis() - time) + " ms");
+        time = System.currentTimeMillis();
+        return jsEngine;
     }
 }
