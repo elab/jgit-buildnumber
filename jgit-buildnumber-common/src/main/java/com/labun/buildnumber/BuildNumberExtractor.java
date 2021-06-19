@@ -306,7 +306,7 @@ public class BuildNumberExtractor {
                     res += 1;
                     if (sha1.startsWith(ancestorSha1)) return res;
                 }
-                throw new IllegalArgumentException("commit '" + countCommitsSinceInclusive + "' not found (parameter 'countCommitsSinceInclusive')");
+                logAndThrow("commit '" + countCommitsSinceInclusive + "' not found (parameter 'countCommitsSinceInclusive')", countCommitsInPath);
             } else if (countCommitsSinceExclusive != null) {
                 String ancestorSha1 = getSha1(countCommitsSinceExclusive);
                 for (RevCommit commit : walk) {
@@ -315,7 +315,7 @@ public class BuildNumberExtractor {
                     if (sha1.startsWith(ancestorSha1)) return res;
                     res += 1;
                 }
-                throw new IllegalArgumentException("commit '" + countCommitsSinceExclusive + "' not found (parameter 'countCommitsSinceExclusive')");
+                logAndThrow("commit '" + countCommitsSinceExclusive + "' not found (parameter 'countCommitsSinceExclusive')", countCommitsInPath);
             } else {
                 for (RevCommit commit : walk) {
                     String sha1 = commit.getId().getName();
@@ -328,6 +328,16 @@ public class BuildNumberExtractor {
             // ignore exception thrown by JGit when walking shallow clone, return -1 to indicate shallow
             return -1;
         }
+    }
+
+    /** log error message and resolution hints, then throw IllegalArgumentException */
+    private void logAndThrow(String errorMessage, String countCommitsInPathParameter) {
+        log(errorMessage);
+        if (countCommitsInPathParameter != null) {
+            log("note: only commits which affecting the path " + countCommitsInPathParameter + " are considered (parameter 'countCommitsInPath')");
+            log("note: merge commits are usually not affecting any paths");
+        }
+        throw new IllegalArgumentException(errorMessage);
     }
 
     /** If the parameter is a tag, returns SHA-1 of the commit it points to; otherwise returns the parameter unchanged.

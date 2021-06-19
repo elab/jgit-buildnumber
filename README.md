@@ -319,6 +319,7 @@ Changelog
   (prevents deprecation warning on Java 11-14; enables working with Java 15+ where Nashorn is not a part of JDK anymore)
 - initialize JavaScript engine in parallel with reading Git repo (reduces overall execution time by ca. 0.5 s)
 - log number of tags (verbose mode only)
+- print some error resolution hints if [countCommitsSince...](#countCommitsSince) in conjunction with [countCommitsInPath](#countCommitsInPath) was used and no such commit (from the `countCommitsSince` parameter) is found
 
 #### 2.4.0 (2020-01-01)
 - new property: `git.nearestTag`
