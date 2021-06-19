@@ -266,6 +266,7 @@ public class BuildNumberExtractor {
     /** @return Map sha1 - tag names */
     private Map<String, SortedSet<String>> loadTagsMap() {
         Map<String, Ref> refMap = repo.getTags(); // key: short tag name ("v1.0"), value: ref with full tag name ("refs/tags/v1.0")
+        logVerbose("number of tags: " + refMap.size());
         Map<String, SortedSet<String>> res = new HashMap<>(refMap.size());
         for (Map.Entry<String, Ref> entry : refMap.entrySet()) {
             String sha1 = extractPeeledSha1(entry.getValue());

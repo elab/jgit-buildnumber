@@ -132,7 +132,7 @@ buildNumberFormat                                            | <a name="buildNum
 repositoryDirectory                                          | <a name="repositoryDirectory"/>Directory to start searching Git root from, should contain `.git` directory or be a subdirectory of such directory. Default: project directory (Maven: `${project.basedir}`, Ant: `${basedir}`, Gradle: `projectDir`).
 runOnlyAtExecutionRoot                                       | <a name="runOnlyAtExecutionRoot"/>Setting this parameter to `false` allows to re-read metadata from Git repo in every submodule of a Maven multi-module project, not only in the root one. Has no effect for Ant or Gradle. Default: `true`.
 skip                                                         | <a name="skip"/>Setting this parameter to `true` will skip extraction of Git metadata and creation of buildNumber. Default: `false`.
-verbose                                                      | <a name="verbose"/>Print more information during build (parameters, all extracted properties, changes that caused dirty status, execution times, etc). Default: `false`.
+verbose                                                      | <a name="verbose"/>Print more information during build (parameters, all extracted properties, changes that caused dirty status, number of tags, execution times, etc). Default: `false`.
 
 Working with parameters is very similar in all build tools. See examples in sections for [Maven](#usage-in-maven), [Ant](#usage-in-ant), [Gradle](#usage-in-gradle).
 
@@ -318,6 +318,7 @@ Changelog
 - use [standalone version of Nashorn JavaScript engine](https://github.com/openjdk/nashorn) if running on Java 11+<br>
   (prevents deprecation warning on Java 11-14; enables working with Java 15+ where Nashorn is not a part of JDK anymore)
 - initialize JavaScript engine in parallel with reading Git repo (reduces overall execution time by ca. 0.5 s)
+- log number of tags (verbose mode only)
 
 #### 2.4.0 (2020-01-01)
 - new property: `git.nearestTag`
