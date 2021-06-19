@@ -317,6 +317,7 @@ Changelog
 - if git status is dirty, log which changes caused that (verbose mode only)
 - use [standalone version of Nashorn JavaScript engine](https://github.com/openjdk/nashorn) if running on Java 11+<br>
   (prevents deprecation warning on Java 11-14; enables working with Java 15+ where Nashorn is not a part of JDK anymore)
+- initialize JavaScript engine in parallel with reading Git repo (reduces overall execution time by ca. 0.5 s)
 
 #### 2.4.0 (2020-01-01)
 - new property: `git.nearestTag`

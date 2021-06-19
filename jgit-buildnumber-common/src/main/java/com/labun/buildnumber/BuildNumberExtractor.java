@@ -13,6 +13,8 @@ import java.util.SortedSet;
 import java.util.TimeZone;
 import java.util.TreeMap;
 import java.util.TreeSet;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Future;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -48,6 +50,10 @@ public class BuildNumberExtractor {
     Parameters params;
     Logger logger;
 
+    /** Holds "future" of Script Engine, which gets initialized in parallel with reading Git repo, to reduce overall execution time.<br>
+     *  Is only initialized if params.buildNumberFormat is not null. */
+    Future<ScriptEngine> jsEngineFuture;
+
     File gitDir;
     Git git;
     Repository repo;
@@ -82,6 +88,8 @@ public class BuildNumberExtractor {
         logVerbose("params: " + params.asString());
 
         logVerbose("java: " + System.getProperty("java.version"));
+
+        jsEngineFuture = (params.getBuildNumberFormat() != null) ? CompletableFuture.supplyAsync(() -> getJsEngine()) : null;
 
         File repoDirectory = params.getRepositoryDirectory();
         if (!(repoDirectory.exists() && repoDirectory.isDirectory()))
@@ -192,7 +200,9 @@ public class BuildNumberExtractor {
             t = System.currentTimeMillis();
 
             if (params.getBuildNumberFormat() != null) {
-                ScriptEngine jsEngine = getJsEngine();
+                ScriptEngine jsEngine = jsEngineFuture.get();
+                logVerbose("waiting for initialization of JS engine: " + (System.currentTimeMillis() - t) + " ms");
+                t = System.currentTimeMillis();
 
                 String jsBuildNumber = formatBuildNumberWithJS(jsEngine, res);
                 res.put("buildNumber", jsBuildNumber); // overwrites default buildNumber
@@ -369,7 +379,7 @@ public class BuildNumberExtractor {
             return null;
         }
 
-        logVerbose("loading JS factory: " + (System.currentTimeMillis() - time) + " ms");
+        logVerbose("[parallel thread] loading JS factory: " + (System.currentTimeMillis() - time) + " ms");
         time = System.currentTimeMillis();
 
         ScriptEngine jsEngine = factory.getScriptEngine();
@@ -377,7 +387,7 @@ public class BuildNumberExtractor {
             log("Nashorn JavaScript engine not found!");
         }
 
-        logVerbose("loading JS Engine: " + (System.currentTimeMillis() - time) + " ms");
+        logVerbose("[parallel thread] loading JS Engine: " + (System.currentTimeMillis() - time) + " ms");
         time = System.currentTimeMillis();
         return jsEngine;
     }
