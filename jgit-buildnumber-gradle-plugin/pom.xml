@@ -13,6 +13,7 @@
     <packaging>jar</packaging>
     <name>JGit Build Number Gradle Plugin</name>
     <description>Extracts Git metadata and a freely composable build number in pure Java without Git command-line tool.</description>
+    <url>https://github.com/elab/jgit-buildnumber</url>
 
     <licenses>
         <license>

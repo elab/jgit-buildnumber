@@ -320,6 +320,7 @@ Changelog
 - initialize JavaScript engine in parallel with reading Git repo (reduces overall execution time by ca. 0.5 s)
 - log number of tags (verbose mode only)
 - print some error resolution hints if [countCommitsSince...](#countCommitsSince) in conjunction with [countCommitsInPath](#countCommitsInPath) was used and no such commit (from the `countCommitsSince` parameter) is found
+- homepage URL added to poms: https://github.com/elab/jgit-buildnumber
 
 #### 2.4.0 (2020-01-01)
 - new property: `git.nearestTag`

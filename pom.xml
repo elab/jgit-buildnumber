@@ -10,7 +10,6 @@
     <packaging>pom</packaging>
     <name>JGit Build Number for Maven, Ant, and Gradle</name>
     <description>Extracts Git metadata and a freely composable build number in pure Java without Git command-line tool. Eclipse m2e compatible.</description>
-
     <url>https://github.com/elab/jgit-buildnumber</url>
 
     <licenses>
