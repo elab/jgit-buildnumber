@@ -38,7 +38,7 @@
         <repository>
             <!-- for org.gradle artifacts -->
             <id>Gradle Releases Repository</id>
-            <url>https://repo.gradle.org/gradle/libs-releases-local</url>
+            <url>https://repo.gradle.org/artifactory/libs-releases-local</url>
         </repository>
     </repositories>
 
