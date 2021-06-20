@@ -88,23 +88,24 @@ Add 0.5 s. if custom `buildNumberFormat` is used.
 
 Git metadata, build number, and build date (added for convenience) are published as following project properties:
 
-property            | description
---------------------|----------------
-git.revision        | HEAD SHA-1
-git.shortRevision   | <a name="shortRevision"/>HEAD SHA-1 (abbreviated, see [shortRevisionLength](#shortRevisionLength))
-git.dirty           | <a name="dirty"/> contains [dirtyValue](#dirtyValue) if differences exist between working-tree, index, and HEAD; empty string otherwise;<br>in [verbose](#verbose) mode, detailed info will be printed to log about the changes which caused the dirty status (very helpful if the problem occurs on a remote build server)
-git.branch          | branch name; empty string for detached HEAD
-git.tag             | HEAD tag name; empty string if no tags defined; multiple tags separated with `;`
-git.nearestTag      | nearest tag name; empty string if no tags found; multiple tags (belonging to the same commit) are separated with `;`<br>Only the "counted" commits are looked for tags; see [countCommitsSince...](#countCommitsSince)
-git.parent          | SHA-1 of the parent commit (`HEAD^`); multiple parents separated with `;`
-git.shortParent     | <a name="shortParent"/>SHA-1 of the parent commit (`HEAD^`) (abbreviated, see [shortRevisionLength](#shortRevisionLength)); multiple parents separated with `;`
-git.commitsCount    | commits count; -1 for a Git shallow clone; see [countCommitsSince...](#countCommitsSince)
-git.authorDate      | <a name="authorDate"/>authored date of HEAD commit; see [gitDateFormat](#gitDateFormat), [dateFormatTimeZone](#dateFormatTimeZone)
-git.commitDate      | <a name="commitDate"/>committed date of HEAD commit; see [gitDateFormat](#gitDateFormat), [dateFormatTimeZone](#dateFormatTimeZone)
-git.describe        | result of JGit `describe` command ([long format](https://download.eclipse.org/jgit/site/5.12.0.202106070339-r/apidocs/org/eclipse/jgit/api/DescribeCommand.html#setLong-boolean-), all tags will be considered: annotated and lightweight (not annotated)); abbreviated commit hash if no tags found (see [setAlways(true)](https://download.eclipse.org/jgit/site/5.12.0.202106070339-r/apidocs/org/eclipse/jgit/api/DescribeCommand.html#setAlways-boolean-))
-git.buildDateMillis | <a name="buildDateMillis"/>start time of plugin execution in milliseconds, as returned by `System.currentTimeMillis()`
-git.buildDate       | <a name="buildDate"/>start time of plugin execution, created from [buildDateMillis](#buildDateMillis) and formatted according to [buildDateFormat](#buildDateFormat), [dateFormatTimeZone](#dateFormatTimeZone)
-git.buildNumber     | <a name="buildNumber"/>composed from other properties according to [buildNumberFormat](#buildNumberFormat) parameter 
+property                        | description
+--------------------------------|----------------
+git.revision                    | HEAD SHA-1
+git.shortRevision               | <a name="shortRevision"/>HEAD SHA-1 (abbreviated, see [shortRevisionLength](#shortRevisionLength))
+git.dirty                       | <a name="dirty"/> contains [dirtyValue](#dirtyValue) if differences exist between working-tree, index, and HEAD; empty string otherwise;<br>in [verbose](#verbose) mode, detailed info will be printed to log about the changes which caused the dirty status (very helpful if the problem occurs on a remote build server)
+git.branch                      | branch name; empty string for detached HEAD
+git.tag                         | HEAD tag name; empty string if no tags defined; multiple tags separated with `;`
+git.nearestTag                  | <a name="nearestTag"/>nearest tag name; empty string if no tags found; multiple tags (belonging to the same commit) are separated with `;`<br>Only the "counted" commits are looked for tags, see [countCommitsSince...](#countCommitsSince) parameter; see also [commitsCountSinceNearestTag](#commitsCountSinceNearestTag) property
+git.parent                      | SHA-1 of the parent commit (`HEAD^`); multiple parents separated with `;`
+git.shortParent                 | <a name="shortParent"/>SHA-1 of the parent commit (`HEAD^`) (abbreviated, see [shortRevisionLength](#shortRevisionLength)); multiple parents separated with `;`
+git.commitsCount                | commits count; -1 for a Git shallow clone; see [countCommitsSince...](#countCommitsSince)
+git.commitsCountSinceNearestTag | <a name="commitsCountSinceNearestTag"/>commits count since [nearestTag](#nearestTag); empty string if the nearest tag is not found; the counting is exclusive (i.e. commit with this tag is not counted, to match the logic of [describe](#describe))
+git.authorDate                  | <a name="authorDate"/>authored date of HEAD commit; see [gitDateFormat](#gitDateFormat), [dateFormatTimeZone](#dateFormatTimeZone)
+git.commitDate                  | <a name="commitDate"/>committed date of HEAD commit; see [gitDateFormat](#gitDateFormat), [dateFormatTimeZone](#dateFormatTimeZone)
+git.describe                    | <a name="describe"/>result of JGit `describe` command ([long format](https://download.eclipse.org/jgit/site/5.12.0.202106070339-r/apidocs/org/eclipse/jgit/api/DescribeCommand.html#setLong-boolean-), all tags will be considered: annotated and lightweight (not annotated)); abbreviated commit hash if no tags found (see [setAlways(true)](https://download.eclipse.org/jgit/site/5.12.0.202106070339-r/apidocs/org/eclipse/jgit/api/DescribeCommand.html#setAlways-boolean-))
+git.buildDateMillis             | <a name="buildDateMillis"/>start time of plugin execution in milliseconds, as returned by `System.currentTimeMillis()`
+git.buildDate                   | <a name="buildDate"/>start time of plugin execution, created from [buildDateMillis](#buildDateMillis) and formatted according to [buildDateFormat](#buildDateFormat), [dateFormatTimeZone](#dateFormatTimeZone)
+git.buildNumber                 | <a name="buildNumber"/>composed from other properties according to [buildNumberFormat](#buildNumberFormat) parameter 
 
 Note that you can redefine the default namespace `git` using [namespace](#namespace) parameter.
 
@@ -323,6 +324,7 @@ Changelog
 - print some error resolution hints if [countCommitsSince...](#countCommitsSince) in conjunction with [countCommitsInPath](#countCommitsInPath) was used and no such commit (from the `countCommitsSince` parameter) is found
 - homepage URL added to poms: https://github.com/elab/jgit-buildnumber
 - new property: `git.buildDateMillis`
+- new property: `git.commitsCountSinceNearestTag`
 
 #### 2.4.0 (2020-01-01)
 - new property: `git.nearestTag`

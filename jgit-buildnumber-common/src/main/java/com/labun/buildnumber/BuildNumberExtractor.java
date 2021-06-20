@@ -36,6 +36,7 @@ import org.eclipse.jgit.treewalk.filter.AndTreeFilter;
 import org.eclipse.jgit.treewalk.filter.PathFilter;
 import org.eclipse.jgit.treewalk.filter.TreeFilter;
 
+import lombok.Data;
 import lombok.Getter;
 
 /** Extracts Git metadata and creates build number. See {@link #propertyNames}. */
@@ -43,7 +44,7 @@ public class BuildNumberExtractor {
 
     /** See documentation in README.md */
     static final List<String> propertyNames = Arrays.asList("revision", "shortRevision", "dirty", "branch", "tag", "nearestTag", "parent", "shortParent",
-        "commitsCount", "authorDate", "commitDate", "describe", "buildDateMillis", "buildDate", "buildNumber");
+        "commitsCount", "commitsCountSinceNearestTag", "authorDate", "commitDate", "describe", "buildDateMillis", "buildDate", "buildNumber");
 
     private static final String EMPTY_STRING = "";
 
@@ -64,8 +65,16 @@ public class BuildNumberExtractor {
     private @Getter String headSha1;
     private @Getter boolean gitStatusDirty;
 
-    /** Temp. mutable holder for the nearest tag. Since a commit can have multiple tags, the type is a collection of strings. */
-    private SortedSet<String> nearestTagTemp;
+    @Data
+    static class TagInfo {
+        /** tag names (a commit can have multiple tags) */
+        private final SortedSet<String> tagNames;
+        /** commits count since the tag; exclusive (i.e. commit with this tag is not counted, to match the logic of git.describe) */
+        private final int commitsCountSince;
+    }
+
+    /** mutable holder for the nearest tag info */
+    private TagInfo nearestTagInfo;
 
     void log(String msg) {
         logger.log(msg);
@@ -165,7 +174,8 @@ public class BuildNumberExtractor {
 
             int commitsCount = countCommits(revWalk, tagMap, headCommit, params.getCountCommitsSinceInclusive(), params.getCountCommitsSinceExclusive(),
                 params.getCountCommitsInPath());
-            String nearestTag = nearestTagTemp == null ? EMPTY_STRING : String.join(";", nearestTagTemp);
+            String nearestTag = nearestTagInfo == null ? EMPTY_STRING : String.join(";", nearestTagInfo.tagNames);
+            String commitsCountSinceNearestTag = nearestTagInfo == null ? EMPTY_STRING : "" + nearestTagInfo.commitsCountSince;
 
             // don't use `headCommit`, `revWalk` from here on!
 
@@ -193,6 +203,7 @@ public class BuildNumberExtractor {
             res.put("parent", parent);
             res.put("shortParent", shortParent);
             res.put("commitsCount", commitsCountAsString);
+            res.put("commitsCountSinceNearestTag", commitsCountSinceNearestTag);
             res.put("authorDate", authorDate);
             res.put("commitDate", commitDate);
             res.put("describe", describe);
@@ -293,7 +304,7 @@ public class BuildNumberExtractor {
     private int countCommits(RevWalk walk, Map<String, SortedSet<String>> tagMap, RevCommit headCommit, String countCommitsSinceInclusive,
         String countCommitsSinceExclusive, String countCommitsInPath) throws Exception {
 
-        nearestTagTemp = null;
+        nearestTagInfo = null;
         try {
             // walk.reset(); // only needed if iterator has been accessed before
             if (countCommitsInPath != null) {
@@ -306,7 +317,7 @@ public class BuildNumberExtractor {
                 String ancestorSha1 = getSha1(countCommitsSinceInclusive);
                 for (RevCommit commit : walk) {
                     String sha1 = commit.getId().getName();
-                    if (nearestTagTemp == null) nearestTagTemp = tagMap.get(sha1);
+                    if (nearestTagInfo == null) nearestTagInfo = tryExtractTagInfo(tagMap, sha1, res);
                     res += 1;
                     if (sha1.startsWith(ancestorSha1)) return res;
                 }
@@ -315,7 +326,7 @@ public class BuildNumberExtractor {
                 String ancestorSha1 = getSha1(countCommitsSinceExclusive);
                 for (RevCommit commit : walk) {
                     String sha1 = commit.getId().getName();
-                    if (nearestTagTemp == null) nearestTagTemp = tagMap.get(sha1);
+                    if (nearestTagInfo == null) nearestTagInfo = tryExtractTagInfo(tagMap, sha1, res);
                     if (sha1.startsWith(ancestorSha1)) return res;
                     res += 1;
                 }
@@ -323,7 +334,7 @@ public class BuildNumberExtractor {
             } else {
                 for (RevCommit commit : walk) {
                     String sha1 = commit.getId().getName();
-                    if (nearestTagTemp == null) nearestTagTemp = tagMap.get(sha1);
+                    if (nearestTagInfo == null) nearestTagInfo = tryExtractTagInfo(tagMap, sha1, res);
                     res += 1;
                 }
             }
@@ -332,6 +343,11 @@ public class BuildNumberExtractor {
             // ignore exception thrown by JGit when walking shallow clone, return -1 to indicate shallow
             return -1;
         }
+    }
+
+    private TagInfo tryExtractTagInfo(Map<String, SortedSet<String>> tagMap, String sha1, int commitNo) {
+        SortedSet<String> tagNames = tagMap.get(sha1); 
+        return (tagNames != null) ? new TagInfo(tagNames, commitNo) : null;
     }
 
     /** log error message and resolution hints, then throw IllegalArgumentException */
