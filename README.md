@@ -1,7 +1,8 @@
-JGit Build Number for Maven, Ant, and Gradle
-============================================
+# JGit Build Number for Maven, Ant, and Gradle
 
-Extracts Git metadata and a freely composable build number in pure Java without Git command-line tool. [https://github.com/elab/jgit-buildnumber](https://github.com/elab/jgit-buildnumber)
+Extracts Git metadata and a freely composable build number in pure Java without Git command-line tool.
+
+Homepage: [https://github.com/elab/jgit-buildnumber](https://github.com/elab/jgit-buildnumber)
 
 Current version | Compatibility                                | Published on [Maven Central](https://search.maven.org/search?q=g:com.labun.buildnumber)
 ----------------|----------------------------------------------|------------
@@ -25,10 +26,17 @@ Contact: Eugen Labun <labun@gmx.net>
 --------------------------------------------------
 
 Contents:
-- [About "Build Number"](#about-build-number)
+- [Philosophy](#philosophy)
 - [Extracted properties](#extracted-properties)
 - [Configuration](#configuration)
+- [Performance](#performance)
 - [Usage in Maven](#usage-in-maven)
+  - [Typical usage (no specific configuration)](#typical-usage-no-specific-configuration)
+  - [Maven resource filtering / Spring Boot](#maven-resource-filtering--spring-boot)
+  - [Example with configuration](#example-with-configuration)
+  - [Multi-module projects](#multi-module-projects)
+  - [Eclipse m2e](#eclipse-m2e)
+  - [Changing JGit version](#changing-jgit-version)
 - [Usage in Ant](#usage-in-ant)
 - [Usage in Gradle](#usage-in-gradle)
 - [Development notes](#development-notes)
@@ -37,9 +45,7 @@ Contents:
 
 --------------------------------------------------
 
-
-About "Build Number"
---------------------
+## Philosophy
 
 Build number should identify the code state of the project from which it has been created. 
 Particularly, it should *not* depend on: 
@@ -75,16 +81,8 @@ Instead of the Git CLI commands above, the pure Java [JGit](http://www.jgit.org/
 Note: The JGit output (intentionally) doesn't coincide exactly with the output of Git CLI. 
 E.g. branch and tag names are returned without the `refs/...` prefix.
 
-**The default BuildNumber can be easily redefined using extracted properties (see [buildNumberFormat](#buildNumberFormat)).**
- 
-All properties, including BuildNumber, are available in Maven, Ant, or Gradle build for the entire application.
 
-__Execution time__ primarily depends on the complexity of Git repo (especially on the number of tags, followed by the number of commits) 
-and whether you use a custom JS `buildNumberFormat` or not. Without custom `buildNumberFormat`, you should expect execution time of 0.5 - 1.5 s. 
-Add 0.5 s. if custom `buildNumberFormat` is used.
-
-
-### Extracted properties
+## Extracted properties
 
 Git metadata, build number, and build date (added for convenience) are published as following project properties:
 
@@ -107,7 +105,11 @@ git.buildDateMillis             | <a name="buildDateMillis"/>start time of plugi
 git.buildDate                   | <a name="buildDate"/>start time of plugin execution, created from [buildDateMillis](#buildDateMillis) and formatted according to [buildDateFormat](#buildDateFormat), [dateFormatTimeZone](#dateFormatTimeZone)
 git.buildNumber                 | <a name="buildNumber"/>composed from other properties according to [buildNumberFormat](#buildNumberFormat) parameter 
 
-Note that you can redefine the default namespace `git` using [namespace](#namespace) parameter.
+**The default BuildNumber can be easily redefined using extracted properties (see [buildNumberFormat](#buildNumberFormat)).**
+ 
+All properties, including BuildNumber, are available in Maven, Ant, or Gradle build for the entire application.
+
+Note that you can also redefine the default namespace `git` using [namespace](#namespace) parameter.
 
 You can see the extracted properties, the execution time, and other info in the build log. Set the [verbose](#verbose) parameter to `true` to achieve that.
 
@@ -115,7 +117,7 @@ Extracted properties can be accessed in the same way in all build tools: as `git
 See examples in sections for [Maven](#usage-in-maven), [Ant](#usage-in-ant), [Gradle](#usage-in-gradle).
 
 
-### Configuration
+## Configuration
 
 We follow a zero configuration approach. Therefore all parameters are optional.
 But just in the case you would like to tweak something, there is a lot of possibilities to do that:
@@ -139,8 +141,19 @@ verbose                                                      | <a name="verbose"
 Working with parameters is very similar in all build tools. See examples in sections for [Maven](#usage-in-maven), [Ant](#usage-in-ant), [Gradle](#usage-in-gradle).
 
 
-Usage in Maven
---------------
+## Performance
+
+__Execution time__ primarily depends on the complexity of Git repo (especially on the number of tags, followed by the number of commits) 
+and whether you use a custom JS [buildNumberFormat](#buildNumberFormat) or not. Without custom `buildNumberFormat`, you should expect execution time of 0.5 - 1.5 s. 
+With custom `buildNumberFormat` add ca. 0.5 s.
+
+
+## Usage in Maven
+
+The plugin binds to the `validate` phase (the first Maven life cycle phase) per default, so that the extracted properties are available in all other phases. 
+
+
+### Typical usage (no specific configuration)
 
 Typical usage with writing extracted properties to the MANIFEST.MF file:
 
@@ -149,6 +162,7 @@ Typical usage with writing extracted properties to the MANIFEST.MF file:
     <plugins>
 
         <plugin>
+            <!-- https://github.com/elab/jgit-buildnumber -->
             <groupId>com.labun.buildnumber</groupId>
             <artifactId>jgit-buildnumber-maven-plugin</artifactId>
             <version>2.5.0</version>
@@ -180,14 +194,56 @@ Typical usage with writing extracted properties to the MANIFEST.MF file:
 </build>
 ```
 
-You can also write the extracted properties into arbitrary files (.properties, .java, ...) using [Maven resource filtering](https://maven.apache.org/plugins/maven-resources-plugin/examples/filter.html).
 
-The plugin binds to the `validate` phase (the first Maven life cycle phase) per default, so that the extracted properties are available in all other phases. 
+### Maven resource filtering / Spring Boot
 
-Configuration example:
+You can write the extracted properties into arbitrary files (.properties, .java, ...) using [Maven resource filtering](https://maven.apache.org/plugins/maven-resources-plugin/examples/filter.html).
+
+For example, to create `git.properties` file:
+
+1. Create file `/src/main/resources/git.properties` with the required properties:
+
+```properties
+buildNumber = ${git.buildNumber}
+buildDate = ${git.buildDate}
+...
+```
+Note: In **Spring Boot** projects, use [this notation to access Maven properties](https://github.com/spring-projects/spring-boot/wiki/Spring-Boot-1.3-Release-Notes#maven-resources-filtering): `@git.buildNumber@`.
+
+2. Add resource filtering configuration to the `<build>` section of your `pom.xml`:
+```xml
+<resources>
+    <resource>
+        <directory>src/main/resources</directory>
+        <filtering>true</filtering>
+        <includes>
+            <include>git.properties</include>
+        </includes>
+    </resource>
+</resources>
+
+<plugin>
+    <groupId>org.apache.maven.plugins</groupId>
+    <artifactId>maven-resources-plugin</artifactId>
+    <configuration>
+        <outputDirectory>${project.build.directory}</outputDirectory>
+    </configuration>
+    <executions>
+        <execution>
+            <goals>
+                <goal>resources</goal>
+            </goals>
+        </execution>
+    </executions>
+</plugin>
+```
+
+
+### Example with configuration
 
 ```xml
 <plugin>
+    <!-- https://github.com/elab/jgit-buildnumber -->
     <groupId>com.labun.buildnumber</groupId>
     <artifactId>jgit-buildnumber-maven-plugin</artifactId>
     <version>2.5.0</version>
@@ -210,7 +266,13 @@ Configuration example:
 </plugin>
 ```
 
+
+### Multi-module projects
+
 If the plugin is defined in parent module of a __multi-module project__, it will access the Git repo only once. (If you want to change that, see [runOnlyAtExecutionRoot](#runOnlyAtExecutionRoot).) The properties extracted in parent module are propagated to all child modules. This only applies to normal Maven builds though, not for Eclipse m2e incremental builds, since Eclipse / OSGI has a flat workspace and doesn't support nested Maven modules.
+
+
+### Eclipse m2e
 
 The plugin contains lifecycle-mapping-metadata for __Eclipse m2e__, and will be executed in m2e incremental builds (yet not on configuration). 
 This is particularly important for local deployments to a JEE server from within Eclipse, if you want to see the proper build number in your web application. (Local deployment somehow depends on m2e incremental build).
@@ -223,6 +285,7 @@ This is particularly important for local deployments to a JEE server from within
     <pluginExecutions>
         <pluginExecution>
             <pluginExecutionFilter>
+                <!-- https://github.com/elab/jgit-buildnumber -->
                 <groupId>com.labun.buildnumber</groupId>
                 <artifactId>jgit-buildnumber-maven-plugin</artifactId>
                 <versionRange>[0.0,)</versionRange>
@@ -241,8 +304,69 @@ This is particularly important for local deployments to a JEE server from within
 > Restart Eclipse thereafter ("apply" in Preferences is not enough).
 
 
-Usage in Ant
-------------
+### Changing JGit version
+
+If for some reason you'd like to change the JGit version used (e.g. a bug was encountered in a specific version), it is possible.
+
+Since the dependency on JGit is transitive (via `jgit-buildnumber-common` artifact), the JGit version can be replaced via [Maven exclusion mechanisms](https://stackoverflow.com/questions/6028534/how-to-exclude-dependency-in-a-maven-plugin).
+(If it was a direct dependency, that [would likely not be possible](https://stackoverflow.com/questions/43630262/how-to-exclude-a-direct-dependency-of-a-maven-plugin).) 
+
+Example: To change the JGit version to `5.11.1.202105131744-r` (just an example, there is no particular reason for it), add the following `<dependencies>` section to the `jgit-buildnumber-maven-plugin`:
+
+```xml
+<plugin>
+    <!-- https://github.com/elab/jgit-buildnumber -->
+    <groupId>com.labun.buildnumber</groupId>
+    <artifactId>jgit-buildnumber-maven-plugin</artifactId>
+    <version>2.5.0</version>
+
+    <dependencies>
+        <dependency>
+            <groupId>com.labun.buildnumber</groupId>
+            <artifactId>jgit-buildnumber-common</artifactId>
+            <version>2.5.0</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.eclipse.jgit</groupId>
+                    <artifactId>org.eclipse.jgit</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>org.eclipse.jgit</groupId>
+            <artifactId>org.eclipse.jgit</artifactId>
+            <version>5.11.1.202105131744-r</version>
+        </dependency>
+    </dependencies>
+
+    <executions>
+        ...
+    </executions>
+</plugin>
+```
+
+As you see, the existing dependency was excluded from the `jgit-buildnumber-common` artifact, and the new dependency was defined on the `jgit-buildnumber-maven-plugin`.
+
+Taking advantage of the Maven dependency resolution logic, you can do the same even more concise. Just add the other JGit version as a direct dependency to the `jgit-buildnumber-maven-plugin`.
+That other version, as the ["nearest definition"](https://maven.apache.org/guides/introduction/introduction-to-dependency-mechanism.html), will take precedence over the version defined in the `jgit-buildnumber-common`.
+The whole `<dependencies>` section of the `jgit-buildnumber-maven-plugin` would look as follows:
+
+```xml
+    ...
+    <dependencies>
+        <dependency>
+            <groupId>org.eclipse.jgit</groupId>
+            <artifactId>org.eclipse.jgit</artifactId>
+            <version>5.11.1.202105131744-r</version>
+        </dependency>
+    </dependencies>
+    ...
+```
+
+You can control the versions used by starting Maven build with the `--debug` option, and then looking in the log for "org.eclipse.jgit" version. 
+
+
+## Usage in Ant
 
 Usage is very similar to Maven. As all parameters are optional you don't have to specify any. Excerpt from `build.xml`:
 
@@ -258,8 +382,7 @@ See [complete `build.xml` example with task parameters](examples/ant/build.xml).
 Another example shows how to [extract two different buildNumbers for two repositories](examples/ant/build-with-2-targets.xml) (e.g. "application" and "documentation") in one build file. 
 
 
-Usage in Gradle
-----------------
+## Usage in Gradle
 
 Usage is very similar to Maven and Ant. Essentially, you only need to specify the dependency on `jgit-buildnumber-gradle-plugin`.
 
@@ -291,8 +414,8 @@ task 'extract-buildnumber' (type: JGitBuildNumberGradleTask) {
 }
 ```
 
-Development notes
------------------
+
+## Development notes
 
 This section is intended for developers of "JGit Build Number". It can be ignored if you only _use_ the plugins in your projects.
 
@@ -305,14 +428,12 @@ Lombok is supported by all major IDEs and build tools. For Eclipse, simply add t
 For other IDEs and tools, see [projectlombok.org/setup](https://projectlombok.org/setup/).
 
 
-License information
--------------------
+## License information
 
 This project is released under the [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0).
 
 
-Changelog
----------
+## Changelog
 
 #### 2.5.0 (not released yet)
 - dependency updates: jgit 5.12.0.202106070339-r, lombok 1.18.20, maven-plugin-api 3.8.1, maven-core 3.8.1, maven-plugin-annotations 3.6.1, ant 1.10.10, groovy 2.5.14
@@ -325,6 +446,7 @@ Changelog
 - homepage URL added to poms: https://github.com/elab/jgit-buildnumber
 - new property: `git.buildDateMillis`
 - new property: `git.commitsCountSinceNearestTag`
+- README revised (slightly restructured, notes about usage with Spring Boot added, section "Changing JGit version" added
 
 #### 2.4.0 (2020-01-01)
 - new property: `git.nearestTag`
