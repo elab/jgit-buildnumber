@@ -340,9 +340,7 @@ public class BuildNumberExtractor {
     }
 
     private String formatBuildNumberWithJS(ScriptEngine jsEngine, Map<String, String> bnProperties) throws Exception {
-        if (jsEngine == null) {
-            return "UNKNOWN_JS_BUILDNUMBER";
-        }
+        if (jsEngine == null) throw new IllegalStateException("JS engine is null");
 
         for (Map.Entry<String, String> e : bnProperties.entrySet())
             jsEngine.put(e.getKey(), e.getValue());
