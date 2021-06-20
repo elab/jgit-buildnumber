@@ -6,7 +6,7 @@ Homepage: [https://github.com/elab/jgit-buildnumber](https://github.com/elab/jgi
 
 Current version | Compatibility                                | Published on [Maven Central](https://search.maven.org/search?q=g:com.labun.buildnumber)
 ----------------|----------------------------------------------|------------
-2.5.0           | Java 8+ (tested up to Java 16)<br>Maven 3.3+ | (not released yet)
+2.5.0           | Java 8+ (tested up to Java 16)<br>Maven 3.3+ | 2021-06-20
 
 <!--
 Available on Maven Central: [repo1.maven.org](http://repo1.maven.org/maven2/com/labun/buildnumber/) / [central.maven.org](http://central.maven.org/maven2/com/labun/buildnumber/) / [search.maven.org](https://search.maven.org/search?q=g:com.labun.buildnumber).
@@ -435,7 +435,7 @@ This project is released under the [Apache License 2.0](https://www.apache.org/l
 
 ## Changelog
 
-#### 2.5.0 (not released yet)
+#### 2.5.0 (2021-06-20)
 - dependency updates: jgit 5.12.0.202106070339-r, lombok 1.18.20, maven-plugin-api 3.8.1, maven-core 3.8.1, maven-plugin-annotations 3.6.1, ant 1.10.10, groovy 2.5.14
 - if git status is dirty, log which changes caused that (verbose mode only)
 - use [standalone version of Nashorn JavaScript engine](https://github.com/openjdk/nashorn) if running on Java 11+<br>
