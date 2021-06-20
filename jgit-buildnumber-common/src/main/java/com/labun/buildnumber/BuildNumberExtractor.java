@@ -43,9 +43,11 @@ public class BuildNumberExtractor {
 
     /** See documentation in README.md */
     static final List<String> propertyNames = Arrays.asList("revision", "shortRevision", "dirty", "branch", "tag", "nearestTag", "parent", "shortParent",
-        "commitsCount", "authorDate", "commitDate", "describe", "buildDate", "buildNumber");
+        "commitsCount", "authorDate", "commitDate", "describe", "buildDateMillis", "buildDate", "buildNumber");
 
     private static final String EMPTY_STRING = "";
+
+    final long startTime = System.currentTimeMillis();
 
     Parameters params;
     Logger logger;
@@ -169,9 +171,10 @@ public class BuildNumberExtractor {
 
             String describe = readDescribe(git);
 
+            String buildDateMillis = "" + startTime; 
             SimpleDateFormat dfBuildDate = new SimpleDateFormat(params.getBuildDateFormat());
             if (params.getDateFormatTimeZone() != null) dfBuildDate.setTimeZone(TimeZone.getTimeZone(params.getDateFormatTimeZone()));
-            String buildDate = dfBuildDate.format(new Date());
+            String buildDate = dfBuildDate.format(new Date(startTime));
 
             String revision = headSha1;
             String shortRevision = abbreviateSha1(headSha1, params.getShortRevisionLength());
@@ -193,6 +196,7 @@ public class BuildNumberExtractor {
             res.put("authorDate", authorDate);
             res.put("commitDate", commitDate);
             res.put("describe", describe);
+            res.put("buildDateMillis", buildDateMillis);
             res.put("buildDate", buildDate);
             res.put("buildNumber", buildNumber);
 
